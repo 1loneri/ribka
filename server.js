@@ -24,7 +24,7 @@ const quests = JSON.parse(fs.readFileSync(path.join(__dirname, "data", "quests.j
 const shopRods = [
   { id: "rod2", number: 1, level: 2, name: "Улучшенная удочка", price: 100 },
   { id: "rod3", number: 2, level: 3, name: "Серебряная удочка", price: 500 },
-  { id: "rod4", number: 3, level: 4, name: "Золотая удочка", price: 2000 },
+  { id: "rod4", number: 3, level: 4, name: "Золотая удочка", price: 5000 },
   { id: "rod5", number: 4, level: 5, name: "VOID-удочка", price: 10000 }
 ];
 
