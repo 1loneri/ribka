@@ -42,7 +42,7 @@ function cleanUsername(value) { return String(value || "").trim().toLowerCase().
 function getLocation(id) { return locations.find(x => x.id === id) || locations[0]; }
 function findLocation(value) {
   const key = String(value || "").trim().toLowerCase();
-  const aliases = { "озеро": "lake", "море": "sea", "глубины": "deep", "глубина": "deep", "void": "void", "войд": "void" };
+  const aliases = { "озеро": "lake", "море": "sea", "глубины": "deep", "глубина": "deep", "руины": "ruins", "затонувшие руины": "ruins", "void": "void", "войд": "void" };
   const id = aliases[key] || key;
   return locations.find(x => x.id === id || String(x.name || "").toLowerCase() === key);
 }
