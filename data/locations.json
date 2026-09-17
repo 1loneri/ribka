@@ -2,21 +2,18 @@
   {
     "id": "lake",
     "name": "Озеро",
-    "emoji": "🏞️",
     "min_rod": 1,
     "multiplier": 1
   },
   {
     "id": "sea",
     "name": "Море",
-    "emoji": "🌊",
     "min_rod": 2,
     "multiplier": 1.15
   },
   {
     "id": "deep",
     "name": "Глубины",
-    "emoji": "🌌",
     "min_rod": 3,
     "multiplier": 1.35
   },
@@ -29,7 +26,6 @@
   {
     "id": "void",
     "name": "VOID",
-    "emoji": "🕳️",
     "min_rod": 5,
     "multiplier": 1.7
   }
