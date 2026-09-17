@@ -242,7 +242,8 @@ app.get("/rod", requireKey, async (req, res) => {
 app.get("/buy", requireKey, async (req, res) => {
   const username = cleanUsername(req.query.user);
   if (!username) return res.status(400).send("Не указан пользователь.");
-  const number = Number(String(req.query.number ?? req.query.level ?? "").trim());
+  const rawNumber = req.query.number ?? req.query.level ?? req.query.rod ?? req.query.item ?? req.query.value ?? req.query.q ?? req.query.query ?? "";
+  const number = Number(String(rawNumber).trim());
   const rod = shopRods.find(x => x.number === number || x.level === number);
   if (!rod) return res.send(`@${username}, такого товара нет. Используй !магазин`);
   const client = await pool.connect();
