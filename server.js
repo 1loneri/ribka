@@ -103,7 +103,10 @@ function weightedPickWeight(item, user, location, event = null) {
   const lm = Number(location.multiplier || 1);
   if (i >= 3) weight *= 1 + (lm - 1) * (i - 2) * 0.55;
   else weight *= 1 / lm;
-  if (i >= 3) {\n    const rodBonuses = { 1: 0, 2: 0.15, 3: 0.35, 4: 0.60, 5: 1.00 };\n    weight *= 1 + (rodBonuses[Number(user.rod_level || 1)] ?? 0);\n  }
+  if (i >= 3) {
+    const rodBonuses = { 1: 0, 2: 0.15, 3: 0.35, 4: 0.60, 5: 1.00 };
+    weight *= 1 + (rodBonuses[Number(user.rod_level || 1)] ?? 0);
+  }
   if (event && item.rarity === event.rarity) weight *= event.multiplier;
   return weight;
 }
