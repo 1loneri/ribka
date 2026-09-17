@@ -13,11 +13,23 @@ const PORT = Number(process.env.PORT || 3000);
 const API_KEY = process.env.FISHING_API_KEY;
 const DATABASE_URL = process.env.DATABASE_URL;
 
-const pool = new Pool({
-  connectionString: DATABASE_URL,
-  ssl: DATABASE_URL?.includes("supabase") ? { rejectUnauthorized: false } : undefined,
-  max: 3
-});
+const dbConfig = process.env.PGHOST
+  ? {
+      host: process.env.PGHOST,
+      port: Number(process.env.PGPORT || 5432),
+      database: process.env.PGDATABASE || "postgres",
+      user: process.env.PGUSER,
+      password: process.env.PGPASSWORD,
+      ssl: { rejectUnauthorized: false },
+      max: 3
+    }
+  : {
+      connectionString: DATABASE_URL,
+      ssl: DATABASE_URL?.includes("supabase") ? { rejectUnauthorized: false } : undefined,
+      max: 3
+    };
+
+const pool = new Pool(dbConfig);
 
 const items = JSON.parse(fs.readFileSync(path.join(__dirname, "data", "items.json"), "utf8"));
 
