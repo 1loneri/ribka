@@ -78,9 +78,7 @@ async function ensureEventState() {
   } catch (e) {
     await client.query("ROLLBACK");
     throw e;
-  } finally {
-    client.release();
-  }
+  } finally { client.release(); }
 }
 
 async function getEventState() {
@@ -99,7 +97,6 @@ function pickByWeight(list) {
   }
   return list[list.length - 1];
 }
-
 function weightedPickWeight(item, user, location, event = null) {
   let weight = Number(item.weight || 0);
   const i = Math.max(0, RARITY_ORDER.indexOf(item.rarity));
@@ -110,9 +107,7 @@ function weightedPickWeight(item, user, location, event = null) {
   if (event && item.rarity === event.rarity) weight *= event.multiplier;
   return weight;
 }
-function weightedPick(list, user, location, event) {
-  return pickByWeight(list.map(item => ({ ...item, weight: weightedPickWeight(item, user, location, event) })));
-}
+function weightedPick(list, user, location, event) { return pickByWeight(list.map(item => ({ ...item, weight: weightedPickWeight(item, user, location, event) }))); }
 function locationItems(locationId) { return items.filter(x => x.id.startsWith(`${locationId}_`)); }
 
 async function initDb() {
@@ -154,9 +149,7 @@ async function addCatch(username, item) {
   } catch (e) {
     await client.query("ROLLBACK");
     throw e;
-  } finally {
-    client.release();
-  }
+  } finally { client.release(); }
   await updateQuestProgress(user.username, item);
   const updated = await getUser(user.username);
   return { cooldown: false, username: user.username, item, streak: newStreak, balance: Number(updated.coins) };
@@ -291,7 +284,7 @@ async function setUserLocation(req, res) {
   if (!requested) return res.send(`@${username}: ${current.name}`);
   const location = findLocation(requested);
   if (!location) return res.send("Такой локации нет. Используй !локации");
-  if (Number(user.rod_level) < Number(location.min_rod)) return res.send(`@${username}, ${location.name} требует удочку ${location.min_rod}().`);
+  if (Number(user.rod_level) < Number(location.min_rod)) return res.send(`@${username}, ${location.name} требует удочку ${location.min_rod}?.`);
   await pool.query("UPDATE users SET location=$2 WHERE username=$1", [username, location.id]);
   res.send(`@${username} отправился в ${location.name}!`);
 }
