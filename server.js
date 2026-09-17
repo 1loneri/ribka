@@ -29,7 +29,6 @@ const shopRods = [
 ];
 
 const shopTitles = [
-  { id: "title_fisher", number: 6, name: "Опытный рыбак", price: 50000 },
   { id: "title_hunter", number: 7, name: "Охотник за сокровищами", price: 150000 },
   { id: "title_depths", number: 8, name: "Повелитель глубин", price: 400000 },
   { id: "title_legend", number: 9, name: "Легенда морей", price: 1000000 },
