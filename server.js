@@ -41,16 +41,17 @@ const shopRods = [
   { id: "rod5", number: 4, level: 5, name: "VOID-удочка", emoji: "🌌", price: 10000 }
 ];
 
-// Влияние удочки на редкость. Вес после модификации всё равно нормализуется.
-const ROD_RARITY_BONUS = {
-  1: 1,
-  2: 1.10,
-  3: 1.20,
-  4: 1.35,
-  5: 1.55
-};
-
 const RARITY_ORDER = ["мусор", "обычная", "необычная", "редкая", "эпическая", "легендарная", "мифическая"];
+
+const EVENT_DEFINITIONS = [
+  { id: "storm", name: "Шторм", emoji: "🌪️", text: "Редкая рыба встречается чаще", rarity: "редкая", multiplier: 1.8 },
+  { id: "moon", name: "Лунная ночь", emoji: "🌕", text: "Эпическая рыба встречается чаще", rarity: "эпическая", multiplier: 1.8 },
+  { id: "void", name: "VOID-разлом", emoji: "🕳️", text: "Мифическая рыба встречается чаще", rarity: "мифическая", multiplier: 3 }
+];
+
+// Событие длится 10 минут. После него случайная пауза: 15, 30, 40 или 60 минут.
+const EVENT_DURATION_MS = 10 * 60 * 1000;
+const EVENT_INTERVALS_MS = [15, 30, 40, 60].map(minutes => minutes * 60 * 1000);
 
 function today() {
   return new Date().toISOString().slice(0, 10);
@@ -64,16 +65,67 @@ function getLocation(id) {
   return locations.find(x => x.id === id) || locations[0];
 }
 
-function getActiveEvent() {
-  const slot = Math.floor(Date.now() / (30 * 60 * 1000));
-  // Каждые 2 часа есть одно 30-минутное событие.
-  if (slot % 4 !== 0) return null;
-  const events = [
-    { id: "storm", name: "Шторм", emoji: "🌪️", text: "Редкая рыба встречается чаще", rarity: "редкая", multiplier: 1.8 },
-    { id: "moon", name: "Лунная ночь", emoji: "🌕", text: "Эпическая рыба встречается чаще", rarity: "эпическая", multiplier: 1.8 },
-    { id: "void", name: "VOID-разлом", emoji: "🕳️", text: "Мифическая рыба встречается чаще", rarity: "мифическая", multiplier: 3 }
-  ];
-  return events[slot / 4 % events.length];
+function randomInterval() {
+  return EVENT_INTERVALS_MS[Math.floor(Math.random() * EVENT_INTERVALS_MS.length)];
+}
+
+function randomEvent() {
+  return EVENT_DEFINITIONS[Math.floor(Math.random() * EVENT_DEFINITIONS.length)];
+}
+
+async function ensureEventState() {
+  const now = Date.now();
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const { rows } = await client.query("SELECT * FROM event_state WHERE id = 1 FOR UPDATE");
+
+    if (!rows.length) {
+      const nextStart = now + randomInterval();
+      await client.query(
+        "INSERT INTO event_state(id, event_id, started_at, active_until, next_start) VALUES (1, NULL, 0, 0, $1)",
+        [nextStart]
+      );
+      await client.query("COMMIT");
+      return null;
+    }
+
+    const state = rows[0];
+    if (Number(state.active_until || 0) > now) {
+      const event = EVENT_DEFINITIONS.find(x => x.id === state.event_id);
+      await client.query("COMMIT");
+      return event || null;
+    }
+
+    if (Number(state.next_start || 0) > now) {
+      await client.query("COMMIT");
+      return null;
+    }
+
+    const event = randomEvent();
+    const startedAt = now;
+    const activeUntil = now + EVENT_DURATION_MS;
+    const nextStart = activeUntil + randomInterval();
+
+    await client.query(
+      "UPDATE event_state SET event_id = $1, started_at = $2, active_until = $3, next_start = $4 WHERE id = 1",
+      [event.id, startedAt, activeUntil, nextStart]
+    );
+    await client.query("COMMIT");
+    return event;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+async function getEventState() {
+  const event = await ensureEventState();
+  const { rows } = await pool.query("SELECT * FROM event_state WHERE id = 1");
+  const state = rows[0];
+  return { event, state };
 }
 
 function pickByWeight(list) {
@@ -87,34 +139,33 @@ function pickByWeight(list) {
   return list[list.length - 1];
 }
 
-function weightedPick(list, user, location) {
-  const event = getActiveEvent();
+function weightedPickWeight(item, user, location, event = null) {
+  let weight = Number(item.weight || 0);
+  const rarityIndex = Math.max(0, RARITY_ORDER.indexOf(item.rarity));
   const locationMultiplier = Number(location.multiplier || 1);
 
-  const weighted = list.map(item => {
-    let weight = Number(item.weight || 0);
-    const rarityIndex = Math.max(0, RARITY_ORDER.indexOf(item.rarity));
+  if (rarityIndex >= 3) {
+    weight *= 1 + (locationMultiplier - 1) * (rarityIndex - 2) * 0.55;
+  } else {
+    weight *= 1 / locationMultiplier;
+  }
 
-    // Более дорогие локации постепенно усиливают редкую добычу.
-    if (rarityIndex >= 3) {
-      weight *= 1 + (locationMultiplier - 1) * (rarityIndex - 2) * 0.55;
-    } else {
-      weight *= 1 / locationMultiplier;
-    }
+  if (rarityIndex >= 3) {
+    weight *= 1 + (Number(user.rod_level || 1) - 1) * 0.10;
+  }
 
-    // Удочка повышает вес редких предметов, но не удаляет обычный улов.
-    if (rarityIndex >= 3) {
-      weight *= 1 + (Number(user.rod_level || 1) - 1) * 0.10;
-    }
+  if (event && item.rarity === event.rarity) {
+    weight *= event.multiplier;
+  }
 
-    if (event && item.rarity === event.rarity) {
-      weight *= event.multiplier;
-    }
+  return weight;
+}
 
-    return { ...item, weight };
-  });
-
-  return pickByWeight(weighted);
+function weightedPick(list, user, location, event) {
+  return pickByWeight(list.map(item => ({
+    ...item,
+    weight: weightedPickWeight(item, user, location, event)
+  })));
 }
 
 async function initDb() {
@@ -148,6 +199,13 @@ async function initDb() {
       claimed BOOLEAN NOT NULL DEFAULT false,
       date TEXT NOT NULL,
       PRIMARY KEY(username, quest_id, date)
+    );
+    CREATE TABLE IF NOT EXISTS event_state (
+      id INTEGER PRIMARY KEY,
+      event_id TEXT,
+      started_at BIGINT NOT NULL DEFAULT 0,
+      active_until BIGINT NOT NULL DEFAULT 0,
+      next_start BIGINT NOT NULL DEFAULT 0
     );
   `);
 }
@@ -236,12 +294,12 @@ app.get("/fish", requireKey, async (req, res) => {
 
     const user = await getUser(username);
     const location = getLocation(user.location);
-    const result = await addCatch(username, weightedPick(items, user, location));
+    const event = await ensureEventState();
+    const result = await addCatch(username, weightedPick(items, user, location, event));
 
     if (result.cooldown) return res.send(`@${username}, 🎣 подожди ещё ${result.seconds} сек.`);
 
     const { item, streak, balance } = result;
-    const event = getActiveEvent();
     let message = `${location.emoji} @${username} поймала ${item.emoji} ${item.name} [${item.rarity.toUpperCase()}] • шанс ${item.chance}% • +${item.value} 🪙`;
     if (event && event.rarity === item.rarity) message += ` • ${event.emoji} СОБЫТИЕ!`;
     if (streak >= 3) message += ` • 🔥 серия ${streak}`;
@@ -282,10 +340,8 @@ app.get("/balance", requireKey, async (req, res) => {
 app.get("/odds", requireKey, async (req, res) => {
   const user = await getUser(req.query.user || "anonymous");
   const location = getLocation(user.location);
-  const weighted = items.map(item => ({
-    ...item,
-    weight: weightedPickWeight(item, user, location)
-  }));
+  const event = await ensureEventState();
+  const weighted = items.map(item => ({ ...item, weight: weightedPickWeight(item, user, location, event) }));
   const total = weighted.reduce((sum, x) => sum + x.weight, 0);
   const text = weighted
     .sort((a, b) => b.weight - a.weight)
@@ -294,18 +350,6 @@ app.get("/odds", requireKey, async (req, res) => {
     .join(" | ");
   res.send(`🎲 ${location.emoji} ${location.name}: ${text}`);
 });
-
-function weightedPickWeight(item, user, location) {
-  const event = getActiveEvent();
-  let weight = Number(item.weight || 0);
-  const rarityIndex = Math.max(0, RARITY_ORDER.indexOf(item.rarity));
-  const locationMultiplier = Number(location.multiplier || 1);
-  if (rarityIndex >= 3) weight *= 1 + (locationMultiplier - 1) * (rarityIndex - 2) * 0.55;
-  else weight *= 1 / locationMultiplier;
-  if (rarityIndex >= 3) weight *= 1 + (Number(user.rod_level || 1) - 1) * 0.10;
-  if (event && item.rarity === event.rarity) weight *= event.multiplier;
-  return weight;
-}
 
 app.get("/shop", requireKey, (_req, res) => {
   const text = shopRods.map(x => `${x.number}. ${x.emoji} ${x.name} — ${x.price} 🪙`).join(" | ");
@@ -392,7 +436,7 @@ app.get("/location", requireKey, async (req, res) => {
   const location = locations.find(x => x.id === requested);
   if (!location) return res.send("🗺️ Такой локации нет. Используй !локации");
   if (Number(user.rod_level) < Number(location.min_rod)) {
-    return res.send(`🔒 @${username}, ${location.name} требует удочку ${location.min_rod}+.`);
+    return res.send(`🔒 @${username}, ${location.name} требует удочку ${location.min_rod}*.`.replace("*", "+"));
   }
 
   await pool.query("UPDATE users SET location = $2 WHERE username = $1", [username, location.id]);
@@ -454,18 +498,18 @@ app.get("/quest/claim", requireKey, async (req, res) => {
   const quest = quests.find(x => x.id === String(req.query.quest));
   if (!username || !quest) return res.status(400).send("Неверный квест.");
   const date = today();
-  const { rows } = await pool.query("SELECT * FROM daily_quests WHERE username = $1 AND quest_id = $2 AND date = $3 FOR UPDATE", [username, quest.id, date]);
-  const row = rows[0];
-  if (!row?.completed) return res.send(`📜 @${username}, квест ещё не выполнен.`);
-  if (row.claimed) return res.send(`📜 @${username}, награда за этот квест уже получена.`);
-
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    const locked = await client.query("SELECT claimed, completed FROM daily_quests WHERE username = $1 AND quest_id = $2 AND date = $3 FOR UPDATE", [username, quest.id, date]);
-    if (!locked.rows[0]?.completed || locked.rows[0].claimed) {
+    const { rows } = await client.query("SELECT * FROM daily_quests WHERE username = $1 AND quest_id = $2 AND date = $3 FOR UPDATE", [username, quest.id, date]);
+    const row = rows[0];
+    if (!row?.completed) {
       await client.query("ROLLBACK");
-      return res.send("📜 Награда уже получена или квест не выполнен.");
+      return res.send(`📜 @${username}, квест ещё не выполнен.`);
+    }
+    if (row.claimed) {
+      await client.query("ROLLBACK");
+      return res.send(`📜 @${username}, награда за этот квест уже получена.`);
     }
     await client.query("UPDATE daily_quests SET claimed = true WHERE username = $1 AND quest_id = $2 AND date = $3", [username, quest.id, date]);
     const updated = await client.query("UPDATE users SET coins = coins + $2 WHERE username = $1 RETURNING coins", [username, quest.reward]);
@@ -480,23 +524,44 @@ app.get("/quest/claim", requireKey, async (req, res) => {
   }
 });
 
-app.get("/event", requireKey, (_req, res) => {
-  const event = getActiveEvent();
-  if (!event) return res.send("🌤️ Сейчас особых событий нет. Следи за !событие");
-  res.send(`${event.emoji} СОБЫТИЕ: ${event.name} — ${event.text}!`);
+app.get("/event", requireKey, async (_req, res) => {
+  try {
+    const { event, state } = await getEventState();
+    if (!event) {
+      const next = Math.max(0, Number(state?.next_start || 0) - Date.now());
+      const minutes = Math.ceil(next / 60_000);
+      return res.send(`🌤️ Сейчас событий нет. Следующее событие примерно через ${minutes} мин.`);
+    }
+    const left = Math.max(0, Number(state.active_until) - Date.now());
+    const minutes = Math.max(1, Math.ceil(left / 60_000));
+    res.send(`${event.emoji} СОБЫТИЕ: ${event.name} — ${event.text}! Осталось ~${minutes} мин.`);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Не удалось проверить событие.");
+  }
 });
 
-app.get("/events", requireKey, (_req, res) => {
-  const event = getActiveEvent();
-  res.json({ active: event, duration_minutes: 30, events: [
-    { id: "storm", name: "Шторм", emoji: "🌪️", rarity: "редкая", multiplier: 1.8 },
-    { id: "moon", name: "Лунная ночь", emoji: "🌕", rarity: "эпическая", multiplier: 1.8 },
-    { id: "void", name: "VOID-разлом", emoji: "🕳️", rarity: "мифическая", multiplier: 3 }
-  ] });
+app.get("/events", requireKey, async (_req, res) => {
+  try {
+    const { event, state } = await getEventState();
+    res.json({
+      active: event,
+      duration_minutes: 10,
+      random_interval_minutes: [15, 30, 40, 60],
+      next_start: state?.next_start || null,
+      events: EVENT_DEFINITIONS
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "event_state_error" });
+  }
 });
 
 initDb()
-  .then(() => app.listen(PORT, () => console.log(`Fishing server listening on ${PORT}`)))
+  .then(async () => {
+    await ensureEventState();
+    app.listen(PORT, () => console.log(`Fishing server listening on ${PORT}`));
+  })
   .catch(error => {
     console.error(error);
     process.exit(1);
