@@ -103,7 +103,7 @@ function weightedPickWeight(item, user, location, event = null) {
   const lm = Number(location.multiplier || 1);
   if (i >= 3) weight *= 1 + (lm - 1) * (i - 2) * 0.55;
   else weight *= 1 / lm;
-  if (i >= 3) weight *= 1 + (Number(user.rod_level || 1) - 1) * 0.10;
+  if (i >= 3) {\n    const rodBonuses = { 1: 0, 2: 0.15, 3: 0.35, 4: 0.60, 5: 1.00 };\n    weight *= 1 + (rodBonuses[Number(user.rod_level || 1)] ?? 0);\n  }
   if (event && item.rarity === event.rarity) weight *= event.multiplier;
   return weight;
 }
@@ -284,7 +284,7 @@ async function setUserLocation(req, res) {
   if (!requested) return res.send(`@${username}: ${current.name}`);
   const location = findLocation(requested);
   if (!location) return res.send("Такой локации нет. Используй !локации");
-  if (Number(user.rod_level) < Number(location.min_rod)) return res.send(`@${username}, ${location.name} требует удочку ${location.min_rod}?.`);
+  if (Number(user.rod_level) < Number(location.min_rod)) return res.send(`@${username}, ${location.name} требует удочку ${location.min_rod} уровня.`);
   await pool.query("UPDATE users SET location=$2 WHERE username=$1", [username, location.id]);
   res.send(`@${username} отправился в ${location.name}!`);
 }
