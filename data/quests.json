@@ -1,0 +1,6 @@
+[
+  {"id":"catch_10","type":"catches","target":10,"reward":200,"text":"Поймай 10 рыб"},
+  {"id":"catch_rare","type":"rarity","rarity":"редкая","target":2,"reward":300,"text":"Поймай 2 редкие рыбы"},
+  {"id":"catch_epic","type":"rarity","rarity":"эпическая","target":1,"reward":500,"text":"Поймай 1 эпическую рыбу"},
+  {"id":"catch_20","type":"catches","target":20,"reward":400,"text":"Сделай 20 уловов"}
+]
