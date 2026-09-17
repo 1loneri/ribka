@@ -28,6 +28,15 @@ const shopRods = [
   { id: "rod5", number: 5, level: 5, name: "VOID-удочка", price: 10000 }
 ];
 
+const shopTitles = [
+  { id: "title_fisher", number: 6, name: "Опытный рыбак", price: 50000 },
+  { id: "title_hunter", number: 7, name: "Охотник за сокровищами", price: 150000 },
+  { id: "title_depths", number: 8, name: "Повелитель глубин", price: 400000 },
+  { id: "title_legend", number: 9, name: "Легенда морей", price: 1000000 },
+  { id: "title_ruins", number: 10, name: "Хозяин затонувших руин", price: 2500000 },
+  { id: "title_void", number: 11, name: "Покоритель VOID", price: 5000000 }
+];
+
 const RARITY_ORDER = ["мусор", "обычная", "необычная", "редкая", "эпическая", "легендарная", "мифическая"];
 const EVENT_DEFINITIONS = [
   { id: "storm", name: "Шторм", text: "Редкая рыба встречается чаще", rarity: "редкая", multiplier: 1.8 },
@@ -114,7 +123,7 @@ function weightedPick(list, user, location, event) { return pickByWeight(list.ma
 function locationItems(locationId) { return items.filter(x => x.id.startsWith(`${locationId}_`)); }
 
 async function initDb() {
-  await pool.query(`CREATE TABLE IF NOT EXISTS users(username TEXT PRIMARY KEY,coins INTEGER NOT NULL DEFAULT 0,catches INTEGER NOT NULL DEFAULT 0,streak INTEGER NOT NULL DEFAULT 0,last_catch BIGINT NOT NULL DEFAULT 0,rod_level INTEGER NOT NULL DEFAULT 1,location TEXT NOT NULL DEFAULT 'lake',daily_claim BIGINT NOT NULL DEFAULT 0,daily_streak INTEGER NOT NULL DEFAULT 0); CREATE TABLE IF NOT EXISTS inventory(username TEXT NOT NULL REFERENCES users(username) ON DELETE CASCADE,item_id TEXT NOT NULL,amount INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(username,item_id)); ALTER TABLE users ADD COLUMN IF NOT EXISTS rod_level INTEGER NOT NULL DEFAULT 1; ALTER TABLE users ADD COLUMN IF NOT EXISTS location TEXT NOT NULL DEFAULT 'lake'; ALTER TABLE users ADD COLUMN IF NOT EXISTS daily_claim BIGINT NOT NULL DEFAULT 0; ALTER TABLE users ADD COLUMN IF NOT EXISTS daily_streak INTEGER NOT NULL DEFAULT 0; CREATE TABLE IF NOT EXISTS daily_quests(username TEXT NOT NULL REFERENCES users(username) ON DELETE CASCADE,quest_id TEXT NOT NULL,progress INTEGER NOT NULL DEFAULT 0,completed BOOLEAN NOT NULL DEFAULT false,claimed BOOLEAN NOT NULL DEFAULT false,date TEXT NOT NULL,PRIMARY KEY(username,quest_id,date)); CREATE TABLE IF NOT EXISTS event_state(id INTEGER PRIMARY KEY,event_id TEXT,started_at BIGINT NOT NULL DEFAULT 0,active_until BIGINT NOT NULL DEFAULT 0,next_start BIGINT NOT NULL DEFAULT 0);`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS users(username TEXT PRIMARY KEY,coins INTEGER NOT NULL DEFAULT 0,catches INTEGER NOT NULL DEFAULT 0,streak INTEGER NOT NULL DEFAULT 0,last_catch BIGINT NOT NULL DEFAULT 0,rod_level INTEGER NOT NULL DEFAULT 1,location TEXT NOT NULL DEFAULT 'lake',daily_claim BIGINT NOT NULL DEFAULT 0,daily_streak INTEGER NOT NULL DEFAULT 0,title TEXT NOT NULL DEFAULT ''); CREATE TABLE IF NOT EXISTS inventory(username TEXT NOT NULL REFERENCES users(username) ON DELETE CASCADE,item_id TEXT NOT NULL,amount INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(username,item_id)); ALTER TABLE users ADD COLUMN IF NOT EXISTS rod_level INTEGER NOT NULL DEFAULT 1; ALTER TABLE users ADD COLUMN IF NOT EXISTS location TEXT NOT NULL DEFAULT 'lake'; ALTER TABLE users ADD COLUMN IF NOT EXISTS daily_claim BIGINT NOT NULL DEFAULT 0; ALTER TABLE users ADD COLUMN IF NOT EXISTS daily_streak INTEGER NOT NULL DEFAULT 0; ALTER TABLE users ADD COLUMN IF NOT EXISTS title TEXT NOT NULL DEFAULT ''; CREATE TABLE IF NOT EXISTS daily_quests(username TEXT NOT NULL REFERENCES users(username) ON DELETE CASCADE,quest_id TEXT NOT NULL,progress INTEGER NOT NULL DEFAULT 0,completed BOOLEAN NOT NULL DEFAULT false,claimed BOOLEAN NOT NULL DEFAULT false,date TEXT NOT NULL,PRIMARY KEY(username,quest_id,date)); CREATE TABLE IF NOT EXISTS event_state(id INTEGER PRIMARY KEY,event_id TEXT,started_at BIGINT NOT NULL DEFAULT 0,active_until BIGINT NOT NULL DEFAULT 0,next_start BIGINT NOT NULL DEFAULT 0);`);
 }
 
 async function getUser(username) {
@@ -225,8 +234,9 @@ app.get("/odds", requireKey, async (req, res) => {
 });
 
 app.get("/shop", requireKey, (_req, res) => {
-  const text = shopRods.map(x => `${x.number}. ${x.name} — ${x.price} монет`).join(" | ");
-  res.send(`МАГАЗИН: ${text} • Покупка: !купить <номер>`);
+  const rodsText = shopRods.map(x => x.number + ". " + x.name + " — " + x.price + " монет").join(" | ");
+  const titlesText = shopTitles.map(x => x.number + ". Титул «" + x.name + "» — " + x.price + " монет").join(" | ");
+  res.send("МАГАЗИН: " + rodsText + " | ТИТУЛЫ: " + titlesText + " • Покупка: !купить <номер>");
 });
 
 app.get("/rod", requireKey, async (req, res) => {
@@ -245,6 +255,7 @@ app.get("/buy", requireKey, async (req, res) => {
   const rawNumber = req.query.number ?? req.query.level ?? req.query.rod ?? req.query.item ?? req.query.value ?? req.query.q ?? req.query.query ?? "";
   const number = Number(String(rawNumber).trim());
   const rod = shopRods.find(x => x.number === number || x.level === number);
+  const title = shopTitles.find(x => x.number === number);
   if (!rod) return res.send(`@${username}, такого товара нет. Используй !магазин`);
   const client = await pool.connect();
   try {
@@ -252,6 +263,17 @@ app.get("/buy", requireKey, async (req, res) => {
     await client.query("INSERT INTO users(username) VALUES($1) ON CONFLICT(username) DO NOTHING", [username]);
     const { rows } = await client.query("SELECT * FROM users WHERE username=$1 FOR UPDATE", [username]);
     const user = rows[0];
+    if (title) {
+      const coins = Number(user.coins || 0);
+      if (user.title === title.name) { await client.query("ROLLBACK"); return res.send("@"+username+", у тебя уже есть титул «"+title.name+"»."); }
+      if (coins < title.price) { await client.query("ROLLBACK"); return res.send("@"+username+", не хватает монет на титул «"+title.name+"». Нужно "+title.price+", у тебя "+coins+"."); }
+      const newBalance = coins - title.price;
+      await client.query("UPDATE users SET coins=$1,title=$2 WHERE username=$3", [newBalance, title.name, username]);
+      await client.query("COMMIT");
+      return res.send("@"+username+" получил титул «"+title.name+"» за "+title.price+" монет. Осталось "+newBalance+".");
+    }
+
+    if (!rod) { await client.query("ROLLBACK"); return res.send("@"+username+", такого товара нет. Используй !магазин"); }
     const currentLevel = Number(user.rod_level || 1);
     if (currentLevel >= rod.level) { await client.query("ROLLBACK"); return res.send(`@${username}, у тебя уже есть ${rod.name} или лучше.`); }
     if (rod.level !== currentLevel + 1) {
