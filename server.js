@@ -33,6 +33,13 @@ const pool = new Pool(dbConfig);
 
 const items = JSON.parse(fs.readFileSync(path.join(__dirname, "data", "items.json"), "utf8"));
 
+const shopRods = [
+  { id: "rod2", level: 2, name: "Улучшенная удочка", emoji: "🎣", price: 100 },
+  { id: "rod3", level: 3, name: "Серебряная удочка", emoji: "✨", price: 500 },
+  { id: "rod4", level: 4, name: "Золотая удочка", emoji: "👑", price: 2000 },
+  { id: "rod5", level: 5, name: "VOID-удочка", emoji: "🌌", price: 10000 }
+];
+
 async function initDb() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
@@ -40,7 +47,8 @@ async function initDb() {
       coins INTEGER NOT NULL DEFAULT 0,
       catches INTEGER NOT NULL DEFAULT 0,
       streak INTEGER NOT NULL DEFAULT 0,
-      last_catch BIGINT NOT NULL DEFAULT 0
+      last_catch BIGINT NOT NULL DEFAULT 0,
+      rod_level INTEGER NOT NULL DEFAULT 1
     );
     CREATE TABLE IF NOT EXISTS inventory (
       username TEXT NOT NULL REFERENCES users(username) ON DELETE CASCADE,
@@ -48,6 +56,7 @@ async function initDb() {
       amount INTEGER NOT NULL DEFAULT 0,
       PRIMARY KEY(username, item_id)
     );
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS rod_level INTEGER NOT NULL DEFAULT 1;
   `);
 }
 
@@ -142,6 +151,37 @@ app.get("/balance", requireKey, async (req, res) => {
 app.get("/odds", requireKey, (_req, res) => {
   const text = items.slice().sort((a,b) => b.weight - a.weight).slice(0, 15).map(x => `${x.emoji} ${x.name}: ${x.chance}%`).join(" | ");
   res.send(`🎲 Шансы: ${text}`);
+});
+
+app.get("/shop", requireKey, (_req, res) => {
+  const text = shopRods.map(x => `${x.emoji} ${x.name} — ${x.price} 🪙`).join(" | ");
+  res.send(`🛒 МАГАЗИН: ${text} • Покупка: !купить <номер>`);
+});
+
+app.get("/rod", requireKey, async (req, res) => {
+  try {
+    const user = await getUser(req.query.user);
+    if (!user) return res.status(400).send("Не указан пользователь.");
+    const rod = Number(user.rod_level || 1);
+    const name = rod === 1 ? "Старая удочка" : shopRods.find(x => x.level === rod)?.name || `Удочка уровня ${rod}`;
+    res.send(`🪝 @${user.username}: ${name} • уровень ${rod}`);
+  } catch (error) { console.error(error); res.status(500).send("Не удалось проверить удочку."); }
+});
+
+app.get("/buy", requireKey, async (req, res) => {
+  try {
+    const user = await getUser(req.query.user);
+    if (!user) return res.status(400).send("Не указан пользователь.");
+    const level = Number(req.query.level);
+    const rod = shopRods.find(x => x.level === level);
+    if (!rod) return res.send(`🛒 @${user.username}, такого товара нет. Используй !магазин`);
+    const currentLevel = Number(user.rod_level || 1);
+    if (currentLevel >= rod.level) return res.send(`🪝 @${user.username}, у тебя уже есть ${rod.name} или лучше.`);
+    if (rod.level !== currentLevel + 1) return res.send(`🪝 @${user.username}, сначала купи предыдущую удочку.`);
+    if (Number(user.coins) < rod.price) return res.send(`🪙 @${user.username}, не хватает монет. Нужно ${rod.price} 🪙, у тебя ${user.coins} 🪙.`);
+    const { rows } = await pool.query(`UPDATE users SET coins = coins - $1, rod_level = $2 WHERE username = $3 RETURNING coins`, [rod.price, rod.level, user.username]);
+    res.send(`🎉 @${user.username} купила ${rod.emoji} ${rod.name} за ${rod.price} 🪙! Осталось ${rows[0].coins} 🪙.`);
+  } catch (error) { console.error(error); res.status(500).send("Не удалось совершить покупку."); }
 });
 
 initDb().then(() => app.listen(PORT, () => console.log(`Fishing server listening on ${PORT}`))).catch(error => { console.error(error); process.exit(1); });
