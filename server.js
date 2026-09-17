@@ -333,6 +333,22 @@ app.get("/top", requireKey, async (req, res) => {
   res.send(`ТОП по ${labels[type] || labels.coins}: ${text || "пока пусто"} • @${user || "тебе"}: место ${place}`);
 });
 
+app.get("/titles", requireKey, async (_req, res) => {
+  const { rows } = await pool.query(
+    "SELECT title,username FROM users WHERE title IS NOT NULL AND title <> '' ORDER BY title ASC, username ASC"
+  );
+  if (!rows.length) return res.send("ТИТУЛЫ: пока пусто");
+  const grouped = new Map();
+  for (const row of rows) {
+    if (!grouped.has(row.title)) grouped.set(row.title, []);
+    grouped.get(row.title).push("@" + row.username);
+  }
+  const text = [...grouped.entries()]
+    .map(([title, users]) => "«" + title + "»: " + users.join(", "))
+    .join(" | ");
+  res.send("ТИТУЛЫ: " + text);
+});
+
 app.get("/bonus", requireKey, async (req, res) => {
   const username = cleanUsername(req.query.user);
   const user = await getUser(username);
