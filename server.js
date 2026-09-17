@@ -256,7 +256,7 @@ app.get("/buy", requireKey, async (req, res) => {
   const number = Number(String(rawNumber).trim());
   const rod = shopRods.find(x => x.number === number || x.level === number);
   const title = shopTitles.find(x => x.number === number);
-  if (!rod) return res.send(`@${username}, такого товара нет. Используй !магазин`);
+  if (!rod && !title) return res.send(`@${username}, такого товара нет. Используй !магазин`);
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
