@@ -29,8 +29,8 @@ const shopRods = [
 ];
 
 const shopTitles = [
-  { id: "title_legend", number: 7, name: "Легенда морей", price: 1000000 },
-  { id: "title_void", number: 8, name: "Покоритель VOID", price: 5000000 }
+  { id: "title_legend", number: 6, name: "Легенда морей", price: 1000000 },
+  { id: "title_void", number: 7, name: "Покоритель VOID", price: 5000000 }
 ]
 
 const RARITY_ORDER = ["мусор", "обычная", "необычная", "редкая", "эпическая", "легендарная", "мифическая"];
@@ -232,7 +232,7 @@ app.get("/odds", requireKey, async (req, res) => {
 app.get("/shop", requireKey, (_req, res) => {
   const rodsText = shopRods.map(x => x.number + ". " + x.name + " — " + x.price + " монет").join(" | ");
   const titlesText = shopTitles.map(x => x.number + ". Титул «" + x.name + "» — " + x.price + " монет").join(" | ");
-  res.send("МАГАЗИН: " + rodsText + " | ТИТУЛЫ: " + titlesText + " • Покупка: !купить <номер>");
+  res.send("МАГАЗ: " + rodsText + " | ТИТУЛ: " + titlesText + " • !купить <номер>");
 });
 
 app.get("/rod", requireKey, async (req, res) => {
