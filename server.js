@@ -33,11 +33,13 @@ const pool = new Pool(dbConfig);
 
 const items = JSON.parse(fs.readFileSync(path.join(__dirname, "data", "items.json"), "utf8"));
 
+// Номер товара в !магазин начинается с 1.
+// Уровень удочки в базе начинается с 2, поэтому номер товара и level — разные значения.
 const shopRods = [
-  { id: "rod2", level: 2, name: "Улучшенная удочка", emoji: "🎣", price: 100 },
-  { id: "rod3", level: 3, name: "Серебряная удочка", emoji: "✨", price: 500 },
-  { id: "rod4", level: 4, name: "Золотая удочка", emoji: "👑", price: 2000 },
-  { id: "rod5", level: 5, name: "VOID-удочка", emoji: "🌌", price: 10000 }
+  { id: "rod2", number: 1, level: 2, name: "Улучшенная удочка", emoji: "🎣", price: 100 },
+  { id: "rod3", number: 2, level: 3, name: "Серебряная удочка", emoji: "✨", price: 500 },
+  { id: "rod4", number: 3, level: 4, name: "Золотая удочка", emoji: "👑", price: 2000 },
+  { id: "rod5", number: 4, level: 5, name: "VOID-удочка", emoji: "🌌", price: 10000 }
 ];
 
 async function initDb() {
@@ -154,7 +156,7 @@ app.get("/odds", requireKey, (_req, res) => {
 });
 
 app.get("/shop", requireKey, (_req, res) => {
-  const text = shopRods.map(x => `${x.emoji} ${x.name} — ${x.price} 🪙`).join(" | ");
+  const text = shopRods.map(x => `${x.number}. ${x.emoji} ${x.name} — ${x.price} 🪙`).join(" | ");
   res.send(`🛒 МАГАЗИН: ${text} • Покупка: !купить <номер>`);
 });
 
@@ -169,19 +171,64 @@ app.get("/rod", requireKey, async (req, res) => {
 });
 
 app.get("/buy", requireKey, async (req, res) => {
+  const username = cleanUsername(req.query.user);
+  if (!username) return res.status(400).send("Не указан пользователь.");
+
+  // Поддерживаем !купить 1, 2, 3, 4. Также принимаем level=2..5 для совместимости.
+  const requested = String(req.query.number ?? req.query.level ?? "").trim();
+  const number = Number(requested);
+  const rod = shopRods.find(x => x.number === number || x.level === number);
+
+  if (!rod) {
+    return res.send(`🛒 @${username}, такого товара нет. Используй !магазин`);
+  }
+
+  const client = await pool.connect();
   try {
-    const user = await getUser(req.query.user);
-    if (!user) return res.status(400).send("Не указан пользователь.");
-    const level = Number(req.query.level);
-    const rod = shopRods.find(x => x.level === level);
-    if (!rod) return res.send(`🛒 @${user.username}, такого товара нет. Используй !магазин`);
+    await client.query("BEGIN");
+
+    await client.query("INSERT INTO users(username) VALUES ($1) ON CONFLICT(username) DO NOTHING", [username]);
+
+    // Блокируем строку пользователя, чтобы две одновременные команды не позволили купить товар дважды.
+    const { rows } = await client.query("SELECT * FROM users WHERE username = $1 FOR UPDATE", [username]);
+    const user = rows[0];
     const currentLevel = Number(user.rod_level || 1);
-    if (currentLevel >= rod.level) return res.send(`🪝 @${user.username}, у тебя уже есть ${rod.name} или лучше.`);
-    if (rod.level !== currentLevel + 1) return res.send(`🪝 @${user.username}, сначала купи предыдущую удочку.`);
-    if (Number(user.coins) < rod.price) return res.send(`🪙 @${user.username}, не хватает монет. Нужно ${rod.price} 🪙, у тебя ${user.coins} 🪙.`);
-    const { rows } = await pool.query(`UPDATE users SET coins = coins - $1, rod_level = $2 WHERE username = $3 RETURNING coins`, [rod.price, rod.level, user.username]);
-    res.send(`🎉 @${user.username} купила ${rod.emoji} ${rod.name} за ${rod.price} 🪙! Осталось ${rows[0].coins} 🪙.`);
-  } catch (error) { console.error(error); res.status(500).send("Не удалось совершить покупку."); }
+
+    if (currentLevel >= rod.level) {
+      await client.query("ROLLBACK");
+      return res.send(`🪝 @${username}, у тебя уже есть ${rod.name} или лучше.`);
+    }
+
+    if (rod.level !== currentLevel + 1) {
+      const nextRod = shopRods.find(x => x.level === currentLevel + 1);
+      await client.query("ROLLBACK");
+      return res.send(nextRod
+        ? `🪝 @${username}, сначала купи №${nextRod.number} — ${nextRod.name} за ${nextRod.price} 🪙.`
+        : `🪝 @${username}, у тебя уже максимальная удочка.`
+      );
+    }
+
+    const coins = Number(user.coins || 0);
+    if (coins < rod.price) {
+      await client.query("ROLLBACK");
+      return res.send(`🪙 @${username}, не хватает монет. Нужно ${rod.price} 🪙, у тебя ${coins} 🪙.`);
+    }
+
+    const newBalance = coins - rod.price;
+    await client.query(
+      "UPDATE users SET coins = $1, rod_level = $2 WHERE username = $3",
+      [newBalance, rod.level, username]
+    );
+
+    await client.query("COMMIT");
+    return res.send(`🎉 @${username} купила №${rod.number} ${rod.emoji} ${rod.name} за ${rod.price} 🪙! Осталось ${newBalance} 🪙.`);
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error(error);
+    return res.status(500).send("Не удалось совершить покупку. Попробуй ещё раз.");
+  } finally {
+    client.release();
+  }
 });
 
 initDb().then(() => app.listen(PORT, () => console.log(`Fishing server listening on ${PORT}`))).catch(error => { console.error(error); process.exit(1); });
