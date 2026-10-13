@@ -33,6 +33,12 @@ const shopTitles = [
   { id: "title_void", number: 7, name: "Покоритель VOID", price: 5000000 }
 ]
 
+const shopBaits = [
+  { number: 8, id: "gold", name: "Золотая наживка", price: 500, chance: 0.05, minFine: 50, maxFine: 150, fish: "Золотой левиафан", reward: 4000 },
+  { number: 9, id: "abyss", name: "Бездонная наживка", price: 1000, chance: 0.02, minFine: 100, maxFine: 300, fish: "Древний кракен", reward: 12000 },
+  { number: 10, id: "cursed", name: "Проклятая наживка", price: 3000, chance: 0.005, minFine: 300, maxFine: 900, fish: "Повелитель бездны", reward: 50000 }
+];
+
 const RARITY_ORDER = ["мусор", "обычная", "необычная", "редкая", "эпическая", "легендарная", "мифическая"];
 const EVENT_DEFINITIONS = [
   { id: "storm", name: "Шторм", text: "Редкая рыба встречается чаще", rarity: "редкая", multiplier: 1.8 },
@@ -119,7 +125,7 @@ function weightedPick(list, user, location, event) { return pickByWeight(list.ma
 function locationItems(locationId) { return items.filter(x => x.id.startsWith(`${locationId}_`)); }
 
 async function initDb() {
-  await pool.query(`CREATE TABLE IF NOT EXISTS users(username TEXT PRIMARY KEY,coins INTEGER NOT NULL DEFAULT 0,catches INTEGER NOT NULL DEFAULT 0,streak INTEGER NOT NULL DEFAULT 0,last_catch BIGINT NOT NULL DEFAULT 0,rod_level INTEGER NOT NULL DEFAULT 1,location TEXT NOT NULL DEFAULT 'lake',daily_claim BIGINT NOT NULL DEFAULT 0,daily_streak INTEGER NOT NULL DEFAULT 0,title TEXT NOT NULL DEFAULT ''); CREATE TABLE IF NOT EXISTS inventory(username TEXT NOT NULL REFERENCES users(username) ON DELETE CASCADE,item_id TEXT NOT NULL,amount INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(username,item_id)); ALTER TABLE users ADD COLUMN IF NOT EXISTS rod_level INTEGER NOT NULL DEFAULT 1; ALTER TABLE users ADD COLUMN IF NOT EXISTS location TEXT NOT NULL DEFAULT 'lake'; ALTER TABLE users ADD COLUMN IF NOT EXISTS daily_claim BIGINT NOT NULL DEFAULT 0; ALTER TABLE users ADD COLUMN IF NOT EXISTS daily_streak INTEGER NOT NULL DEFAULT 0; ALTER TABLE users ADD COLUMN IF NOT EXISTS title TEXT NOT NULL DEFAULT ''; CREATE TABLE IF NOT EXISTS daily_quests(username TEXT NOT NULL REFERENCES users(username) ON DELETE CASCADE,quest_id TEXT NOT NULL,progress INTEGER NOT NULL DEFAULT 0,completed BOOLEAN NOT NULL DEFAULT false,claimed BOOLEAN NOT NULL DEFAULT false,date TEXT NOT NULL,PRIMARY KEY(username,quest_id,date)); CREATE TABLE IF NOT EXISTS event_state(id INTEGER PRIMARY KEY,event_id TEXT,started_at BIGINT NOT NULL DEFAULT 0,active_until BIGINT NOT NULL DEFAULT 0,next_start BIGINT NOT NULL DEFAULT 0);`);
+  await pool.query(`CREATE TABLE IF NOT EXISTS users(username TEXT PRIMARY KEY,coins INTEGER NOT NULL DEFAULT 0,catches INTEGER NOT NULL DEFAULT 0,streak INTEGER NOT NULL DEFAULT 0,last_catch BIGINT NOT NULL DEFAULT 0,rod_level INTEGER NOT NULL DEFAULT 1,location TEXT NOT NULL DEFAULT 'lake',daily_claim BIGINT NOT NULL DEFAULT 0,daily_streak INTEGER NOT NULL DEFAULT 0,title TEXT NOT NULL DEFAULT ''); CREATE TABLE IF NOT EXISTS inventory(username TEXT NOT NULL REFERENCES users(username) ON DELETE CASCADE,item_id TEXT NOT NULL,amount INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(username,item_id)); ALTER TABLE users ADD COLUMN IF NOT EXISTS rod_level INTEGER NOT NULL DEFAULT 1; ALTER TABLE users ADD COLUMN IF NOT EXISTS location TEXT NOT NULL DEFAULT 'lake'; ALTER TABLE users ADD COLUMN IF NOT EXISTS daily_claim BIGINT NOT NULL DEFAULT 0; ALTER TABLE users ADD COLUMN IF NOT EXISTS daily_streak INTEGER NOT NULL DEFAULT 0; ALTER TABLE users ADD COLUMN IF NOT EXISTS title TEXT NOT NULL DEFAULT ''; CREATE TABLE IF NOT EXISTS user_baits(username TEXT NOT NULL REFERENCES users(username) ON DELETE CASCADE,bait_id TEXT NOT NULL,amount INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(username,bait_id)); CREATE TABLE IF NOT EXISTS daily_quests(username TEXT NOT NULL REFERENCES users(username) ON DELETE CASCADE,quest_id TEXT NOT NULL,progress INTEGER NOT NULL DEFAULT 0,completed BOOLEAN NOT NULL DEFAULT false,claimed BOOLEAN NOT NULL DEFAULT false,date TEXT NOT NULL,PRIMARY KEY(username,quest_id,date)); CREATE TABLE IF NOT EXISTS event_state(id INTEGER PRIMARY KEY,event_id TEXT,started_at BIGINT NOT NULL DEFAULT 0,active_until BIGINT NOT NULL DEFAULT 0,next_start BIGINT NOT NULL DEFAULT 0);`);
 }
 
 async function getUser(username) {
@@ -232,7 +238,47 @@ app.get("/odds", requireKey, async (req, res) => {
 app.get("/shop", requireKey, (_req, res) => {
   const rodsText = shopRods.map(x => x.number + ". " + x.name + " — " + x.price + " монет").join(" | ");
   const titlesText = shopTitles.map(x => x.number + ". Титул «" + x.name + "» — " + x.price + " монет").join(" | ");
-  res.send("МАГАЗ: " + rodsText + " | ТИТУЛ: " + titlesText + " • !купить <номер>");
+  const baitsText = shopBaits.map(x => x.number + ". " + x.name + " — " + x.price + " монет (" + (x.chance * 100) + "%)").join(" | ");
+  res.send("МАГАЗ: " + rodsText + " | ТИТУЛ: " + titlesText + " | НАЖИВКА: " + baitsText + " • !купить <номер>");
+});
+
+app.get("/bait", requireKey, async (req, res) => {
+  const username = cleanUsername(req.query.user);
+  if (!username) return res.status(400).send("Не указан пользователь.");
+  const raw = String(req.query.number ?? req.query.level ?? req.query.item ?? "").trim();
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query("INSERT INTO users(username) VALUES($1) ON CONFLICT(username) DO NOTHING", [username]);
+    const { rows } = await client.query("SELECT * FROM users WHERE username=$1 FOR UPDATE", [username]);
+    const owned = await client.query("SELECT bait_id,amount FROM user_baits WHERE username=$1 AND amount>0", [username]);
+    if (!raw) {
+      await client.query("ROLLBACK");
+      return res.send("@" + username + ", наживки: " + (owned.rows.map(x => (shopBaits.find(b => b.id === x.bait_id)?.name || x.bait_id) + " x" + x.amount).join(" | ") || "нет") + ". Используй !наживка <номер>.");
+    }
+    const bait = shopBaits.find(x => x.number === Number(raw));
+    if (!bait) { await client.query("ROLLBACK"); return res.send("@" + username + ", такой наживки нет. Номера: 8, 9, 10."); }
+    if (!owned.rows.some(x => x.bait_id === bait.id)) { await client.query("ROLLBACK"); return res.send("@" + username + ", сначала купи наживку: !купить " + bait.number); }
+    const now = Date.now();
+    const last = Number(rows[0].last_catch || 0);
+    if (now - last < 20000) { await client.query("ROLLBACK"); return res.send("@" + username + ", подожди ещё " + Math.ceil((20000 - (now - last)) / 1000) + " сек."); }
+    await client.query("UPDATE user_baits SET amount=amount-1 WHERE username=$1 AND bait_id=$2", [username,bait.id]);
+    if (Math.random() < bait.chance) {
+      await client.query("UPDATE users SET coins=coins+$1,catches=catches+1,last_catch=$2 WHERE username=$3", [bait.reward,now,username]);
+      await client.query("INSERT INTO inventory(username,item_id,amount) VALUES($1,$2,1) ON CONFLICT(username,item_id) DO UPDATE SET amount=inventory.amount+1", [username,"bait_"+bait.id]);
+      await client.query("COMMIT");
+      return res.send("@" + username + " поймал " + bait.fish + "! Шанс " + (bait.chance*100) + "%. Награда +" + bait.reward + " монет.");
+    }
+    const fine = bait.minFine + Math.floor(Math.random() * (bait.maxFine - bait.minFine + 1));
+    const actualFine = Math.min(Number(rows[0].coins || 0), fine);
+    await client.query("UPDATE users SET coins=coins-$1,last_catch=$2 WHERE username=$3", [actualFine,now,username]);
+    await client.query("COMMIT");
+    return res.send("@" + username + ", крутая рыба сорвалась! Наживка потрачена, штраф -" + actualFine + " монет.");
+  } catch(e) {
+    try { await client.query("ROLLBACK"); } catch {}
+    console.error(e);
+    return res.status(500).send("Ошибка наживки. Попробуй позже.");
+  } finally { client.release(); }
 });
 
 app.get("/rod", requireKey, async (req, res) => {
@@ -252,13 +298,22 @@ app.get("/buy", requireKey, async (req, res) => {
   const number = Number(String(rawNumber).trim());
   const rod = shopRods.find(x => x.number === number || x.level === number);
   const title = shopTitles.find(x => x.number === number);
-  if (!rod && !title) return res.send(`@${username}, такого товара нет. Используй !магазин`);
+  const bait = shopBaits.find(x => x.number === number);
+  if (!rod && !title && !bait) return res.send(`@${username}, такого товара нет. Используй !магазин`);
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
     await client.query("INSERT INTO users(username) VALUES($1) ON CONFLICT(username) DO NOTHING", [username]);
     const { rows } = await client.query("SELECT * FROM users WHERE username=$1 FOR UPDATE", [username]);
     const user = rows[0];
+    if (bait) {
+      const coins = Number(user.coins || 0);
+      if (coins < bait.price) { await client.query("ROLLBACK"); return res.send("@" + username + ", не хватает монет. Нужно " + bait.price + ", у тебя " + coins + "."); }
+      await client.query("UPDATE users SET coins=coins-$1 WHERE username=$2", [bait.price, username]);
+      await client.query("INSERT INTO user_baits(username,bait_id,amount) VALUES($1,$2,1) ON CONFLICT(username,bait_id) DO UPDATE SET amount=user_baits.amount+1", [username,bait.id]);
+      await client.query("COMMIT");
+      return res.send("@" + username + " купил " + bait.name + " за " + bait.price + " монет. Используй !наживка " + bait.number);
+    }
     if (title) {
       const coins = Number(user.coins || 0);
       if (user.title === title.name) { await client.query("ROLLBACK"); return res.send("@"+username+", у тебя уже есть титул «"+title.name+"»."); }
