@@ -34,9 +34,9 @@ const shopTitles = [
 ]
 
 const shopBaits = [
-  { number: 8, id: "gold", name: "Золотая наживка", price: 500, chance: 0.05, minFine: 50, maxFine: 150, fish: "Золотой левиафан", reward: 4000 },
-  { number: 9, id: "abyss", name: "Бездонная наживка", price: 1000, chance: 0.02, minFine: 100, maxFine: 300, fish: "Древний кракен", reward: 12000 },
-  { number: 10, id: "cursed", name: "Проклятая наживка", price: 3000, chance: 0.005, minFine: 300, maxFine: 900, fish: "Повелитель бездны", reward: 50000 }
+  { number: 8, id: "gold", name: "Золотая наживка", price: 500, chance: 0.05, minFine: 500, maxFine: 1000, fish: "Золотой левиафан", reward: 4000 },
+  { number: 9, id: "abyss", name: "Бездонная наживка", price: 1000, chance: 0.02, minFine: 1500, maxFine: 3000, fish: "Древний кракен", reward: 12000 },
+  { number: 10, id: "cursed", name: "Проклятая наживка", price: 3000, chance: 0.005, minFine: 5000, maxFine: 10000, fish: "Повелитель бездны", reward: 50000 }
 ];
 
 const RARITY_ORDER = ["мусор", "обычная", "необычная", "редкая", "эпическая", "легендарная", "мифическая"];
