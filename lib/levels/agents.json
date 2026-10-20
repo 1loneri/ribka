@@ -1,0 +1,147 @@
+[
+  {
+    "id": "astra",
+    "name": "Astra",
+    "image": "/valorant/agents/astra.webp"
+  },
+  {
+    "id": "breach",
+    "name": "Breach",
+    "image": "/valorant/agents/breach.webp"
+  },
+  {
+    "id": "brimstone",
+    "name": "Brimstone",
+    "image": "/valorant/agents/brimstone.webp"
+  },
+  {
+    "id": "chamber",
+    "name": "Chamber",
+    "image": "/valorant/agents/chamber.webp"
+  },
+  {
+    "id": "clove",
+    "name": "Clove",
+    "image": "/valorant/agents/clove.webp"
+  },
+  {
+    "id": "cypher",
+    "name": "Cypher",
+    "image": "/valorant/agents/cypher.webp"
+  },
+  {
+    "id": "deadlock",
+    "name": "Deadlock",
+    "image": "/valorant/agents/deadlock.webp"
+  },
+  {
+    "id": "fade",
+    "name": "Fade",
+    "image": "/valorant/agents/fade.webp"
+  },
+  {
+    "id": "gekko",
+    "name": "Gekko",
+    "image": "/valorant/agents/gekko.webp"
+  },
+  {
+    "id": "harbor",
+    "name": "Harbor",
+    "image": "/valorant/agents/harbor.webp"
+  },
+  {
+    "id": "iso",
+    "name": "Iso",
+    "image": "/valorant/agents/iso.webp"
+  },
+  {
+    "id": "jett",
+    "name": "Jett",
+    "image": "/valorant/agents/jett.webp"
+  },
+  {
+    "id": "kay-o",
+    "name": "KAY/O",
+    "image": "/valorant/agents/kay-o.webp"
+  },
+  {
+    "id": "killjoy",
+    "name": "Killjoy",
+    "image": "/valorant/agents/killjoy.webp"
+  },
+  {
+    "id": "miks",
+    "name": "Miks",
+    "image": "/valorant/agents/miks.webp"
+  },
+  {
+    "id": "neon",
+    "name": "Neon",
+    "image": "/valorant/agents/neon.webp"
+  },
+  {
+    "id": "omen",
+    "name": "Omen",
+    "image": "/valorant/agents/omen.webp"
+  },
+  {
+    "id": "phoenix",
+    "name": "Phoenix",
+    "image": "/valorant/agents/phoenix.webp"
+  },
+  {
+    "id": "raze",
+    "name": "Raze",
+    "image": "/valorant/agents/raze.webp"
+  },
+  {
+    "id": "reyna",
+    "name": "Reyna",
+    "image": "/valorant/agents/reyna.webp"
+  },
+  {
+    "id": "sage",
+    "name": "Sage",
+    "image": "/valorant/agents/sage.webp"
+  },
+  {
+    "id": "skye",
+    "name": "Skye",
+    "image": "/valorant/agents/skye.webp"
+  },
+  {
+    "id": "sova",
+    "name": "Sova",
+    "image": "/valorant/agents/sova.webp"
+  },
+  {
+    "id": "tejo",
+    "name": "Tejo",
+    "image": "/valorant/agents/tejo.webp"
+  },
+  {
+    "id": "veto",
+    "name": "Veto",
+    "image": "/valorant/agents/veto.webp"
+  },
+  {
+    "id": "viper",
+    "name": "Viper",
+    "image": "/valorant/agents/viper.webp"
+  },
+  {
+    "id": "vyse",
+    "name": "Vyse",
+    "image": "/valorant/agents/vyse.webp"
+  },
+  {
+    "id": "waylay",
+    "name": "Waylay",
+    "image": "/valorant/agents/waylay.webp"
+  },
+  {
+    "id": "yoru",
+    "name": "Yoru",
+    "image": "/valorant/agents/yoru.webp"
+  }
+]

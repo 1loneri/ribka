@@ -1,0 +1,33 @@
+[
+  {
+    "id": "lake",
+    "name": "Озеро",
+    "min_rod": 1,
+    "multiplier": 1
+  },
+  {
+    "id": "sea",
+    "name": "Море",
+    "min_rod": 2,
+    "multiplier": 1.15
+  },
+  {
+    "id": "deep",
+    "name": "Глубины",
+    "min_rod": 3,
+    "multiplier": 1.35
+  },
+  {
+    "id": "ruins",
+    "name": "Затонувшие руины",
+    "min_rod": 4,
+    "multiplier": 1.55
+  },
+  {
+    "id": "void",
+    "name": "VOID",
+    "min_rod": 5,
+    "multiplier": 1.7
+  }
+]
+

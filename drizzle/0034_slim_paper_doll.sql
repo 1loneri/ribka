@@ -1,0 +1,1 @@
+ALTER TABLE `community_mystery_events` ADD `nonce` text DEFAULT '' NOT NULL;

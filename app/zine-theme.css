@@ -1,0 +1,113 @@
+@font-face{font-family:'Zine Sans';src:url('/fonts/overlay/manrope.ttf') format('truetype');font-weight:200 800;font-display:swap}
+@font-face{font-family:'Zine Display';src:url('/fonts/overlay/oswald.ttf') format('truetype');font-weight:200 700;font-display:swap}
+@font-face{font-family:'Zine Hand';src:url('/fonts/overlay/caveat.ttf') format('truetype');font-weight:400 700;font-display:swap}
+:root{--bg:#101011;--surface:#1c1b1ce8;--text:#eeeae2;--muted:#aaa6a1;--accent:#b83934;--glass-line:#dbd4c127}
+body.dropzone-v2{background-color:#101011;background-image:linear-gradient(#1010112e,#10101157),url('/homepage/ornate-dark-v1.webp');background-size:auto,cover;background-position:center top;background-repeat:no-repeat;background-attachment:fixed;color:#eeeae2;font-family:'Zine Sans',Arial,sans-serif}
+.dropzone-v2::selection{background:#8f2c2a;color:#fff}
+.dropzone-v2 .site-navigation{border-radius:21px;border-color:#d8d3c429;background:#171718df;box-shadow:inset 0 1px #e7e0d012,0 8px 30px #0004}
+.dropzone-v2 .site-brand{font-family:'Zine Sans',Arial,sans-serif;font-size:22px;font-weight:800;letter-spacing:-1.1px;transform:none;text-transform:none}
+.dropzone-v2 .site-nav-link{border-radius:17px;font-size:12px;color:#c3bfb9}
+.dropzone-v2 .site-nav-link.is-current{background:#d8d3c8;color:#191819;border-color:#e7e1d1;box-shadow:inset 0 -3px #a5a09342;transform:rotate(-1deg)}
+.dropzone-v2 .site-nav-link.is-current:hover{background:#ebe7dc;color:#111}
+.dropzone-v2 .site-account,.dropzone-v2 .site-login{background:#35333299;border-color:#d0c8b72e;box-shadow:inset 0 1px #fff1}
+.dropzone-v2 .site-account-avatar{background:#dad3c71a;border-color:#d9d2c62e;color:#ebe5da}
+.dropzone-v2 .site-account-name strong{color:#eee8dd}
+.dropzone-v2 .site-account-name small{color:#b2ada6}
+.dropzone-v2 .page-heading h1,.dropzone-v2 .community-heading h1,.dropzone-v2 .feedback-heading h1,.dropzone-v2 .review-heading h1{font-family:'Zine Sans',Arial,sans-serif;text-transform:none;letter-spacing:-.035em;font-weight:600}
+.dropzone-v2 .section-label,.dropzone-v2 .community-kicker,.dropzone-v2 .feedback-kicker{font-family:'Zine Sans',Arial,sans-serif;font-size:12px;letter-spacing:.05em;color:#bdb5a8}
+.dropzone-v2 :is(.giveaway-spotlight,.giveaway-ticket,.feedback-card,.community-room-card,.community-mystery-card,.community-poll-panel){border-color:#d2c9b62c;border-radius:9px;box-shadow:inset 0 1px #e8dfcf08;background-color:#19191bf0}
+.dropzone-v2 :is(.community-tabs,.feedback-toolbar){border-color:#d2c9b62c}
+.dropzone-v2 :is(.primary,.feedback-primary,.community-primary){background:#a72f2b;color:#fff2e7;border-color:#c7524638;border-radius:5px;box-shadow:inset 0 1px #ecc9aa1a}
+.dropzone-v2 :is(.primary,.feedback-primary,.community-primary):hover{background:#b83c34}
+/* Homepage: photocopy paper, taped prints and handwritten section names. */
+.dropzone-v2 main.war-home{font-family:'Zine Sans',Arial,sans-serif;padding-top:30px}
+.dropzone-v2 .war-home .home-hero{background:#202022;border:1px solid #d3c9b83b;border-radius:13px;min-height:425px;box-shadow:0 12px 32px #0004,inset 0 1px #eee7d51a;isolation:isolate}
+.dropzone-v2 .war-home .home-hero-1{background:#242426}
+.dropzone-v2 .war-home .home-hero-2{background:#241c1d}
+.dropzone-v2 .war-home .home-hero-paper{background-image:url('/homepage/ornate-dark-v1.webp');background-position:center;background-size:cover;opacity:.09}
+.dropzone-v2 .war-home .home-hero-paper:before{display:none;width:70%;height:165%;left:49%;bottom:-28%;border:1px solid #cfc7b01f;border-radius:0;transform:rotate(13deg);background:#c8c1b706}
+.dropzone-v2 .war-home .home-hero-orbit{border:0;border-top:2px solid #bdb9a450;border-bottom:1px solid #bdb9a425;right:3%;top:26%;width:47%;height:50%;border-radius:48%;transform:rotate(-23deg)}
+.dropzone-v2 .war-home .home-hero-orbit:after{content:'';position:absolute;width:95%;height:100%;top:11px;left:-7px;border-top:1px solid #a9a39050;border-radius:50%;transform:rotate(4deg)}
+.dropzone-v2 .war-home .home-hero-copy{min-height:425px;padding:42px 0 81px 52px;max-width:59%}
+.dropzone-v2 .war-home .home-hero h1{font-family:'Zine Sans',Arial,sans-serif;font-size:clamp(39px,4.1vw,57px);font-weight:650;text-transform:none;letter-spacing:-.05em;line-height:1.05;margin:8px 0 24px;color:#f0eadf;transform:none;transform-origin:left center;text-shadow:none}
+.dropzone-v2 .war-home .home-hero-copy>p{font-size:12px;line-height:1.9;color:#beb8ad;max-width:335px}
+.dropzone-v2 .war-home .home-hero-link{font-size:12px;color:#e8e0d1;border-color:#b9ab95;gap:22px}
+.dropzone-v2 .war-home .home-art-word{display:none}
+.dropzone-v2 .war-home .home-hero-art>.image-video,.dropzone-v2 .war-home .home-hero-art>.image-prize{border-radius:12px;border:1px solid #ffffff20;outline:none;box-shadow:0 12px 25px #0003;object-position:62% center}
+.dropzone-v2 .war-home .home-hero-art>.image-video{filter:grayscale(.95) contrast(1.07);width:83%;height:80%;bottom:40px}
+.dropzone-v2 .war-home .home-hero-art>.image-prize{filter:saturate(.85) contrast(1.03);border-color:#ffffff20;width:72%;height:88%;bottom:30px}
+.dropzone-v2 .war-home .home-hero-star{filter:grayscale(1);opacity:.55;width:62px;height:62px;top:44px}
+.dropzone-v2 .war-home .home-slide-controls>button>span{background:#d2c7ae42;height:2px;border-radius:0}
+.dropzone-v2 .war-home .home-slide-controls>button[aria-pressed=true]>span{background:#eae2cf}
+.dropzone-v2 .war-home .home-slide-controls>small{color:#aaa18f}
+.dropzone-v2 .war-home .home-index{margin:27px 0 30px;color:#9f998d}
+.dropzone-v2 .war-home .home-section-title{margin-bottom:22px;min-height:37px}
+.dropzone-v2 .war-home .home-section-title h2{position:relative;font-family:'Zine Sans',Arial,sans-serif;font-size:23px;font-weight:600;line-height:1.3;letter-spacing:-.04em;transform:none;color:#e6e1d4}
+.dropzone-v2 .war-home .home-section-title h2:after{content:none;position:absolute;height:4px;width:66%;left:1px;bottom:-8px;background:#9f3430;clip-path:polygon(0 35%,90% 0,100% 45%,35% 100%,2% 80%);transform:rotate(-1deg)}
+.dropzone-v2 .war-home .home-feature-card{border:1px solid #b2a98d60;border-radius:7px;background:#161616;box-shadow:3px 4px 0 #0004}
+.dropzone-v2 .war-home .home-feature-card:after{background:linear-gradient(transparent 40%,#121112e8 86%)}
+.dropzone-v2 .war-home .home-feature-card.is-video>img{filter:saturate(.55) contrast(1.08);object-position:50% center}
+.dropzone-v2 .war-home .home-feature-card h3{font-family:'Zine Sans',Arial,sans-serif;text-transform:none;font-size:22px;letter-spacing:-.04em;font-weight:600;color:#eee7d9}
+.dropzone-v2 .war-home .home-card-tag{background:#18171999;color:#ddd4c2;border:1px solid #ffffff20;box-shadow:none;padding:4px 7px;font-size:8px;letter-spacing:.05em}
+.dropzone-v2 .war-home .home-feature-bottom{border-radius:5px;background:#d9d1bf;color:#211e1d;box-shadow:inset 0 -3px #a89e8855;font-size:12px}
+.dropzone-v2 .war-home .home-feature-bottom:hover{background:#eee5ce}
+.dropzone-v2 .war-home .home-play-stamp{border-radius:50%;background:#111b;border-color:#e0d5b9aa;color:#eee4cb}
+.dropzone-v2 .war-home .home-quick-link{background:#202022;border:1px solid #c5bca12b;border-radius:6px;min-height:61px;box-shadow:inset 0 1px #eee5d008}
+.dropzone-v2 .war-home .home-quick-link.tone-0{background:#2e2525;border-left:3px solid #9c3d35}
+.dropzone-v2 .war-home .home-quick-link.tone-1{background:#282628}
+.dropzone-v2 .war-home .home-quick-link.tone-2{background:#252527}
+.dropzone-v2 .war-home .home-quick-link.tone-3{background:#222224}
+.dropzone-v2 .war-home .home-quick-link.tone-4{background:#1c1c1e}
+.dropzone-v2 .war-home .home-quick-link:hover{background:#36312f;border-color:#b7aa8a60;transform:translateX(2px)}
+.dropzone-v2 .war-home .home-quick-link strong{font-size:12px;color:#e4ddce}
+.dropzone-v2 .war-home .home-quick-link small{color:#9e9687}
+.dropzone-v2 .war-home .home-quick-link>svg{color:#aea38e}
+.dropzone-v2 .war-home .home-club-card{border:1px solid #c5bca12b;border-radius:7px;background:#1e1e20e8;box-shadow:inset 0 1px #eee5d008}
+.dropzone-v2 .war-home .home-club-card:hover{background:#2c2726;border-color:#b7aa8a60}
+.dropzone-v2 .war-home .home-club-card h3{color:#e3ddce;font-weight:650}
+.dropzone-v2 .war-home .home-club-card p{color:#a09888}
+.dropzone-v2 .war-home :is(.home-mystery-art,.home-room-art,.home-feedback-art){border-radius:3px;outline:1px solid #c4bda322;outline-offset:3px}
+.dropzone-v2 .war-home .home-feedback-art{background:#2d2928;border-color:#b3a58b55;color:#d9ccae}
+.dropzone-v2 .war-home .home-footer{border-color:#c5bca12b;margin-top:38px}
+.dropzone-v2 .war-home .home-footer>a:first-child{font-family:'Zine Sans',Arial,sans-serif;text-transform:none;font-size:20px;transform:none;letter-spacing:-.05em}
+.dropzone-v2 .war-home .home-footer>a:first-child span{font-family:'Zine Sans',Arial,sans-serif;font-size:7px;letter-spacing:.08em;transform:none}
+@media(max-width:1100px){.dropzone-v2 .war-home .home-hero-copy{padding-left:36px}.dropzone-v2 .war-home .home-hero h1{font-size:45px}.dropzone-v2 .war-home .home-feature-card h3{font-size:21px}.dropzone-v2 .war-home .home-section-title h2{font-size:22px}}
+@media(max-width:850px){.dropzone-v2 .war-home .home-hero-copy{padding-left:28px}.dropzone-v2 .war-home .home-hero h1{font-size:40px}.dropzone-v2 .war-home .home-hero-copy>p{max-width:265px;font-size:11px}.dropzone-v2 .war-home .home-hero-art>.image-video{right:2%;width:90%}.dropzone-v2 .war-home .home-section-title h2{font-size:23px}}
+@media(max-width:540px){
+ body.dropzone-v2{background-attachment:scroll;background-size:auto,100% auto;background-repeat:no-repeat,repeat-y}
+ .dropzone-v2 .site-navigation{border-radius:19px}
+ .dropzone-v2 .site-brand{font-size:21px}
+ .dropzone-v2 main.war-home{padding-top:22px}
+ .dropzone-v2 .war-home .home-hero{min-height:530px;overflow:hidden;border-radius:9px}
+ .dropzone-v2 .war-home .home-hero-copy{padding:29px 24px 225px;max-width:100%;min-height:530px}
+ .dropzone-v2 .war-home .home-hero h1{font-size:39px;margin:4px 0 18px;line-height:1.08}
+ .dropzone-v2 .war-home .home-hero-copy>p{font-size:11px;max-width:250px;line-height:1.85}
+ .dropzone-v2 .war-home .home-hero-art>.image-video{height:87%;width:90%;bottom:29px;right:9%;border-width:1px}
+ .dropzone-v2 .war-home .home-hero-art>.image-prize{height:95%;bottom:20px;border-width:1px}
+ .dropzone-v2 .war-home .home-hero-star{top:5px;width:48px;height:48px}
+ .dropzone-v2 .war-home .home-section-title h2{font-size:24px}
+ .dropzone-v2 .war-home .home-feature-card h3{font-size:25px}
+ .dropzone-v2 .war-home .home-index{margin:24px 0 29px}
+}
+@media(prefers-reduced-motion:reduce){.dropzone-v2 .war-home *{animation:none!important;transition:none!important}}
+
+/* Straight-edged interface surfaces and controls. Decorative circles stay intact. */
+body.dropzone-v2 :is(.site-navigation,.site-nav-link,.site-account,.site-login,.site-account-avatar,.home-hero,.home-hero-paper,.home-hero-art>img,.home-feature-card,.home-quick-link,.home-club-card,.home-feature-bottom,.home-card-tag,.home-private-link,.home-mystery-art,.home-room-art,.home-feedback-art,.home-play-stamp,.home-slide-arrow,.home-autoplay-toggle,[data-slot='dialog-content'],[data-slot='tabs-list'],[data-slot='tabs-trigger']){border-radius:0!important}
+body.dropzone-v2 main :is(section,article,aside,button,textarea,select,iframe,video,input:not([type='radio']):not([type='checkbox']):not([type='range']),[class*='-card'],[class*='-panel'],[class*='-tile'],[class*='-tabs'],[class*='-avatar']){border-radius:0!important}
+body.dropzone-v2 .war-home .home-hero:after{border-radius:0}
+
+/* Blur the live background only inside the content column. */
+.site-content-backdrop{position:fixed;inset:0 auto 0 50%;width:min(1440px,calc(100% - 40px));transform:translateX(-50%);z-index:-1;pointer-events:none;background:#0c0d0fc2;border:0;box-shadow:none;backdrop-filter:blur(80px) saturate(.5);-webkit-backdrop-filter:blur(80px) saturate(.5);mask-image:none;-webkit-mask-image:none}
+@media(max-width:760px){.site-content-backdrop{width:calc(100% - 24px);backdrop-filter:blur(56px);-webkit-backdrop-filter:blur(56px)}}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.site-content-backdrop{background:#101012e6}}
+
+/* Lighter neutral graphite for the highlighted quick links and private fishing entry. */
+.dropzone-v2 .war-home .home-quick-link[class*='tone-']{background:#303034;border-color:#ffffff24;box-shadow:inset 0 1px #ffffff08}
+.dropzone-v2 .war-home .home-quick-link.tone-0{border-left-color:#73737b;background:#353539}
+.dropzone-v2 .war-home .home-quick-link:hover{background:#3d3d43;border-color:#ffffff3b}
+.dropzone-v2 .war-home .home-quick-link strong{color:#eeeef0}
+.dropzone-v2 .war-home .home-quick-link small{color:#aeafb7}
+.dropzone-v2 .war-home .home-quick-link>svg{color:#c2c3cb}
+.dropzone-v2 .war-home .home-private-link{background:#303034;border-color:#ffffff24;color:#e0e0e5;box-shadow:inset 0 1px #ffffff08}
+.dropzone-v2 .war-home .home-private-link small{color:#aeafb7}
+.dropzone-v2 .war-home .home-private-link:hover{background:#3d3d43;border-color:#ffffff3b}

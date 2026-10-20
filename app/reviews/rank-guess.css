@@ -1,0 +1,67 @@
+.reviews-toolbar nav > a {position:relative; display:inline-flex; align-items:center; padding:14px 0; border-bottom:2px solid transparent; font-size:13px; line-height:1.5; color:#9e8c80; white-space:nowrap; text-decoration:none}
+.reviews-toolbar nav > a.is-active {border-bottom-color:#c7483c; color:#e4d8cf}
+.reviews-toolbar nav {flex-wrap:wrap; max-width:100%; min-width:0}
+.guess-heading {display:flex; justify-content:space-between; align-items:center; gap:25px; margin-bottom:25px}
+.guess-heading h1 {font-weight:400; font-size:clamp(33px,4vw,48px); line-height:1.2; letter-spacing:-.055em; margin:14px 0}
+.guess-heading h1 > span {color:#c34438}
+.guess-heading p {font-size:13px; line-height:1.6; color:#aa998d; margin:0}
+.guess-heading label {font-size:11px; color:#a8998e; min-width:180px}
+.guess-heading label > div {position:relative; margin-top:9px}
+.guess-heading select {width:100%; appearance:none; padding:11px 32px 11px 12px; color:#ddd0c4; border:1px solid #ffffff27; background:#211e21; border-radius:4px; font-size:13px}
+.guess-heading label svg {position:absolute; right:11px; top:14px; pointer-events:none}
+.guess-channel-status {font-size:11px; color:#b8a190; white-space:nowrap}
+.guess-layout {display:grid; grid-template-columns:minmax(0,1fr) 310px; gap:24px; align-items:start}
+.guess-main {min-width:0}
+.guess-video {width:100%; aspect-ratio:16/9; background:#0d0d0f; border:1px solid #ffffff24; border-radius:7px; overflow:hidden; display:grid; place-items:center}
+.guess-video video {display:block; width:100%; height:100%; object-fit:contain}
+.guess-video > div {text-align:center; padding:25px; color:#b7a89b}
+.guess-video h2 {font-size:22px; font-weight:400; letter-spacing:-.03em; margin:12px 0}
+.guess-video p {font-size:12px; line-height:1.6; max-width:340px; margin:0 auto; color:#8e8176}
+.guess-round-info {display:flex; justify-content:space-between; gap:15px; align-items:center; padding:18px 0; color:#ad9d90; font-size:12px; line-height:1.5}
+.guess-round-info b {font-weight:400; color:#e2c9b4; margin-left:8px; font-variant-numeric:tabular-nums}
+.guess-ranks {display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px}
+.guess-ranks button {position:relative; display:flex; align-items:center; gap:9px; padding:13px 11px; min-width:0; min-height:65px; color:#d9cbbf; border:1px solid #ffffff22; border-radius:4px; background:#1e1c1fe0; text-align:left; cursor:pointer; overflow:hidden; isolation:isolate}
+.guess-ranks button:disabled {cursor:default}
+.guess-ranks button:hover:not(:disabled) {border-color:#ac7b66; background:#282126}
+.guess-ranks button.is-chosen {border-color:#dc6251}
+.guess-ranks button.is-correct {border-color:var(--guess-color); background:color-mix(in srgb,var(--guess-color) 8%,#19191c)}
+.guess-ranks button > img {object-fit:contain; flex:none}
+.guess-rank-number {font-size:10px; color:#8c7d71; font-variant-numeric:tabular-nums}
+.guess-rank-label {font-size:12px; min-width:0; overflow-wrap:anywhere; line-height:1.4}
+.guess-rank-label > small {display:block; margin-top:4px; font-size:10px; color:#9c8c7e}
+.guess-ranks button > svg {flex:none; color:#e79e84; margin-left:auto}
+.guess-vote-bar {position:absolute; height:2px; left:0; bottom:0; background:var(--guess-color); transition:width .5s; z-index:-1}
+.guess-vote-help {display:flex; justify-content:space-between; align-items:center; gap:13px; flex-wrap:wrap; padding:15px 0; font-size:11px; color:#b6a091; line-height:1.7}
+.guess-vote-help code {font-size:11px; color:#d8bdad; font-family:inherit; background:#ffffff05; padding:2px 5px; border:1px solid #ffffff12; border-radius:3px}
+.guess-vote-help a,.guess-connect {display:inline-flex; gap:6px; align-items:center; color:#d3aa94; font-size:12px; line-height:1.6}
+.guess-reveal {display:flex; align-items:center; gap:18px; padding:23px 0; animation:guess-answer .4s ease both}
+.guess-reveal > img {object-fit:contain; flex:none}
+.guess-reveal > div {min-width:0}
+.guess-reveal div > span {font-size:9px; letter-spacing:.12em; color:#9f8d80}
+.guess-reveal h2 {font-size:25px; line-height:1.3; font-weight:400; letter-spacing:-.025em; margin:7px 0}
+.guess-reveal p {font-size:11px; line-height:1.6; color:#b19c8b; margin:0; overflow-wrap:anywhere}
+.guess-reveal > strong {margin-left:auto; flex:none; font-size:29px; line-height:1.2; font-weight:400; color:#dfc4ac; text-align:right}
+.guess-reveal strong > small {display:block; font-size:10px; line-height:1.5; color:#a08b78; margin-top:6px}
+.guess-winners {border-top:1px solid #ffffff16; padding:15px 0; font-size:12px; color:#d1b6a2}
+.guess-winners > span {font-size:10px; letter-spacing:.08em; color:#a78e7a}
+.guess-winners p {font-size:12px; line-height:1.8; margin:6px 0 0; overflow-wrap:anywhere}
+.guess-host {display:flex; flex-wrap:wrap; align-items:flex-end; gap:15px; padding:21px; margin-top:15px; border:1px solid #ffffff25; border-radius:6px; background:#1c1a1ec9}
+.guess-host > div:first-child {width:100%}
+.guess-host h2 {font-size:15px; line-height:1.5; margin:0 0 5px; font-weight:500}
+.guess-host > div > span {font-size:11px; color:#a58f7e}
+.guess-host > label {display:flex; flex-direction:column; flex:1; min-width:170px; gap:8px; font-size:12px; color:#b99e88}
+.guess-host select {min-width:0; width:100%; padding:11px; color:#dcc4af; border:1px solid #ffffff25; border-radius:4px; background:#29242a; font-size:12px}
+.guess-host > p {font-size:12px; line-height:1.6; color:#ac927d; width:100%; margin:0}
+.guess-host-actions {display:flex; gap:12px; flex-wrap:wrap}
+.guess-connect {width:100%}
+.guess-chat {position:sticky; top:90px; min-width:0; height:min(760px,calc(100dvh - 110px)); min-height:420px}
+.guess-chat .fish-chat-panel {height:100%; min-height:0; max-height:none; display:flex; flex-direction:column}
+.guess-chat .fish-chat-lines {min-height:0}
+.rank-guess-page button:focus-visible,.rank-guess-page a:focus-visible,.rank-guess-page select:focus-visible {outline:2px solid #df8c76; outline-offset:3px}
+@keyframes guess-answer {from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:1000px){.guess-layout{grid-template-columns:minmax(0,1fr) 280px;gap:16px}.guess-ranks button{padding:11px 8px;gap:6px}.guess-ranks button>img{width:28px;height:28px}.guess-rank-number{display:none}.guess-rank-label{font-size:11px}}
+@media(max-width:760px){.guess-layout{grid-template-columns:minmax(0,1fr)}.guess-chat{position:static;height:500px;min-height:0}.guess-heading{align-items:flex-start;flex-wrap:wrap}.guess-heading label{width:100%}.guess-reveal{gap:10px}.guess-reveal>img{width:60px;height:60px}.guess-reveal h2{font-size:21px}.guess-reveal>strong{font-size:23px}.guess-host{padding:17px}.guess-host>button{width:100%}.guess-host-actions{width:100%}.guess-host-actions button{flex:1}.reviews-toolbar nav>a{font-size:12px}}
+@media(prefers-reduced-motion:reduce){.rank-guess-page *{animation:none!important;transition:none!important}}
+.guess-chat {--event-panel:#1c191d;--event-text:#e4d9d0;--event-accent:#b7a195;--event-bar:#35282c}
+.guess-chat .fish-chat-panel {border:1px solid #ffffff24; background:var(--event-panel); color:var(--event-text)}
+.guess-chat .fish-chat-thread {height:auto; min-height:120px; background:#1b171c}

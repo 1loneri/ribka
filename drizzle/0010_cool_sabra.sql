@@ -1,0 +1,1 @@
+ALTER TABLE `twitch_states` ADD `return_to` text DEFAULT '/studio' NOT NULL;

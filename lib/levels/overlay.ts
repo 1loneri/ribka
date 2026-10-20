@@ -1,0 +1,38 @@
+import {OVERLAY_FONTS,overlayFontFaces,overlayFontFor} from './fonts';
+import {OVERLAY_ROLES} from './roles';
+export const overlayStyles=`
+${overlayFontFaces}
+.wl-root,.wl-root *{box-sizing:border-box}.wl-root{--wl-accent:#ce3833;--wl-opacity:.82;--wl-font:18px;--wl-family:${overlayFontFor('manrope').family};font-family:var(--wl-family);color:#f3f0ed;width:100%;height:100%;min-height:0;display:flex;flex-direction:column;padding:20px 22px;background:rgb(17 17 19 / var(--wl-opacity));border:1px solid #ffffff29;border-top:2px solid var(--wl-accent);border-radius:8px;overflow:hidden;text-align:left}
+.wl-heading{height:auto;min-height:0;max-width:none;width:100%;margin:0;padding:0 0 17px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #ffffff19;flex:none}.wl-heading span{font-size:10px;letter-spacing:.18em;font-weight:700;color:#b6b0ad}.wl-heading strong{font-size:12px;letter-spacing:.03em;font-weight:400;color:#c9c4c1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.wl-heading span:before{content:'';display:inline-block;width:5px;height:5px;background:var(--wl-accent);margin-right:9px;vertical-align:2px}
+.wl-messages{display:flex;flex-direction:column;justify-content:flex-end;gap:15px;flex:1;min-height:0;overflow:hidden;padding-top:20px}.wl-message{flex-shrink:0;min-width:0;animation:wl-enter .35s ease both}.wl-message-head{display:flex;gap:9px;align-items:center;min-width:0}.wl-name{font-size:calc(var(--wl-font) * .78);font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;min-width:0}.wl-title{font-size:10px;color:#baa89d;max-width:120px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;flex-shrink:0}.wl-title:empty{display:none}.wl-badge{font-size:10px;line-height:19px;min-width:40px;flex-shrink:0;padding:0 6px;border:1px solid color-mix(in srgb,var(--wl-accent) 60%,transparent);border-radius:3px;color:#f7dfdc;background:color-mix(in srgb,var(--wl-accent) 13%,transparent);font-variant-numeric:tabular-nums;text-align:center}.wl-text{font-size:var(--wl-font);line-height:1.42;overflow-wrap:anywhere;white-space:pre-wrap;margin:6px 0 0;color:#e5e0dd;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}.wl-emote{display:inline-block;height:1.45em;width:auto;max-width:3em;object-fit:contain;vertical-align:-.32em;margin:0 .08em}.wl-level-up .wl-badge{animation:wl-promote 1.2s ease 2}
+.wl-role-badge{flex:none;font-size:8px;font-weight:600;line-height:17px;padding:0 5px;border:1px solid currentColor;border-radius:3px;letter-spacing:.04em;white-space:nowrap}.wl-role-badge:empty{display:none}.wl-role-vip .wl-name,.wl-role-vip .wl-role-badge{color:${OVERLAY_ROLES.vip.color}}.wl-role-moderator .wl-name,.wl-role-moderator .wl-role-badge{color:${OVERLAY_ROLES.moderator.color}}.wl-message-head .wl-title{flex-shrink:1;min-width:0}
+@keyframes wl-enter{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}@keyframes wl-promote{50%{color:#fff;background:var(--wl-accent);box-shadow:0 0 18px color-mix(in srgb,var(--wl-accent) 35%,transparent)}}@media(prefers-reduced-motion:reduce){.wl-root *{animation:none!important;transition:none!important}}
+`;
+export function overlayDocument(channel:string){
+ return `<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Чат @${channel} · wariouss</title><style>html,body{margin:0;padding:0;background:transparent!important;width:100%;height:100%;overflow:hidden}${overlayStyles}</style></head><body><section class="wl-root" id="frame" style="visibility:hidden"><header class="wl-heading"><span>ЧАТ</span><strong>@${channel}</strong></header><div class="wl-messages" id="messages" role="log" aria-label="Чат Twitch"></div></section><script>
+(()=>{
+ const channel=${JSON.stringify(channel)},fonts=${JSON.stringify(OVERLAY_FONTS.map(({id,family})=>({id,family})))},roles=${JSON.stringify(OVERLAY_ROLES)},frame=document.getElementById('frame'),list=document.getElementById('messages'),nodes=new Map(),levels=new Map();let running=false;
+ function element(tag,cls,text){const node=document.createElement(tag);node.className=cls;if(text!==undefined)node.textContent=text;return node;}
+ function card(){const node=element('article','wl-message'),head=element('div','wl-message-head');head.append(element('span','wl-badge'),element('strong','wl-name'),element('span','wl-role-badge'),element('span','wl-title'));node.append(head,element('p','wl-text'));return node;}
+ function messageText(node,message){
+  const text=typeof message.text==='string'?message.text.slice(0,500):'',input=message.fragments;
+  const parts=Array.isArray(input)&&input.length<=1000&&input.every(part=>part&&typeof part.text==='string')&&input.map(part=>part.text).join('')===text?input:[{type:'text',text}];
+  const key=JSON.stringify(parts);if(node._wlPartsKey===key)return;node._wlPartsKey=key;node.replaceChildren();
+  for(const part of parts){if(part.type==='emote'&&typeof part.id==='string'&&/^[a-zA-Z0-9_-]{1,200}$/.test(part.id)){
+   const img=element('img','wl-emote');img.alt=part.text;img.title=part.text;img.referrerPolicy='no-referrer';img.onerror=()=>img.replaceWith(document.createTextNode(part.text));img.src='https://static-cdn.jtvnw.net/emoticons/v2/'+encodeURIComponent(part.id)+'/default/dark/2.0';node.append(img);
+  }else node.append(document.createTextNode(part.text));}
+ }
+ async function update(){if(running)return;running=true;let retry=2000;try{
+  const response=await fetch('/api/levels/overlay?channel='+encodeURIComponent(channel),{cache:'no-store',credentials:'omit'});if(!response.ok)throw Error();const data=await response.json();
+  if(!data||!Array.isArray(data.messages)){frame.style.visibility='hidden';list.replaceChildren();nodes.clear();levels.clear();return;}
+  const a=data.appearance;frame.style.setProperty('--wl-accent',a.accent);frame.style.setProperty('--wl-opacity',String(a.opacity/100));frame.style.setProperty('--wl-font',a.fontSize+'px');frame.style.setProperty('--wl-family',(fonts.find(font=>font.id===a.fontFamily)||fonts[0]).family);
+  const messages=data.messages.filter(m=>!a.hideAfter||m.created>data.now-a.hideAfter*1000).slice(-a.messages),keep=new Set(messages.map(m=>m.id)),last=new Map(messages.map(m=>[m.userId,m.id]));
+  for(const [id,node] of nodes)if(!keep.has(id)){node.remove();nodes.delete(id);}
+  for(const m of messages){let node=nodes.get(m.id);if(!node){node=card();nodes.set(m.id,node);}node.querySelector('.wl-name').textContent=m.name;messageText(node.querySelector('.wl-text'),m);node.querySelector('.wl-title').textContent=m.title||'';node.querySelector('.wl-badge').textContent='LV '+m.level;
+   const role=m.role==='moderator'||m.role==='vip'?m.role:'viewer';node.classList.remove('wl-role-moderator');node.classList.remove('wl-role-vip');if(role!=='viewer')node.classList.add('wl-role-'+role);const roleBadge=node.querySelector('.wl-role-badge');roleBadge.textContent=roles[role].label;roleBadge.title=roles[role].name;
+   if(last.get(m.userId)===m.id){const previous=levels.get(m.userId);if(previous!==undefined&&m.level>previous){node.classList.remove('wl-level-up');void node.offsetWidth;node.classList.add('wl-level-up');}levels.set(m.userId,m.level);}list.append(node);
+  }frame.style.visibility=messages.length?'visible':'hidden';
+ }catch{retry=5000;list.replaceChildren();nodes.clear();frame.style.visibility='hidden';}finally{running=false;setTimeout(update,retry);}}
+ update();
+})();</script></body></html>`;
+}

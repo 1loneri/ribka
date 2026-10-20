@@ -1,0 +1,12 @@
+@font-face{font-family:'Wariouss Broadsheet';src:url('/fonts/site/broadsheet.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Wariouss Leonov';src:url('/fonts/site/leonov-sp.otf') format('opentype');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Wariouss Arturito';src:url('/fonts/site/arturito-slab.ttf') format('truetype');font-weight:700;font-style:normal;font-display:swap}
+body.dropzone-v2 main h1,body.dropzone-v2 .war-home .home-hero h1{font-family:'Wariouss Broadsheet','Zine Sans',serif;font-weight:400;letter-spacing:-.025em;text-transform:none;font-synthesis:none}
+body.dropzone-v2 .war-home .home-section-title h2{font-family:'Wariouss Leonov','Zine Sans',sans-serif;font-size:29px;font-weight:400;letter-spacing:0;line-height:1.3;font-synthesis:none}
+body.dropzone-v2 .site-brand,body.dropzone-v2 .war-home .home-footer>a:first-child{font-family:'Wariouss Leonov','Zine Sans',sans-serif;font-weight:400;letter-spacing:-.025em;font-size:26px;font-synthesis:none}
+body.dropzone-v2 .site-nav-link{font-family:'Wariouss Arturito','Zine Sans',sans-serif;font-weight:700;font-size:12px;letter-spacing:0;font-synthesis:none}
+body.dropzone-v2 .war-home .home-feature-card h3{font-family:'Wariouss Arturito','Zine Sans',sans-serif;font-weight:700;font-size:22px;letter-spacing:-.02em;line-height:1.3;font-synthesis:none}
+body.dropzone-v2 .war-home .home-quick-link strong,body.dropzone-v2 .war-home .home-club-card h3{font-family:'Wariouss Arturito','Zine Sans',sans-serif;font-weight:700;font-size:12px;letter-spacing:0;font-synthesis:none}
+@media(max-width:850px){body.dropzone-v2 .war-home .home-section-title h2{font-size:27px}body.dropzone-v2 .site-nav-link{font-size:11px}}
+@media(max-width:540px){body.dropzone-v2 .war-home .home-hero h1{font-size:35px;line-height:1.14}body.dropzone-v2 .war-home .home-section-title h2{font-size:29px}body.dropzone-v2 .site-brand{font-size:24px}body.dropzone-v2 .site-nav-link{font-size:10px}body.dropzone-v2 .war-home .home-feature-card h3{font-size:21px}}
+@media(max-width:370px){body.dropzone-v2 .war-home .home-hero h1{font-size:31px}}

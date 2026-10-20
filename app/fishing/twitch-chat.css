@@ -1,0 +1,94 @@
+.fish-chat-composer{padding:14px 16px 16px;border-top:1px solid #473333;display:flex;flex-direction:column;gap:10px;background:var(--event-panel)}
+.fish-composer-label{display:flex;align-items:baseline;justify-content:space-between;gap:12px;min-width:0}
+.fish-composer-label label{font-size:14px;line-height:1.6;color:var(--event-text);overflow-wrap:anywhere;min-width:0}
+.fish-composer-label span{font-size:12px;color:var(--event-accent);flex-shrink:0}
+.fish-chat-composer textarea{width:100%;min-width:0;resize:vertical;min-height:66px;max-height:160px;padding:10px 12px;border:1px solid #5a4242;border-radius:4px;background:#171111;color:#f0f0f0;font:inherit;font-size:14px;line-height:1.6}
+.fish-chat-composer textarea::placeholder{color:#9e9494}
+.fish-chat-composer textarea:focus-visible{outline:2px solid var(--event-text);outline-offset:2px}
+.fish-chat-composer textarea:disabled{opacity:.65}
+.fish-composer-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.fish-chat-command,.fish-chat-send,.fish-composer-access a,.fish-composer-access button{min-height:40px;border-radius:4px;font-size:14px;padding:9px 12px}
+.fish-chat-command{background:var(--event-bar);color:var(--event-text);font-family:Consolas,monospace}
+.fish-chat-send{display:flex;align-items:center;justify-content:center;gap:8px;background:#c0bbbb;color:#281d1d;font-weight:600}
+.fish-chat-send:hover{background:#d2cfcf}
+.fish-chat-send:disabled,.fish-chat-command:disabled{opacity:.45;cursor:default}
+.fish-composer-note,.fish-composer-access p{margin:0;font-size:14px;line-height:1.7;color:var(--event-accent);overflow-wrap:anywhere}
+.fish-composer-note.is-error{color:#cdcaca}
+.fish-composer-access{display:flex;flex-direction:column;align-items:flex-start;gap:10px}
+.fish-composer-access a,.fish-composer-access button{background:var(--event-bar);color:var(--event-text)}
+.fish-chat-panel.fish-native-chat{border-radius:5px;overflow:hidden;position:static;z-index:auto;isolation:auto}
+.fish-native-chat .fish-media-heading{padding-bottom:10px}
+.fish-chat-connection{display:flex;align-items:center;gap:7px;padding:0 17px 14px;font-size:12px;line-height:1.6;color:#a69d9d}
+.fish-chat-connection>span{width:6px;height:6px;border-radius:50%;background:#938989;flex-shrink:0}
+.fish-chat-connection.is-live>span{background:#b0a9a9}
+.fish-chat-pin{padding:12px 16px;background:#322525;border-top:1px solid #493535;border-bottom:1px solid #493535;color:#cfcccc}
+.fish-chat-pin summary{display:flex;gap:7px;align-items:center;font-size:14px;line-height:1.6;cursor:pointer;list-style:none}
+.fish-chat-pin summary::-webkit-details-marker,.fish-chat-activity summary::-webkit-details-marker{display:none}
+.fish-chat-pin p{font-size:14px;line-height:1.7;margin:8px 0 0;overflow-wrap:anywhere;max-height:120px;overflow-y:auto;white-space:pre-wrap}
+.fish-chat-activities{max-height:240px;overflow-y:auto;scrollbar-width:thin;background:#251b1b}
+.fish-chat-activity{border-bottom:1px solid #473434;padding:12px 16px}
+.fish-chat-activity summary{display:flex;align-items:flex-start;gap:8px;list-style:none;cursor:pointer;color:var(--event-text)}
+.fish-chat-activity summary>svg{flex-shrink:0;margin-top:4px}
+.fish-chat-activity summary>span{min-width:0;flex:1}
+.fish-chat-activity summary:after{content:'⌄';color:var(--event-accent);line-height:1.6}
+.fish-chat-activity[open] summary:after{transform:rotate(180deg)}
+.fish-chat-activity summary small{font-size:12px;line-height:1.6;display:block;color:var(--event-accent);margin-bottom:2px}
+.fish-chat-activity summary strong{font-size:14px;font-weight:500;line-height:1.6;overflow-wrap:anywhere;display:block}
+.fish-chat-activity-body{display:flex;flex-direction:column;gap:14px;padding-top:16px}
+.fish-chat-outcome>div:first-child{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:14px;line-height:1.6;color:#e0dede}
+.fish-chat-outcome strong{font-weight:500;overflow-wrap:anywhere;display:flex;align-items:center;gap:5px}
+.fish-chat-outcome.is-winner strong{color:#c4c2c2}
+.fish-chat-outcome p{margin:5px 0 0;color:#a49b9b;font-size:12px;line-height:1.6}
+.fish-chat-meter{height:3px;margin-top:7px;background:#443232}
+.fish-chat-meter span{display:block;height:100%;background:#aba3a3}
+.is-prediction .fish-chat-meter.tone-0 span{background:#b1a9a9}
+.is-prediction .fish-chat-meter.tone-1 span{background:#bab4b4}
+.fish-chat-activity-body>a{font-size:14px;color:#ccc9c9;line-height:1.6;text-decoration:underline;text-underline-offset:3px}
+.fish-chat-thread{height:340px;min-height:240px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#665454 #1e1515;padding:6px 0;background:#1e1515}
+.fish-chat-thread:focus-visible{outline:2px solid var(--event-accent);outline-offset:-2px}
+.fish-chat-line{padding:9px 16px;min-width:0}
+.fish-chat-line:hover{background:#ffffff04}
+.fish-chat-message-head{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.fish-chat-author{display:flex;align-items:center;gap:5px;min-width:0;flex-wrap:wrap;color:#c3c0c0}
+.fish-chat-author strong{font-size:14px;line-height:1.6;font-weight:650;overflow-wrap:anywhere}
+.fish-chat-message-head time{font-size:12px;color:#968c8c;flex-shrink:0}
+.fish-chat-line p{font-size:16px;line-height:1.7;color:#e1e0e0;margin:2px 0 0;overflow-wrap:anywhere;white-space:pre-wrap}
+.fish-chat-line.is-notice{margin:5px 8px;padding:10px 8px;background:#372828;border-left:2px solid #897e7e}
+.fish-chat-line.is-game{background:#352626;border-left-color:#b1aaaa}
+.fish-chat-line.is-highlight{background:#392a2a}
+.fish-chat-game-label{padding:1px 5px;background:#503a3a;color:#d7d4d4;font-size:12px;line-height:1.6;border-radius:3px}
+.fish-chat-badge{flex-shrink:0;color:#bab4b4;vertical-align:middle}
+.fish-chat-badge.host{color:#beb7b7}.fish-chat-badge.mod{color:#aba4a4}.fish-chat-badge.sub{color:#b5adad}.fish-chat-badge.vip{font-size:12px;color:#c2bebe}
+.fish-chat-emote{display:inline-block;width:auto;height:26px;vertical-align:middle;max-width:80px;object-fit:contain;margin:0 2px}
+.fish-chat-gif{display:block;width:auto;max-width:100%;max-height:160px;margin-top:5px;object-fit:contain}
+.fish-chat-cheer{display:inline-flex;align-items:center;gap:3px;color:#cfcdcd;font-size:14px;vertical-align:baseline}
+.fish-chat-mention{color:#d2cfcf;background:#a69e9e17;border-radius:2px;padding:0 2px}
+.fish-chat-line a,.fish-chat-pin a{color:#bfb9b9;text-decoration:underline;text-underline-offset:3px}
+.fish-chat-reply,.fish-chat-source{display:block;font-size:12px;line-height:1.6;color:#aba3a3;overflow-wrap:anywhere}
+.fish-chat-empty{min-height:100%;padding:28px 20px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#a49c9c;gap:14px}
+.fish-chat-empty p{margin:0;font-size:16px;line-height:1.7}
+.fish-chat-empty>span{font-size:12px;line-height:1.7}
+.fish-chat-new{display:flex;align-items:center;justify-content:center;gap:8px;background:#4b3636;color:#dad8d8;font-size:14px;line-height:1.6;width:100%;padding:10px 16px}
+.fish-chat-error{font-size:14px;line-height:1.7;margin:0;padding:12px 16px;color:#cdcaca;overflow-wrap:anywhere;background:#372828}
+.fish-chat-modes{display:flex;gap:5px 10px;flex-wrap:wrap;padding:9px 16px;background:#342525;color:#bcb6b6;font-size:12px;line-height:1.6}
+.fish-chat-warnings{padding:10px 16px;font-size:14px;line-height:1.6;color:#bbb4b4;background:#322424}
+.fish-chat-warnings summary{cursor:pointer}
+.fish-chat-warnings p{margin:8px 0 0;overflow-wrap:anywhere;font-size:12px;line-height:1.7}
+.fish-chat-sync-permission{padding:12px 16px;background:#342525;color:#c1bebe;border-top:1px solid #4a3636}
+.fish-chat-sync-permission p{font-size:14px;line-height:1.7;margin:0 0 9px}
+.fish-chat-sync-permission a{display:inline-flex;align-items:center;min-height:40px;padding:9px 12px;font-size:14px;line-height:1.6;background:#4b3636;color:#d9d7d7;border-radius:4px}
+.fish-native-chat .fish-chat-composer textarea{font-size:16px}
+@media(max-width:1000px){.fish-chat-thread{height:380px}}
+
+.fish-native-chat{display:flex;flex-direction:column;background:var(--event-panel,#241919);color:var(--event-text,#e4dddd)}.fish-native-chat>:not(.fish-chat-thread){flex-shrink:0}.fish-native-chat .fish-chat-thread{flex:1;min-height:160px}.fish-native-chat .fish-media-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 17px;color:var(--event-accent,#c5aaaa)}.fish-native-chat .fish-media-heading>div{display:flex;align-items:center;gap:9px;min-width:0}.fish-native-chat .fish-media-heading h2{display:flex;flex-wrap:wrap;gap:0 6px;margin:0;min-width:0;font-size:14px;font-weight:500;line-height:1.6}.fish-native-chat .fish-media-heading h2 span{font-weight:400;overflow-wrap:anywhere}
+
+.fish-native-chat.fish-chat-no-heading .fish-chat-connection{min-height:36px;padding:2px 12px}
+.fish-native-chat.fish-chat-no-heading .fish-chat-connection .fish-chat-refresh{margin-left:auto;width:28px;height:28px;padding:0;border:0;background:none;color:inherit}
+
+/* The fishing chat ends above the cat reminder, at the same height as the scene controls. */
+@media(min-width:761px){
+ .dropzone-v2 .fish-layout-with-stream .fish-chat-panel.fish-native-chat{align-self:start;height:var(--fish-chat-height,620px);max-height:var(--fish-chat-height,620px);min-height:0}
+ .dropzone-v2 .fish-layout-with-stream .fish-chat-panel.fish-native-chat .fish-chat-thread{height:auto;min-height:100px;flex:1 1 0}
+ .dropzone-v2 .fish-layout-with-stream .fish-chat-panel.fish-native-chat .fish-chat-activities{max-height:140px;min-height:0;flex-shrink:1}
+ .dropzone-v2 .fish-layout-with-stream .fish-chat-panel.fish-native-chat .fish-chat-pin{max-height:130px;overflow:auto;flex-shrink:1}
+}

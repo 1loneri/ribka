@@ -1,0 +1,1 @@
+ALTER TABLE `community_mystery_guesses` ADD `correct_at` integer;

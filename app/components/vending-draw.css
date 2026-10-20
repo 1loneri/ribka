@@ -1,0 +1,44 @@
+.vending-draw{width:100%;margin:8px auto 0;isolation:isolate}
+.vending-machine{position:relative;width:min(100%,500px);aspect-ratio:971/1619;margin:0 auto;container-type:inline-size}
+.vending-cabinet{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;image-rendering:pixelated;pointer-events:none;user-select:none}
+.vending-marquee{position:absolute;left:18.2%;top:10.2%;width:62.3%;height:2%;display:flex;align-items:center;justify-content:center;font:800 clamp(6px,2.25cqw,11px)/1 ui-monospace,monospace;color:#5d3a0b;letter-spacing:.2em;white-space:nowrap;overflow:hidden}
+.vending-glass{position:absolute;left:15.6%;top:14.5%;width:66.3%;height:60.7%;overflow:hidden;border-radius:1%;padding:1.8% 1.2% 1%;background:linear-gradient(120deg,#18212cb3,#10162075 55%,#25314075);box-shadow:inset 0 0 14px #0009}
+.vending-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(5,minmax(0,1fr));gap:1.8% 2.5%;width:100%;height:100%}
+.vending-slot{position:relative;min-height:0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:8% 3% 12%;border-bottom:2px solid #546373;border-top:1px solid #ffffff0a;background:linear-gradient(90deg,#0002,transparent,#0002);transition:background .1s,box-shadow .1s}
+.monster-can{display:block;height:100%;width:auto;aspect-ratio:.41;flex-shrink:0;overflow:hidden;image-rendering:pixelated}
+.vending-slot>.monster-can{max-width:76%;height:72%;max-height:72%;filter:drop-shadow(1px 2px 0 #0009)}
+.vending-slot-code{position:absolute;left:3%;top:1%;font:500 clamp(5px,1.65cqw,8px)/1 ui-monospace,monospace;color:#7e90a1}
+.vending-nickname{display:block;width:100%;margin-top:8%;text-align:center;font:600 clamp(6px,1.9cqw,10px)/1.1 ui-monospace,monospace;letter-spacing:-.03em;color:#e7edf1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 1px 1px #000}
+.vending-coil{position:absolute;bottom:3%;width:72%;height:7%;border:1px solid #81909e;border-radius:50%;background:repeating-linear-gradient(90deg,transparent 0 11%,#7d8c98 12% 17%,transparent 19% 29%);opacity:.7}
+.vending-slot.is-scanned{background:#f6d98229;box-shadow:inset 0 0 0 1px #ffde8a,0 0 10px #ffdd7233}
+.vending-slot.is-scanned .vending-slot-code{color:#ffe6a3}
+.vending-slot.is-emptying>.monster-can{opacity:0}
+.vending-slot.is-emptying .vending-coil{animation:vending-coil-spin .35s linear 3}
+.vending-empty-slot{color:#364350;font-size:clamp(10px,3cqw,16px);margin:auto}
+.vending-glass-shine{position:absolute;inset:0;pointer-events:none;background:linear-gradient(125deg,transparent 9%,#ffffff0b 9.5% 15%,transparent 15.5% 73%,#ffffff05 73.5% 82%,transparent 82.5%)}
+.vending-waiting{position:absolute;left:5%;right:5%;top:42%;margin:0!important;font:500 clamp(7px,2.35cqw,11px)/1.6 ui-monospace,monospace!important;color:#a6b2bf!important;background:#131b25ed;padding:7% 3%;text-align:center}
+.vending-falling-can{position:absolute;left:48.4%;width:6.5%;aspect-ratio:.4;pointer-events:none;transition:top 65ms linear,transform 65ms linear;z-index:3;filter:drop-shadow(1px 2px 1px #0009)}
+.vending-falling-can .monster-can{width:100%;height:100%}
+.vending-hatch-light{position:absolute;left:21%;top:81.4%;width:55%;height:5.5%;box-shadow:inset 0 0 8px #ffe09d00;pointer-events:none;z-index:4;transition:box-shadow .4s}
+.vending-hatch-light.is-lit{box-shadow:inset 0 0 12px #ffe09d45;border-bottom:1px solid #ffe7ab88;animation:vending-hatch-glow 1.1s ease-in-out infinite alternate}
+.vending-under-machine{margin:-1.5% auto 0;max-width:500px;position:relative}
+.vending-shelf-controls{display:flex;align-items:center;justify-content:center;gap:16px;color:#a7a8ae;font:500 11px/1.2 ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.vending-shelf-controls button{display:grid;place-items:center;width:32px;height:28px;background:#ffffff06;border:1px solid #ffffff0d;border-radius:5px;color:#e0e0e3;font-size:17px;cursor:pointer}
+.vending-shelf-controls button:disabled{opacity:.25;cursor:default}
+.vending-shelf-controls button:focus-visible{outline:2px solid #edcf87;outline-offset:3px}
+.vending-caption{font-size:12px!important;line-height:1.5!important;color:#98999f!important;text-align:center;margin:13px 0 4px!important}
+.vending-caption code{color:#e8d7ad;font-size:12px}
+.vending-winner{display:flex;align-items:center;justify-content:center;gap:19px;padding:18px 12px 4px;animation:vending-result-in .45s ease-out}
+.vending-winner>.monster-can{height:70px;width:30px}
+.vending-winner>div{min-width:0;display:flex;flex-direction:column;text-align:left;gap:6px}
+.vending-winner small{font:500 10px/1 ui-monospace,monospace;letter-spacing:.17em;color:#e2c78e}
+.vending-winner strong{font-size:clamp(21px,2.4vw,30px);font-weight:600;line-height:1.2;overflow-wrap:anywhere;color:#f1f0ea;letter-spacing:-.04em}
+.vending-winner span{font-size:12px;color:#92969f;overflow-wrap:anywhere}
+.participant .participant-monster{height:37px;width:16px;margin:0 6px;flex-shrink:0}
+.participant .monster-flavor{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#8d929c!important;font-size:10px!important;line-height:1.4;margin-top:3px}
+.vending-additional-winners{padding-top:20px!important;min-height:0!important}
+@keyframes vending-coil-spin{50%{transform:scaleX(-1)}}
+@keyframes vending-hatch-glow{to{box-shadow:inset 0 0 18px #ffe09d65}}
+@keyframes vending-result-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.vending-draw *{animation:none!important;transition:none!important}}
+@media(max-width:420px){.vending-under-machine{margin-top:-3%}.vending-caption{font-size:11px!important}}

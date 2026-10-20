@@ -1,0 +1,1 @@
+ALTER TABLE `demo_reviews` ADD `purpose` text DEFAULT 'review' NOT NULL;

@@ -1,0 +1,474 @@
+/* The levels workspace owns its layout; legacy global header/main rules stay outside. */
+.dropzone-v2 main.levels-page {
+  --level-line: #ffffff16;
+  --level-muted: #a5a1a0;
+  display: block;
+  width: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 28px 40px 64px;
+  min-height: calc(100dvh - 76px);
+  color: #f0edeb;
+}
+.levels-page *, .levels-page *::before, .levels-page *::after {box-sizing: border-box}
+.levels-page button, .levels-page a, .levels-page input, .levels-page select {font-family: inherit; touch-action: manipulation}
+.levels-page button:focus-visible, .levels-page a:focus-visible, .levels-page input:focus-visible, .levels-page select:focus-visible, .levels-page summary:focus-visible {outline: 2px solid #da4b43; outline-offset: 4px}
+.levels-page button:disabled {cursor: default; opacity: .5}
+.levels-heading {display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 24px; margin: 0 0 24px}
+.levels-kicker {font-size: 11px; letter-spacing: .1em; line-height: 1.5; color: var(--level-muted); font-weight: 500}
+.levels-heading h1 {font-size: 36px; font-weight: 500; letter-spacing: -.05em; line-height: 1.15; margin: 7px 0 8px}
+.levels-heading p {font-size: 14px; line-height: 1.5; color: #b2acab; margin: 0}
+.level-channel {display: flex; flex-direction: column; gap: 8px; min-width: 190px; max-width: 280px}
+.level-channel > span {font-size: 12px; color: var(--level-muted)}
+.level-channel > div {position: relative; border: 1px solid #ffffff26; border-radius: 5px; background: #1b1b1ed9}
+.level-channel select {display: block; appearance: none; width: 100%; min-width: 0; padding: 11px 35px 11px 14px; color: #f0edeb; font-size: 14px; line-height: 1.4; background: transparent; border: 0; border-radius: 5px; cursor: pointer; text-overflow: ellipsis}
+.level-channel option {background: #202023; color: #f0edeb}
+.level-channel svg {position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #b6afad; pointer-events: none}
+.levels-toolbar {display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--level-line); margin-bottom: 24px; min-height: 56px; flex-wrap: wrap}
+.levels-tabs {display: flex; flex: 1 1 460px; min-width: 0; flex-wrap: wrap; align-self: stretch; align-items: stretch; gap: 0 28px}
+.levels-tabs button {display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 56px; font-size: 14px; font-weight: 400; background: none; padding: 12px 0; color: #a9a3a1; border: 0; position: relative; cursor: pointer}
+.levels-tabs button[aria-selected=true] {color: #f6f1ed}
+.levels-tabs button[aria-selected=true]::after {content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: #d84037}
+.level-connection-controls {display: flex; align-items: center; gap: 20px; padding: 8px 0; flex-wrap: wrap}
+.level-status {display: flex; align-items: center; gap: 8px; font-size: 12px; line-height: 1.4; color: #b6b0ad}
+.level-status i {display: block; width: 6px; height: 6px; border-radius: 50%; background: #77706e; flex: none}
+.level-status i.is-on {background: #9bc7a4; box-shadow: 0 0 0 3px #9bc7a40c}
+.levels-page .level-action {display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 38px; border: 1px solid #ffffff2a; border-radius: 4px; color: #e2dcda; font-size: 13px; padding: 8px 13px; background: #ffffff04; cursor: pointer; line-height: 1.4}
+.levels-page .level-action.is-primary {background: #a52c27; border-color: #c13a31; color: #fff}
+.levels-page .level-action:hover {border-color: #bf5149; background: #ffffff09}
+.levels-page .level-action.is-primary:hover {background: #bb352e}
+.level-notice {margin: 0 0 20px; padding: 12px 15px; border: 1px solid #b6ba9f35; background: #c1c39d06; border-radius: 4px; color: #d0d0bc; font-size: 13px; line-height: 1.6}
+.level-notice.is-error {border-color: #b4483d80; color: #efa89b; background: #b4483d0a}
+.level-collector-hint {font-size: 12px; line-height: 1.6; color: #b9b0ac; margin: -8px 0 20px}
+.levels-loading, .levels-empty {padding: 100px 24px; color: #bbb2ad; text-align: center; font-size: 14px; line-height: 1.7}
+.level-summary {display: grid; grid-template-columns: minmax(0,1.3fr) minmax(0,1fr); gap: 28px; padding: 24px; border: 1px solid #ffffff20; border-radius: 7px; background: #1b1b1dd9; backdrop-filter: blur(16px)}
+.level-personal {display: flex; align-items: center; gap: 23px; min-width: 0}
+.level-personal-badge {width: 80px; min-height: 102px; display: flex; flex: none; align-items: center; justify-content: center; flex-direction: column; border: 1px solid #b43a304d; border-radius: 5px; background: #942c2010; padding: 12px 8px}
+.level-personal-badge strong {font-size: 45px; font-weight: 400; line-height: 1.1; letter-spacing: -.065em; color: #f1e6e2; font-variant-numeric: tabular-nums}
+.level-personal-badge span {font-size: 11px; line-height: 1.5; color: #c7a49a; margin-top: 5px}
+.level-personal-body {flex: 1; min-width: 0}
+.level-personal-title {display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 17px}
+.level-personal-title > div {min-width: 0}
+.level-personal-title .levels-kicker {font-size: 10px; letter-spacing: .09em}
+.level-personal-title h2 {font-size: 19px; font-weight: 500; line-height: 1.4; letter-spacing: -.025em; margin: 3px 0 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis}
+.level-next {font-size: 11px; color: #beb5b1; white-space: nowrap}
+.level-progress-label {display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 11px; font-variant-numeric: tabular-nums; line-height: 1.5; color: #d0c4bd; margin-bottom: 7px}
+.level-progress-label i {font-style: normal; color: #a39b96}
+.level-progress-track {height: 4px; background: #ffffff15; border-radius: 4px; overflow: hidden}
+.level-progress-track > span {display: block; height: 100%; background: #d34338; transition: width .6s ease; border-radius: inherit}
+.level-progress.is-large .level-progress-track {height: 6px}
+.level-personal .level-progress-label > span:first-child {font-size: 11px; color: #bcb2ac}
+.level-remaining {font-size: 12px; color: #aaa19c; line-height: 1.6; margin: 9px 0 0}
+.level-remaining strong {font-weight: 500; color: #e0cfc5}
+.level-connect {display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #ddd2cb; line-height: 1.6; margin-top: 9px}
+.level-connect:hover {color: #fff}
+.level-stream-stats {display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); align-content: center; border-left: 1px solid #ffffff1c; padding-left: 28px; gap: 22px; min-width: 0}
+.level-stream-stats > div {min-width: 0}
+.level-stream-stats span {display: block; font-size: 12px; color: #bcb2ad; line-height: 1.5}
+.level-stream-stats strong {display: block; font-size: 30px; letter-spacing: -.045em; font-weight: 400; color: #f0e9e4; line-height: 1.25; margin: 9px 0 5px; overflow-wrap: anywhere; font-variant-numeric: tabular-nums}
+.level-stream-stats small {font-size: 11px; line-height: 1.5; color: #a09893}
+.level-rules-bar {display: flex; align-items: center; gap: 26px; font-size: 12px; line-height: 1.7; color: #a9a09b; padding: 14px 0 0; margin-bottom: 29px; flex-wrap: wrap}
+.level-rules-bar b {font-weight: 500; color: #ded2c9}
+.level-rules-bar details {margin-left: auto; position: relative}
+.level-rules-bar summary {cursor: pointer; color: #c5b8ae; text-decoration: underline; text-decoration-color: #c5b8ae50; text-underline-offset: 4px; list-style: none}
+.level-rules-bar summary::after {content: '+'; margin-left: 9px; display: inline-block; text-decoration: none}
+.level-rules-bar details[open] summary::after {content: '−'}
+.level-rules-bar summary::-webkit-details-marker {display: none}
+.level-rules-bar p {position: absolute; top: 100%; right: 0; z-index: 5; width: 360px; max-width: calc(100vw - 40px); border: 1px solid #ffffff25; border-radius: 6px; background: #202023; color: #d3c8c0; margin: 12px 0 0; padding: 18px 20px; box-shadow: 0 12px 35px #0005; font-size: 13px; line-height: 1.8}
+.levels-overview {display: grid; grid-template-columns: minmax(0,1fr) 350px; gap: 34px; align-items: start}
+.level-community {min-width: 0}
+.level-section-heading {display: flex; align-items: center; justify-content: space-between; gap: 16px; min-width: 0; margin-bottom: 21px}
+.level-section-heading h2 {font-size: 18px; line-height: 1.4; font-weight: 500; letter-spacing: -.02em; margin: 0; color: #eae4df}
+.level-section-heading > span {font-size: 12px; color: #a89c94; line-height: 1.5}
+.level-table-head {display: grid; grid-template-columns: minmax(0,1fr) 100px 66px; gap: 14px; padding: 12px 0; border-top: 1px solid var(--level-line); border-bottom: 1px solid var(--level-line); color: #a99d95; font-size: 12px; line-height: 1.5}
+.level-table-head > span:first-child {padding-left: 40px}
+.level-table-head > span:not(:first-child) {text-align: right}
+.level-leaderboard {margin: 0; padding: 0; list-style: none}
+.level-leaderboard li {display: grid; grid-template-columns: 24px minmax(0,1fr) 100px 66px; gap: 16px; align-items: center; padding: 18px 0; border-bottom: 1px solid #ffffff10; min-height: 86px}
+.level-rank {font-size: 12px; color: #a79a91; font-variant-numeric: tabular-nums}
+.level-viewer {min-width: 0}
+.level-viewer > a {display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 500; line-height: 1.5; margin: 0 0 9px}
+.level-viewer .level-progress {display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 10px}
+.level-viewer .level-progress-label {grid-column: 2; grid-row: 1; font-size: 10px; margin: 0}
+.level-viewer .level-progress-label > span:first-child {display: none}
+.level-viewer .level-progress-track {grid-column: 1; grid-row: 1; height: 3px}
+.level-stream-count {font-size: 13px; color: #c0b2a8; text-align: right; font-variant-numeric: tabular-nums}
+.level-number {font-size: 25px; font-weight: 400; color: #e8dbd1; text-align: right; font-variant-numeric: tabular-nums}
+.level-leaders-empty {display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; min-height: 290px; padding: 36px 20px 30px; border-bottom: 1px solid #ffffff10}
+.level-empty-icon {display: grid; place-items: center; width: 51px; height: 51px; border: 1px solid #ffffff19; border-radius: 9px; color: #b0a096; background: #ffffff03; margin-bottom: 19px}
+.level-leaders-empty h3 {font-size: 16px; font-weight: 500; line-height: 1.5; color: #d9ccc3; letter-spacing: -.02em; margin: 0 0 8px}
+.level-leaders-empty p {font-size: 13px; line-height: 1.75; color: #aa9c92; max-width: 340px; margin: 0}
+.level-empty-action {display: inline-flex; align-items: center; gap: 7px; min-height: 40px; color: #e0b7a8; border: 0; background: none; font-size: 13px; padding: 8px 10px; margin-top: 15px; cursor: pointer}
+.level-empty-action:hover {color: #f7dbca}
+.level-quick-overlay {min-width: 0; border: 1px solid #ffffff1c; border-radius: 7px; background: #1b1b1dcc; padding: 19px}
+.level-quick-overlay .level-section-heading {margin-bottom: 17px}
+.level-quick-overlay .level-section-heading h2 {font-size: 16px}
+.level-section-heading > .level-demo-label {font-size: 11px; color: #c2b3a8; padding: 2px 7px; background: #ffffff04; border: 1px solid #ffffff18; border-radius: 3px}
+.level-preview-stage {position: relative; width: min(100%,360px); height: 540px; margin: 0 auto 38px; border-radius: 6px; background-color: #232326; background-image: linear-gradient(45deg,#2b2b2e 25%,transparent 25%),linear-gradient(-45deg,#2b2b2e 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#2b2b2e 75%),linear-gradient(-45deg,transparent 75%,#2b2b2e 75%); background-size: 20px 20px; background-position: 0 0,0 10px,10px -10px,-10px 0}
+.level-preview-stage .wl-root {height: 100%; border-radius: 6px}
+.level-preview-stage .wl-heading {height: auto; min-height: 0; max-width: none; margin: 0; padding: 0 0 17px}
+.level-preview-stage iframe {display: block; border: 0; width: 100%; height: 100%; background: transparent; border-radius: 6px}
+.level-preview-trigger {position: absolute; left: 0; right: 0; bottom: -35px; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 35px; border: 0; background: none; color: #cdb3a2; font-size: 12px; line-height: 1.5; padding: 8px 0; cursor: pointer}
+.level-preview-trigger:hover {color: #f0d0b9}
+.level-preview-stage.is-compact {height: 260px; margin: 0 0 14px; width: 100%}
+.level-preview-stage.is-compact .wl-root {padding: 14px 15px}
+.level-preview-stage.is-compact .wl-heading {padding-bottom: 12px}
+.level-preview-stage.is-compact .wl-messages {gap: 12px; padding-top: 12px}
+.level-preview-stage.is-compact .wl-text {font-size: 16px; line-height: 1.35; margin: 5px 0 8px}
+.level-preview-stage.is-compact .level-preview-trigger {display: none}
+.level-quick-actions {display: flex; align-items: stretch; border: 1px solid #ffffff23; border-radius: 4px; overflow: hidden}
+.level-quick-actions button {display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; color: #e0c9b8; font-size: 13px; border: 0; background: #ffffff04; cursor: pointer; padding: 9px 12px}
+.level-quick-actions button:first-child {flex: 1}
+.level-quick-actions button:last-child {width: 44px; flex: none; border-left: 1px solid #ffffff20}
+.level-quick-actions button:hover {background: #ffffff0b}
+.level-preview-caption {font-size: 12px; color: #a99a8e; line-height: 1.65; text-align: center; margin: 13px 0 0}
+.levels-overlay {display: grid; grid-template-columns: minmax(0,1.15fr) minmax(300px,.85fr); gap: 34px; align-items: start}
+.level-preview-panel {background: #19191bcc; border: 1px solid #ffffff1c; border-radius: 7px; padding: 24px; min-width: 0}
+.level-preview-heading {display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 25px}
+.level-preview-heading h2 {font-size: 18px; line-height: 1.4; font-weight: 500; letter-spacing: -.02em; margin: 0 0 6px}
+.level-preview-heading > div > span {font-size: 12px; color: #a89b91; line-height: 1.5}
+.level-preview-switch {display: flex; padding: 3px; border: 1px solid #ffffff1e; border-radius: 4px; gap: 3px}
+.level-preview-switch button {font-size: 12px; color: #b5a497; min-height: 34px; line-height: 1.5; padding: 6px 10px; background: none; border: 0; border-radius: 2px; cursor: pointer}
+.level-preview-switch button.is-active {color: #f1dbca; background: #ffffff0b}
+.level-preview-empty {display: grid; place-items: center; height: 100%; text-align: center; font-size: 14px; line-height: 1.7; color: #d3c1b2; background: #171719eb; padding: 28px; margin: 0; border-radius: 6px}
+.level-overlay-controls {min-width: 0}
+.level-obs-link {border: 1px solid #ffffff23; background: #1c1c1ed9; border-radius: 7px; padding: 23px 24px; margin-bottom: 22px}
+.level-form-heading {display: flex; align-items: center; gap: 10px; color: #bda99a; margin-bottom: 17px}
+.level-form-heading h2 {font-size: 16px; font-weight: 500; line-height: 1.5; letter-spacing: -.01em; color: #e0cfc2; margin: 0}
+.level-obs-link p {font-size: 13px; line-height: 1.8; color: #bcac9e; margin: 0 0 17px}
+.level-obs-link p strong {font-weight: 500; color: #e7d4c4; white-space: nowrap}
+.level-url-field {display: flex; align-items: stretch; border: 1px solid #ffffff26; border-radius: 4px; overflow: hidden; background: #11111266; margin-bottom: 12px}
+.level-url-field input {width: 100%; min-width: 0; padding: 12px; color: #e0c8b5; border: 0; background: transparent; font-size: 12px; line-height: 1.5; text-overflow: ellipsis}
+.level-url-field button {display: grid; place-items: center; width: 43px; flex: none; border: 0; border-left: 1px solid #ffffff20; background: #ffffff04; color: #d1b399; cursor: pointer}
+.level-url-field button:hover {background: #ffffff0a}
+.level-link-hint {font-size: 12px; line-height: 1.6; color: #b7a393}
+.level-obs-link small {display: block; margin-top: 8px; color: #d3a084; font-size: 12px; line-height: 1.6}
+.level-appearance-section {padding: 24px; border: 1px solid #ffffff1c; background: #19191bcc; border-radius: 7px}
+.level-appearance-section > .level-form-heading {margin-bottom: 24px}
+.level-appearance-form {display: flex; flex-direction: column; gap: 25px}
+.level-font-setting {min-width: 0; padding: 0; margin: 0; border: 0}
+.level-font-setting legend {padding: 0; margin-bottom: 12px; color: #c2afa0; font-size: 13px; line-height: 1.5}
+.level-font-options {display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; max-height: 254px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #796050 #ffffff08; padding: 3px; margin: -3px}
+.level-font-options > button {position: relative; min-width: 0; min-height: 76px; padding: 12px 10px; border: 1px solid #ffffff22; border-radius: 4px; background: #ffffff02; color: #eee3db; text-align: left; cursor: pointer}
+.level-font-options > button:hover {border-color: #a48d7c; background: #ffffff05}
+.level-font-options > button.is-selected {border-color: #d94d40; background: #bf42360b}
+.level-font-options > button:focus-visible {outline: 2px solid #e9bcb2; outline-offset: 3px}
+.level-font-options > button:disabled {opacity: .5; cursor: wait}
+.level-font-options button > span {display: block; margin-right: 12px; font-size: 10px; line-height: 1.5; color: #bfa996; white-space: nowrap; overflow: hidden; text-overflow: ellipsis}
+.level-font-options button > b {display: block; font-size: 17px; line-height: 1.5; font-weight: 500; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis}
+.level-font-options button > svg {position: absolute; top: 13px; right: 10px; color: #e57868}
+.level-color-setting {display: flex; align-items: center; justify-content: space-between; gap: 14px; font-size: 13px; color: #c2afa0}
+.level-color-setting > div {display: flex; align-items: center; gap: 12px}
+.level-color-setting > div > span {font-size: 12px; color: #ae9885; font-variant-numeric: tabular-nums}
+.level-color-setting input {appearance: none; width: 32px; height: 28px; border: 1px solid #ffffff33; padding: 3px; background: transparent; border-radius: 4px; cursor: pointer}
+.level-color-setting input::-webkit-color-swatch-wrapper {padding: 0}
+.level-color-setting input::-webkit-color-swatch {border: 0; border-radius: 1px}
+.level-range-setting {display: block}
+.level-range-setting > span {display: flex; align-items: center; justify-content: space-between; gap: 14px; color: #bfa996; font-size: 13px; line-height: 1.5}
+.level-range-setting strong {font-size: 12px; line-height: 1.5; color: #e3c8b0; font-weight: 400; font-variant-numeric: tabular-nums}
+.level-range-setting input {display: block; width: 100%; height: 4px; accent-color: #d34338; margin: 17px 0 0; cursor: pointer}
+.level-save {display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 42px; width: 100%; border: 1px solid #bf4236; background: #a12c25; color: #fff; border-radius: 4px; margin-top: 31px; padding: 10px 14px; font-size: 13px; cursor: pointer}
+.level-save:hover:not(:disabled) {background: #b9362d}
+.level-save:disabled {border-color: #ffffff20; background: #ffffff05; color: #c4b19f; opacity: 1}
+.level-viewer-hint {border: 1px solid #ffffff1c; border-radius: 5px; padding: 20px; color: #c2ac99; font-size: 13px; line-height: 1.7; margin: 0}
+@media (max-width: 1100px) {
+  .dropzone-v2 main.levels-page {padding: 26px 28px 56px}
+  .level-summary {grid-template-columns: minmax(0,1.4fr) minmax(0,1fr); gap: 23px; padding: 22px}
+  .level-personal {gap: 17px}
+  .level-stream-stats {padding-left: 23px; gap: 14px}
+  .level-stream-stats strong {font-size: 27px}
+  .levels-overview {grid-template-columns: minmax(0,1fr) 310px; gap: 26px}
+  .level-table-head {grid-template-columns: minmax(0,1fr) 77px 55px}
+  .level-leaderboard li {grid-template-columns: 22px minmax(0,1fr) 77px 55px; gap: 14px}
+  .levels-overlay {gap: 26px}
+  .level-preview-panel {padding: 22px}
+}
+@media (max-width: 850px) {
+  .level-summary {grid-template-columns: minmax(0,1fr); gap: 22px}
+  .level-stream-stats {border-left: 0; border-top: 1px solid #ffffff18; padding: 18px 0 0; gap: 22px}
+  .level-stream-stats strong {font-size: 26px; display: inline-block; margin-right: 9px; margin-bottom: 0; margin-top: 5px}
+  .level-stream-stats small {white-space: nowrap}
+  .levels-overlay {grid-template-columns: minmax(0,1fr)}
+  .level-preview-panel {padding: 22px}
+  .level-overlay-controls {display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 20px; align-items: start}
+  .level-obs-link {margin-bottom: 0}
+  .level-obs-link, .level-appearance-section {padding: 22px}
+  .levels-overview {grid-template-columns: minmax(0,1fr) 290px; gap: 22px}
+  .level-personal-title {margin-bottom: 12px}
+  .level-table-head {grid-template-columns: minmax(0,1fr) 64px 49px; font-size: 11px}
+  .level-leaderboard li {grid-template-columns: 20px minmax(0,1fr) 52px 42px; gap: 10px}
+  .level-quick-overlay {padding: 16px}
+  .level-viewer .level-progress {grid-template-columns: minmax(0,1fr)}
+  .level-viewer .level-progress-label {display: none}
+}
+@media (max-width: 700px) {
+  .dropzone-v2 main.levels-page {padding: 24px 20px 48px}
+  .levels-heading {gap: 20px; margin-bottom: 22px; align-items: end}
+  .levels-heading h1 {font-size: 30px; margin-top: 5px}
+  .levels-heading p {font-size: 13px; max-width: 190px}
+  .levels-kicker {font-size: 10px}
+  .level-channel {min-width: 145px; max-width: 180px; gap: 7px}
+  .level-channel > span {font-size: 11px}
+  .level-channel select {font-size: 12px; padding: 10px 29px 10px 11px}
+  .level-channel svg {right: 9px; width: 13px}
+  .levels-toolbar {align-items: stretch; gap: 0; margin-bottom: 22px}
+  .levels-tabs {gap: 24px}
+  .levels-tabs button {font-size: 13px; min-height: 50px}
+  .level-connection-controls {gap: 12px; margin-left: auto; min-height: 50px}
+  .level-status {font-size: 11px}
+  .levels-page .level-action {font-size: 12px; min-height: 36px; padding: 8px 10px}
+  .levels-overview {grid-template-columns: minmax(0,1fr); gap: 28px}
+  .level-community {order: 0}
+  .level-quick-overlay {order: 1; max-width: none; padding: 20px}
+  .level-preview-stage.is-compact {max-width: 370px; height: 275px; margin-left: auto; margin-right: auto}
+  .level-quick-actions {max-width: 370px; margin-left: auto; margin-right: auto}
+  .level-section-heading {margin-bottom: 18px}
+  .level-section-heading h2 {font-size: 17px}
+  .level-table-head {grid-template-columns: minmax(0,1fr) 90px 60px; font-size: 12px}
+  .level-leaderboard li {grid-template-columns: 24px minmax(0,1fr) 90px 60px; gap: 14px}
+  .level-viewer .level-progress {grid-template-columns: minmax(0,1fr) auto}
+  .level-viewer .level-progress-label {display: flex}
+  .level-rules-bar {gap: 8px 22px; margin-bottom: 24px; font-size: 12px}
+  .level-rules-bar details {width: 100%; margin-left: 0; margin-top: 2px}
+  .level-rules-bar p {position: static; width: 100%; max-width: none; margin-top: 12px; box-shadow: none; padding: 15px 17px}
+  .level-summary {padding: 20px; gap: 18px}
+  .level-personal-badge {width: 68px; min-height: 94px}
+  .level-personal-badge strong {font-size: 40px}
+  .level-personal-title h2 {font-size: 18px}
+  .level-next {font-size: 10px}
+  .level-remaining, .level-connect {font-size: 12px}
+  .level-leaders-empty {min-height: 260px; padding: 32px 12px}
+  .level-overlay-controls {grid-template-columns: minmax(0,1fr)}
+  .level-preview-stage {height: 510px}
+  .level-preview-heading {align-items: flex-start}
+  .level-preview-heading h2 {font-size: 17px}
+}
+@media (max-width: 480px) {
+  .dropzone-v2 main.levels-page {padding-left: 16px; padding-right: 16px}
+  .levels-heading {grid-template-columns: minmax(0,1fr); gap: 20px}
+  .levels-heading h1 {font-size: 32px}
+  .levels-heading p {max-width: none}
+  .level-channel {max-width: none; width: 100%; min-width: 0}
+  .level-channel select {font-size: 14px}
+  .level-connection-controls {width: 100%; justify-content: space-between; padding: 12px 0; border-top: 1px solid #ffffff0d}
+  .level-status {font-size: 12px}
+  .levels-tabs {width: 100%}
+  .level-summary {padding: 18px; gap: 19px}
+  .level-personal {gap: 15px}
+  .level-personal-badge {width: 61px; min-height: 90px}
+  .level-personal-badge strong {font-size: 36px}
+  .level-personal-title {gap: 8px; align-items: flex-start}
+  .level-personal-title h2 {font-size: 16px}
+  .level-personal-title .levels-kicker {font-size: 9px}
+  .level-next {display: none}
+  .level-stream-stats {gap: 12px}
+  .level-stream-stats span {font-size: 11px}
+  .level-stream-stats strong {font-size: 26px; display: block; margin-bottom: 3px; margin-right: 0}
+  .level-stream-stats small {font-size: 10px; white-space: normal}
+  .level-table-head {grid-template-columns: minmax(0,1fr) 82px 58px; gap: 9px; font-size: 11px}
+  .level-table-head > span:first-child {padding-left: 30px}
+  .level-leaderboard li {grid-template-columns: 20px minmax(0,1fr) 72px 49px; gap: 10px}
+  .level-viewer .level-progress {grid-template-columns: minmax(0,1fr)}
+  .level-viewer .level-progress-label {display: none}
+  .level-viewer > a {font-size: 13px}
+  .level-preview-panel, .level-quick-overlay, .level-obs-link, .level-appearance-section {padding: 18px}
+  .level-preview-stage {height: 470px}
+  .level-preview-stage.is-compact {height: 260px}
+  .level-preview-trigger {font-size: 11px}
+  .level-preview-heading {gap: 16px}
+  .level-preview-switch {width: 100%}
+  .level-preview-switch button {flex: 1}
+}
+@media (prefers-reduced-motion: reduce) {
+  .levels-page * {transition: none !important; animation: none !important; scroll-behavior: auto !important}
+}
+
+/* Community profiles use only the owner's curated artwork catalogue. */
+.level-open-profile {display: inline-flex; align-items: center; gap: 8px; max-width: 100%; padding: 0; border: 0; font: inherit; color: inherit; background: none; text-align: left; cursor: pointer}
+.level-open-profile svg {flex: none; color: #a69488}
+.level-viewer > a:hover, .level-open-profile:hover {color: #eed0bc}
+.level-profile-state {display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; min-height: 330px; border: 1px solid #ffffff1c; border-radius: 7px; padding: 36px 24px; text-align: center; background: #1b1b1d88}
+.level-profile-state h2 {font-size: 23px; font-weight: 500; letter-spacing: -.035em; line-height: 1.4; margin: 0}
+.level-profile-state p {font-size: 14px; line-height: 1.7; color: #b9aaa0; margin: 0}
+.level-profile {min-width: 0}
+.level-profile-back {display: inline-flex; align-items: center; gap: 4px; min-height: 36px; padding: 0; font-size: 13px; color: #c9b5a5; border: 0; background: none; margin-bottom: 14px; cursor: pointer}
+.level-profile-banner {height: 164px; background: #1b1b1f; border: 1px solid #ffffff20; border-bottom: 0; border-radius: 8px 8px 0 0; overflow: hidden; position: relative; isolation: isolate}
+.level-profile-banner > img {width: 100%; height: 100%; display: block; object-fit: cover}
+.level-profile-banner > span {position: absolute; right: 36px; top: 26px; font-size: clamp(58px,8vw,102px); line-height: 1; font-weight: 700; letter-spacing: -.065em; color: #ffffff08; user-select: none}
+.level-profile-banner::after {content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: linear-gradient(90deg,#b3342a 0%,#b3342a 16%,#ffffff05 16%,#ffffff05 100%)}
+.level-profile-banner-lines {position: absolute; left: 26%; top: -110px; width: 245px; height: 440px; border-left: 1px solid #ffffff06; border-right: 1px solid #ffffff06; transform: rotate(28deg); background: linear-gradient(90deg,#ffffff02,transparent); pointer-events: none}
+.level-profile-content {padding: 0 27px 28px; border: 1px solid #ffffff20; border-top: 0; border-radius: 0 0 8px 8px; background: #1a1a1dd9; backdrop-filter: blur(14px)}
+.level-profile-identity {display: flex; align-items: flex-start; gap: 21px; padding-bottom: 26px; border-bottom: 1px solid #ffffff16; min-width: 0}
+.level-profile-avatar {width: 108px; height: 108px; border: 5px solid #1a1a1d; border-radius: 15px; flex: none; background: #282629; overflow: hidden; margin-top: -35px; position: relative; z-index: 1; display: grid; place-items: center; color: #d5bfb2}
+.level-profile-avatar img {display: block; width: 100%; height: 100%; object-fit: cover}
+.level-profile-avatar > span {font-size: 39px; font-weight: 400}
+.level-profile-name {padding-top: 19px; min-width: 0}
+.level-profile-name > span {font-size: 10px; letter-spacing: .11em; color: #a79b94; line-height: 1.4}
+.level-profile-name h2 {font-size: 25px; line-height: 1.35; letter-spacing: -.035em; font-weight: 500; margin: 3px 0 5px; overflow-wrap: anywhere}
+.level-profile-name > a {display: inline-flex; align-items: center; gap: 4px; font-size: 12px; line-height: 1.5; color: #bba99b}
+.level-profile-actions {margin-left: auto; padding-top: 24px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; justify-content: flex-end}
+.level-profile-saved {display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: #b9c6ad; line-height: 1.5}
+.level-profile-grid {display: grid; grid-template-columns: minmax(0,1.15fr) minmax(0,1fr); gap: 24px; padding: 26px 0}
+.level-profile-progress, .level-profile-rank {border: 1px solid #ffffff1b; border-radius: 6px; padding: 22px 23px; background: #ffffff02; min-width: 0}
+.level-profile .level-section-heading {margin-bottom: 20px}
+.level-profile .level-section-heading h3 {font-size: 15px; font-weight: 500; line-height: 1.5; letter-spacing: -.015em; color: #e8dcd2; margin: 0}
+.level-profile .level-section-heading > span {font-size: 11px; line-height: 1.5; color: #ae9c8e}
+.level-profile-xp {display: flex; align-items: center; gap: 22px; margin: 5px 0 19px}
+.level-profile-xp > strong {font-size: 51px; line-height: 1; letter-spacing: -.06em; font-weight: 400; font-variant-numeric: tabular-nums}
+.level-profile-xp > div {display: flex; flex-direction: column; gap: 6px; min-width: 0}
+.level-profile-xp span {font-size: 12px; line-height: 1.5; color: #bcaa9c}
+.level-profile-xp b {font-size: 14px; line-height: 1.5; font-weight: 400; color: #ead7c7; font-variant-numeric: tabular-nums}
+.level-profile-xp i {font-style: normal; color: #a79484; font-size: 12px}
+.level-profile-statline {display: flex; justify-content: space-between; gap: 15px; margin-top: 17px; flex-wrap: wrap}
+.level-profile-statline > span {font-size: 11px; line-height: 1.6; color: #ae9988}
+.level-profile-statline strong {display: block; font-size: 12px; font-weight: 400; color: #d9c2af; margin-top: 4px}
+.level-profile-rank-value {display: flex; align-items: center; gap: 24px; padding: 13px 6px 18px}
+.level-profile-rank-icon {display: block; width: 62px; height: 62px; object-fit: contain; flex: none}
+.level-profile-rank-value strong {display: block; font-size: 23px; line-height: 1.4; font-weight: 500; letter-spacing: -.02em; color: var(--rank-color)}
+.level-profile-rank-value div > span {display: inline-flex; align-items: center; gap: 5px; font-size: 11px; line-height: 1.5; color: #b7a393; margin-top: 7px}
+.level-riot-id {display: inline-flex; align-items: center; gap: 6px; font-size: 13px; line-height: 1.5; color: #d7bba3; margin-top: 4px; overflow-wrap: anywhere; max-width: 100%}
+.level-profile-no-rank {padding: 9px 0}
+.level-profile-no-rank p {font-size: 17px; line-height: 1.5; color: #d6c2b1; margin: 0 0 16px}
+.level-profile-no-rank a, .level-profile-no-rank span {display: inline-flex; align-items: center; gap: 6px; font-size: 12px; line-height: 1.6; color: #b69d87}
+.level-profile-favorites {padding-top: 2px}
+.level-favorite-cards {display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px}
+.level-favorite-card {height: 195px; min-width: 0; background: #242327; border: 1px solid #ffffff1d; border-radius: 5px; position: relative; overflow: hidden}
+.level-favorite-card > img {position: absolute; top: 0; width: 100%; height: 100%; display: block; object-fit: cover; object-position: center 19%; opacity: .8}
+.level-favorite-card > div {position: absolute; bottom: 0; left: 0; right: 0; padding: 36px 17px 16px; background: linear-gradient(transparent,#141416ee 70%)}
+.level-favorite-card span {display: block; font-size: 9px; letter-spacing: .12em; line-height: 1.5; color: #c2b6ac}
+.level-favorite-card strong {display: block; font-size: 21px; font-weight: 500; line-height: 1.4; letter-spacing: -.015em; margin-top: 3px}
+.level-favorites-empty {border: 1px dashed #ffffff26; border-radius: 5px; padding: 28px 25px; background: #ffffff01}
+.level-favorites-empty p {font-size: 15px; line-height: 1.5; color: #d7c3b2; margin: 0 0 12px}
+.level-favorites-empty > button, .level-favorites-empty > span {display: inline-flex; align-items: center; gap: 7px; border: 0; background: none; padding: 0; font-size: 13px; line-height: 1.7; color: #bca18a}
+.level-favorites-empty > button {cursor: pointer}
+.level-profile-editor {margin-top: 26px}
+.level-profile-art-collections {display: grid; gap: 25px}
+.level-profile-art-collections fieldset {min-width: 0; border: 0; padding: 0; margin: 0}
+.level-profile-art-collections legend {padding: 0; margin-bottom: 12px; font-size: 13px; line-height: 1.5; color: #c8b7ab}
+.level-avatar-options {display: grid; grid-template-columns: repeat(6,minmax(0,104px)); gap: 12px}
+.level-banner-options {display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px}
+.level-avatar-options > button, .level-banner-options > button {position: relative; min-width: 0; padding: 7px; border: 1px solid #ffffff24; border-radius: 5px; background: #ffffff03; color: #e1d2c7; text-align: left; cursor: pointer; transition: border-color .15s,background .15s}
+.level-avatar-options > button:hover, .level-banner-options > button:hover {border-color: #a59184; background: #ffffff06}
+.level-avatar-options > button.is-selected, .level-banner-options > button.is-selected {border-color: #df5445; box-shadow: 0 0 0 1px #df5445}
+.level-avatar-options > button:focus-visible, .level-banner-options > button:focus-visible {outline: 2px solid #e9bcb2; outline-offset: 4px}
+.level-avatar-options > button:disabled, .level-banner-options > button:disabled {opacity: .5; cursor: wait}
+.level-avatar-option-image, .level-banner-option-image {display: grid; place-items: center; width: 100%; overflow: hidden; border-radius: 3px; background: #282429}
+.level-avatar-option-image {aspect-ratio: 1}
+.level-banner-option-image {aspect-ratio: 4/1}
+.level-avatar-option-image > img, .level-banner-option-image > img {display: block; width: 100%; height: 100%; min-height: 0; object-fit: cover}
+.level-avatar-option-image > b {font-weight: 400; font-size: 28px; color: #cebcb1}
+.level-banner-option-image.is-default {background: #1b1b1f; border-bottom: 2px solid #a9372e; box-sizing: border-box}
+.level-banner-option-image > b {font-weight: 600; font-size: clamp(18px,2.7vw,34px); line-height: 1; letter-spacing: -.055em; color: #ffffff26}
+.level-avatar-options button > span:last-of-type, .level-banner-options button > span:last-of-type {display: block; margin: 8px 1px 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; line-height: 1.5}
+.level-avatar-options button > i, .level-banner-options button > i {position: absolute; top: 11px; right: 11px; display: grid; place-items: center; width: 20px; height: 20px; border: 1px solid #ed9280; border-radius: 3px; color: #fff; background: #b7372c}
+.level-agent-picker-heading {display: flex; align-items: center; gap: 20px; justify-content: space-between; margin: 24px 0 16px}
+.level-agent-picker-heading label {display: flex; align-items: center; gap: 9px; border: 1px solid #ffffff24; border-radius: 4px; padding: 0 12px; color: #bca28b; background: #11111233; max-width: 280px; width: 100%; min-width: 0}
+.level-agent-picker-heading input {min-width: 0; width: 100%; padding: 10px 0; border: 0; background: none; color: #e3c9b0; font-size: 13px; line-height: 1.5}
+.level-agent-picker-heading input::placeholder {color: #ac9077}
+.level-agent-picker-heading > span {font-size: 12px; line-height: 1.5; color: #c1a083; white-space: nowrap}
+.level-agent-picker {display: grid; grid-template-columns: repeat(8,minmax(0,1fr)); gap: 12px; max-height: 340px; overflow-y: auto; scrollbar-color: #655143 #1a1a1d; padding: 2px 6px 2px 2px}
+.level-agent-picker > button {min-width: 0; position: relative; padding: 0; border: 1px solid #ffffff22; background: #29252a; border-radius: 4px; overflow: hidden; text-align: left; cursor: pointer}
+.level-agent-picker > button:hover {border-color: #cb8870}
+.level-agent-picker > button.is-selected {border-color: #df5445; box-shadow: 0 0 0 1px #df5445}
+.level-agent-picker > button:disabled {opacity: .38}
+.level-agent-picker img {width: 100%; aspect-ratio: 3/3.4; height: auto; object-fit: cover; object-position: center top; display: block; background: #343037}
+.level-agent-picker button > span {display: block; padding: 7px 8px; color: #e5cbb4; font-size: 12px; line-height: 1.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap}
+.level-agent-picker button > i {position: absolute; top: 6px; right: 6px; background: #b7372c; border: 1px solid #ed9280; color: #fff; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 3px}
+.level-profile-editor-actions {display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 24px}
+.level-profile-editor-actions > span {font-size: 12px; color: #b19479; line-height: 1.6}
+.level-profile-editor-actions > button {flex: none}
+@media(max-width: 1000px) {
+ .level-agent-picker {grid-template-columns: repeat(6,minmax(0,1fr))}
+ .level-profile-actions {padding-top: 20px}
+ .level-profile-actions .level-action {font-size: 12px}
+ .level-profile-avatar {width: 96px; height: 96px}
+ .level-profile-name h2 {font-size: 23px}
+}
+@media(max-width: 700px) {
+ .level-profile-banner {height: 130px}
+ .level-profile-content {padding: 0 20px 23px}
+ .level-profile-identity {gap: 15px; flex-wrap: wrap; padding-bottom: 22px}
+ .level-profile-actions {width: 100%; padding-top: 0; justify-content: flex-start; margin-left: 0; gap: 12px}
+ .level-profile-avatar {width: 90px; height: 90px; margin-top: -28px}
+ .level-profile-name {padding-top: 15px; flex: 1}
+ .level-profile-name h2 {font-size: 22px}
+ .level-profile-grid {grid-template-columns: minmax(0,1fr); gap: 17px; padding: 22px 0}
+ .level-profile-progress, .level-profile-rank {padding: 20px}
+ .level-profile-rank-value {padding-top: 0}
+ .level-favorite-cards {gap: 12px}
+ .level-favorite-card {height: 165px}
+ .level-favorite-card > div {padding: 30px 12px 12px}
+ .level-favorite-card strong {font-size: 18px}
+ .level-agent-picker {grid-template-columns: repeat(5,minmax(0,1fr)); gap: 10px}
+ .level-avatar-options {grid-template-columns: repeat(6,minmax(0,1fr)); gap: 9px}
+ .level-banner-options {grid-template-columns: repeat(2,minmax(0,1fr))}
+ .level-profile-editor-actions {align-items: flex-start; flex-direction: column; gap: 13px}
+ .level-profile-editor-actions > button {width: 100%}
+}
+@media(max-width: 480px) {
+ .level-profile-content {padding: 0 16px 20px}
+ .level-profile-banner {height: 112px}
+ .level-profile-banner > span {font-size: 66px; right: 20px; top: 24px}
+ .level-profile-avatar {width: 80px; height: 80px; border-width: 4px; border-radius: 12px}
+ .level-profile-name h2 {font-size: 21px}
+ .level-favorite-cards {gap: 8px}
+ .level-favorite-card {height: 135px}
+ .level-favorite-card > div {padding: 25px 9px 9px}
+ .level-favorite-card strong {font-size: 15px}
+ .level-favorite-card span {font-size: 8px}
+ .level-agent-picker {grid-template-columns: repeat(4,minmax(0,1fr)); gap: 9px}
+ .level-agent-picker button > span {font-size: 11px; padding: 6px}
+ .level-avatar-options {grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px}
+ .level-banner-options {grid-template-columns: minmax(0,1fr)}
+ .level-agent-picker-heading {gap: 12px}
+ .level-agent-picker-heading > span {font-size: 11px}
+ .levels-tabs {gap: 23px}
+}
+
+/* Titles and the monthly table share the existing restrained profile style. */
+.levels-tabs > button {flex: 0 0 auto; white-space: nowrap}
+@media (max-width: 560px) {
+ .levels-tabs {display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 18px; flex-basis:100%}
+ .levels-tabs > button {min-width:0; justify-content:flex-start}
+ .level-connection-controls {width:100%; margin-left:0}
+}
+.level-title-tag {display:inline-flex; width:fit-content; max-width:100%; padding:2px 6px; border:1px solid #b349393f; border-radius:3px; color:#d0aaa0; font-size:10px; line-height:1.4; white-space:nowrap; margin:3px 0 7px}
+.level-profile-title {display:block; width:fit-content; font-size:11px; line-height:1.5; color:#d0a092; font-weight:400; margin:2px 0 6px}
+.level-title-picker {border:0; padding:0; margin:25px 0 0; min-width:0}
+.level-title-picker legend {font-size:13px; line-height:1.5; color:#c8b7ab; margin-bottom:12px; padding:0}
+.level-title-picker > div {display:flex; flex-wrap:wrap; gap:9px}
+.level-title-picker button {display:inline-flex; align-items:center; gap:7px; padding:10px 12px; background:#ffffff03; color:#ded0c5; border:1px solid #ffffff25; border-radius:4px; font-size:12px; line-height:1.5; cursor:pointer}
+.level-title-picker button small {font-size:10px; color:#b2a194}
+.level-title-picker button.is-selected {border-color:#df5445; color:#f2d6cd; background:#a9372310}
+.level-title-picker button:disabled {opacity:.45; cursor:default}
+.level-season {min-width:0}
+.level-season-heading {display:flex; justify-content:space-between; align-items:center; gap:24px; margin:10px 0 22px}
+.level-season-heading h2 {font-weight:400; font-size:29px; letter-spacing:-.04em; line-height:1.3; margin:7px 0 9px}
+.level-season-heading p {font-size:13px; line-height:1.6; color:#b3a49a; margin:0}
+.level-season-heading label {display:flex; flex-direction:column; gap:8px; min-width:170px; font-size:11px; color:#ae9c8f}
+.level-season-heading select {padding:11px 12px; color:#e7d8cb; background:#232124; border:1px solid #ffffff26; border-radius:4px; font-size:13px; max-width:100%}
+.level-season-note {display:flex; justify-content:space-between; gap:15px; flex-wrap:wrap; padding:13px 0; color:#a99c92; font-size:11px; line-height:1.6; border-top:1px solid #ffffff18}
+.level-season-note span:first-child {color:#ccb7a7}
+.level-season-podium {display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:17px; margin-top:15px}
+.level-season-place {display:flex; gap:19px; min-width:0; border:1px solid #ffffff24; border-radius:6px; padding:24px 21px; background:#1c1b1de0}
+.level-season-place.is-first {border-top-color:#c64b3e}
+.level-season-position {font-size:40px; line-height:1; font-weight:300; color:#89776a; letter-spacing:-.05em}
+.level-season-place.is-first .level-season-position {color:#d5806a}
+.level-season-place > div {min-width:0; display:flex; flex-direction:column; align-items:flex-start; gap:6px}
+.level-season-place .level-open-profile {font-size:15px; overflow-wrap:anywhere}
+.level-season-place > div > span:not(.level-title-tag) {font-size:13px; color:#94867b}
+.level-season-place strong {font-weight:400; font-size:27px; line-height:1.4; margin-top:auto; font-variant-numeric:tabular-nums}
+.level-season-place small,.level-season-list small {font-size:11px; font-weight:400; color:#ac9786}
+.level-season-summary {display:flex; flex-wrap:wrap; gap:12px 25px; font-size:11px; line-height:1.6; color:#a89586; padding:20px 0}
+.level-season-me {display:flex; justify-content:space-between; gap:15px; padding:17px 20px; border:1px solid #b8453640; background:#69271c16; border-radius:5px; font-size:13px; color:#cfb4a1; margin:0 0 15px}
+.level-season-me b {font-weight:500; color:#e2c9b5; margin-left:8px}
+.level-season-list {padding:0; list-style:none; margin:0; border-top:1px solid #ffffff20}
+.level-season-list li {display:grid; grid-template-columns:34px minmax(0,1fr) auto; gap:18px; padding:16px 18px; align-items:center; border-bottom:1px solid #ffffff13; font-size:13px}
+.level-season-list li > span {font-size:12px; color:#a58d7b; font-variant-numeric:tabular-nums}
+.level-season-list li.is-me {background:#ffffff03}
+.level-season-list li > div {display:flex; align-items:center; gap:14px; min-width:0; flex-wrap:wrap}
+.level-season-list .level-title-tag {margin:0}
+.level-season-list strong {font-size:16px; font-weight:400; white-space:nowrap; font-variant-numeric:tabular-nums}
+@media(max-width:700px){.level-season-podium{gap:10px}.level-season-place{padding:17px 13px;gap:11px;flex-direction:column}.level-season-position{font-size:30px}.level-season-place .level-open-profile{font-size:13px}.level-season-place strong{font-size:23px}.level-season-heading{align-items:flex-start;flex-wrap:wrap}.level-season-heading label{min-width:100%;}.level-season-list li{padding:14px 5px;gap:10px;grid-template-columns:24px minmax(0,1fr) auto}.level-season-list li>div{gap:4px}.level-season-me{flex-wrap:wrap;font-size:12px}.level-title-picker button{padding:9px 10px}}
+
+.level-stream-count>small{display:block;margin-top:4px;font-size:10px;line-height:1.5;color:#a09893;font-weight:400;white-space:normal}

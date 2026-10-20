@@ -1,0 +1,1 @@
+ALTER TABLE `giveaway_feedback` ADD `post_url` text;
