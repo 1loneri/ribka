@@ -15,11 +15,25 @@ function randomIndex(length:number){
 
 export async function answerChatCommand(connection:Connection,channel:string,lease:string,message:FeedMessage){
  const now=Date.now(),command=message.text.trim().toLowerCase();
- if(message.kind!=='message'||!['!вирт','!секс'].includes(command)||!message.id||message.id.length>200||!/^[a-z0-9_]{1,25}$/.test(channel)||(message.source&&message.source.toLowerCase()!==channel)||!Number.isFinite(message.created)||message.created<now-45000||message.created>now+5000)return;
+ if(message.kind!=='message'||!['!вирт','!секс','!монетка'].includes(command)||!message.id||message.id.length>200||!/^[a-z0-9_]{1,25}$/.test(channel)||(message.source&&message.source.toLowerCase()!==channel)||!Number.isFinite(message.created)||message.created<now-45000||message.created>now+5000)return;
  const valid=(person:Chatter)=>/^\d{1,30}$/.test(person.user_id)&&/^[a-z0-9_]{1,25}$/i.test(person.login)&&!KNOWN_BOTS.has(person.login.toLowerCase());
  const candidate=(person:Chatter)=>valid(person)&&person.user_id!==connection.broadcaster&&person.login.toLowerCase()!==connection.channel.toLowerCase();
  if(!valid({user_id:message.userId,login:message.login}))return;
  const db=botDb();
+ if(command==='!монетка'){
+  const side=randomIndex(2)===0?'орёл':'решка';
+  const text=chatText('Лёха: @'+message.login+', монетка показывает — '+side+'!');
+  const id='command:'+channel+':'+message.id;
+  const queued=await db.prepare(`INSERT OR IGNORE INTO twitch_bot_messages(id,channel,kind,text,created,ready_at,expires,reply_to)
+   SELECT ?,?,'command',?,?,?,?,? WHERE EXISTS(SELECT 1 FROM twitch_bot_settings s JOIN chat_channels c ON c.channel=s.channel AND c.owner=s.owner WHERE s.channel=? AND s.owner=? AND s.enabled=1 AND c.collector_token=? AND c.collector_until>?)
+   AND EXISTS(SELECT 1 FROM streamers WHERE email=? AND (channel=? OR EXISTS(SELECT 1 FROM twitch_bot_channels WHERE channel=? AND owner=?)))
+   AND EXISTS(SELECT 1 FROM chat_messages WHERE channel=? AND message_id=? AND user_id=? AND removed=0)
+   AND (SELECT COUNT(*) FROM twitch_bot_messages WHERE channel=? AND kind='command' AND status='queued' AND expires>?)<10`)
+   .bind(id,channel,text,now,now,now+30000,message.id,channel,connection.user,lease,now,connection.email.toLowerCase(),channel,channel,connection.user,channel,message.id,message.userId,channel,now).run();
+  if(!queued.meta.changes)return;
+  await flushBot(connection,channel);await finishBotReply(connection,id,channel);
+  return;
+ }
  const active=await db.prepare(`SELECT c.stream_started FROM level_channels c WHERE c.channel=? AND c.owner=? AND c.stream_live=1 AND c.checked_at>?`).bind(channel,connection.user,now-90000).first<{stream_started:number}>();
  const since=active?.stream_started||now-2*3600000;
  const [participants,history]=await Promise.all([
