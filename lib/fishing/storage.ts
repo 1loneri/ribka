@@ -83,7 +83,10 @@ async function recordCommand(g:Game,id:string,name:string,text:string,lease:stri
 }
 
 export async function ingestFish(channel:string,lease:string,id:string,username:string,text:string){
- if(!commands.includes(text.trim().split(/\s+/)[0].toLowerCase()))return null;
+ const cmd=text.trim().split(/\s+/)[0].toLowerCase();
+ // Русские !баланс/!магазин принадлежат Monster; рыболовные аналоги: !balance/!shop.
+ if(cmd==='!баланс'||cmd==='!магазин')return null;
+ if(!commands.includes(cmd))return null;
  const name=cleanUsername(username);if(!name||!id||!lease)return null;
  const g=await fishDb().prepare('SELECT * FROM fishing_games WHERE channel=? AND enabled=1 AND collector_token=? AND collector_until>?').bind(channel,lease,Date.now()).first<Game>();if(!g)return null;
  if(duelCommands.includes(text.trim().split(/\s+/)[0].toLowerCase())){
