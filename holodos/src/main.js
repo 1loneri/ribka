@@ -104,9 +104,9 @@ function page(body){
  return '<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Лёха · Холодос</title><style>body{background:#0e100e;color:#eee;font:16px system-ui;margin:0;padding:9vh 18px}main{max-width:690px;margin:auto}h1{font-size:44px}h1 b{color:#9aea42}section{background:#1b201a;border:1px solid #3b4b35;padding:25px;border-radius:16px}p{line-height:1.6}a,button{background:#9aea42;border:0;color:#14240e;padding:13px 19px;border-radius:9px;font-weight:bold;text-decoration:none;cursor:pointer;display:inline-block}a.link{background:transparent;color:#9aea42;padding:0;text-decoration:underline}label{display:block;margin:13px 0 5px}input{box-sizing:border-box;padding:12px;background:#111;color:white;border:1px solid #666;border-radius:8px;display:block;width:100%;margin-top:5px}code{color:#9aea42;overflow-wrap:anywhere}small{color:#bbb}summary{cursor:pointer}</style><main><h1>ЛЁХА<b>.</b></h1><section>'+body+'</section><p><small>Отдельный бот команд, не связанный со старым сайтом. W-монеты сохраняются на сервере.</small></p></main></html>';
 }
 async function formData(req){let text='';for await(const chunk of req){text+=chunk;if(text.length>4096)throw Error('Слишком большая форма');}return new URLSearchParams(text);}
-function setupForm(){
+function setupForm(token){
  const a=app();
- return '<form method="post" action="/configure"><label>Client ID<input name="client_id" required maxlength="100" autocomplete="off" value="'+escape(a?.id||'')+'"></label><label>Client Secret<input type="password" name="client_secret" required maxlength="200" autocomplete="off" placeholder="Secret из Twitch Developer Console"></label><p><button type="submit">Сохранить настройки Twitch</button></p></form>';
+ return '<form method="post" action="/configure"><input type="hidden" name="csrf" value="'+token+'"><label>Client ID<input name="client_id" required maxlength="100" autocomplete="off" value="'+escape(a?.id||'')+'"></label><label>Client Secret<input type="password" name="client_secret" required maxlength="200" autocomplete="off" placeholder="Secret из Twitch Developer Console"></label><p><button type="submit">Сохранить настройки Twitch</button></p></form>';
 }
 const server=http.createServer(async(req,res)=>{
  const url=new URL(req.url,'http://localhost');
@@ -140,20 +140,19 @@ const server=http.createServer(async(req,res)=>{
  };
  let basicPassword='';
  try{const hdr=req.headers.authorization||'';if(hdr.startsWith('Basic '))basicPassword=Buffer.from(hdr.slice(6),'base64').toString('utf8').split(':').slice(1).join(':');}catch{}
- // Only accept form submissions from this exact Railway hostname.
- const sameOrigin=()=>{
-  try{
-   const hostname='holodos-bot-production.up.railway.app';
-   return req.headers.host===hostname&&new URL(String(req.headers.origin||'')).origin==='https://'+hostname;
-  }catch{return false;}
- };
  const isAdmin=authenticated()||(basicPassword.length>0&&equal(basicPassword,pass));
- const loginPage=(error='')=>'<h2>Вход в Холодос</h2><p>Панель работает. Для настройки Twitch нужен пароль администратора.</p>'+(error?'<p style="color:#ffb9b9">'+escape(error)+'</p>':'')+'<form action="/login" method="post"><label>Пароль панели<input type="password" name="password" required autocomplete="current-password"></label><p><button type="submit">Войти</button></p></form><p><small>Пароль находится в Railway: holodos-bot → Variables → ADMIN_PASSWORD. Не присылай его в чат.</small></p>';
+ // Signed, form-specific CSRF tokens work even when a browser or proxy omits Origin.
+ const csrf=(purpose)=>{
+  const session=(req.headers.cookie||'').split(';').map(s=>s.trim()).find(s=>s.startsWith(cookieName+'='))?.slice(cookieName.length+1)||'';
+  return createHmac('sha256',key).update('csrf:v3:'+purpose+':'+(purpose==='login'?'guest':session)).digest('base64url');
+ };
+ const validCsrf=(form,purpose)=>equal(String(form.get('csrf')||''),csrf(purpose));
+ const loginPage=(error='')=>'<h2>Вход в Холодос</h2><p>Панель работает. Для настройки Twitch нужен пароль администратора.</p>'+(error?'<p style="color:#ffb9b9">'+escape(error)+'</p>':'')+'<form action="/login" method="post"><input type="hidden" name="csrf" value="'+csrf('login')+'"><label>Пароль панели<input type="password" name="password" required autocomplete="current-password"></label><p><button type="submit">Войти</button></p></form><p><small>Пароль находится в Railway: holodos-bot → Variables → ADMIN_PASSWORD. Не присылай его в чат.</small></p>';
  if(!isAdmin){
   if(req.method==='POST'&&url.pathname==='/login'){
-   if(!sameOrigin()){html(403,loginPage('Неверный адрес запроса.'));return;}
    try{
     const form=await formData(req),candidate=String(form.get('password')||'');
+    if(!validCsrf(form,'login')){html(403,loginPage('Обнови страницу и попробуй ещё раз.'));return;}
     if(candidate.length>1024||!equal(candidate,pass)){html(401,loginPage('Неверный пароль.'));return;}
     const expiry=String(Date.now()+authAge),value=expiry+'.'+signed(expiry);
     res.writeHead(303,{Location:'/',"Cache-Control":"no-store",'Set-Cookie':cookieName+'='+value+'; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800'});res.end();
@@ -163,14 +162,16 @@ const server=http.createServer(async(req,res)=>{
   html(req.method==='GET'&&url.pathname==='/'?200:401,loginPage());return;
  }
  if(req.method==='POST'&&url.pathname==='/logout'){
-  if(!sameOrigin()){html(403,'Неверный адрес запроса');return;}
+  const form=await formData(req);
+  if(!validCsrf(form,'disconnect')){html(403,'Форма устарела, обнови страницу.');return;}
   res.writeHead(303,{Location:'/',"Cache-Control":"no-store",'Set-Cookie':cookieName+'=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0'});res.end();return;
  }
  if(req.method==='POST'){
-  if(!sameOrigin()){html(403,'Неверный адрес запроса');return;}
   if(url.pathname==='/configure'){
    try{
-    const f=await formData(req),id=(f.get('client_id')||'').trim(),s=(f.get('client_secret')||'').trim();
+    const f=await formData(req);
+    if(!validCsrf(f,'configure')){html(403,'Форма устарела, обнови страницу.');return;}
+    const id=(f.get('client_id')||'').trim(),s=(f.get('client_secret')||'').trim();
     if(!/^[a-z0-9]{10,100}$/i.test(id)||s.length<10||s.length>200)throw Error('Неверный Client ID или Secret');
     await stop();
     db.prepare('DELETE FROM twitch_token WHERE id=1').run();
@@ -193,10 +194,10 @@ const server=http.createServer(async(req,res)=>{
  if(url.pathname!=='/'){html(404,'Не найдено');return;}
  const a=app(),linked=current();
  let content='<h2>'+ (linked?'@'+escape(linked.login)+' авторизован':a?'Twitch-приложение настроено':'Подключение Twitch')+'</h2><p>Канал: <code>#'+escape(channel)+'</code> · '+(connected?'Бот в чате':'Бот не в чате')+'</p><p>Команды: <code>!холодос</code>, <code>!баланс</code>, <code>!топмонет</code>, <code>!статмонет</code>, <code>!магазин</code>.</p>';
- if(!a)content+='<h3>Шаг 1. Создай Twitch-приложение</h3><p>Открой <a class="link" href="https://dev.twitch.tv/console/apps" target="_blank" rel="noopener">Twitch Developer Console</a> и зарегистрируй приложение типа Confidential. В OAuth Redirect URLs добавь:</p><p><code>'+escape(publicUrl)+'/oauth/callback</code></p><p>Нажми Manage → New Secret и введи ID и Secret ниже (не отправляй секрет в чат ChatGPT).</p>'+setupForm();
+ if(!a)content+='<h3>Шаг 1. Создай Twitch-приложение</h3><p>Открой <a class="link" href="https://dev.twitch.tv/console/apps" target="_blank" rel="noopener">Twitch Developer Console</a> и зарегистрируй приложение типа Confidential. В OAuth Redirect URLs добавь:</p><p><code>'+escape(publicUrl)+'/oauth/callback</code></p><p>Нажми Manage → New Secret и введи ID и Secret ниже (не отправляй секрет в чат ChatGPT).</p>'+setupForm(csrf('configure'));
  else{
-  content+=linked?'<form method="post" action="/disconnect"><button type="submit">Отключить Twitch</button></form>':'<h3>Шаг 2. Войди как @'+escape(botLogin)+'</h3><p>Авторизуй именно аккаунт бота, чтобы он писал команды в чате.</p><a href="/connect">Подключить Twitch</a>';
-  content+='<details style="margin-top:30px"><summary>Изменить Twitch Client ID / Secret</summary><p>Адрес OAuth Redirect: <code>'+escape(publicUrl)+'/oauth/callback</code></p>'+setupForm()+'</details>';
+  content+=linked?'<form method="post" action="/disconnect"><input type="hidden" name="csrf" value="'+csrf('disconnect')+'"><button type="submit">Отключить Twitch</button></form>':'<h3>Шаг 2. Войди как @'+escape(botLogin)+'</h3><p>Авторизуй именно аккаунт бота, чтобы он писал команды в чате.</p><a href="/connect">Подключить Twitch</a>';
+  content+='<details style="margin-top:30px"><summary>Изменить Twitch Client ID / Secret</summary><p>Адрес OAuth Redirect: <code>'+escape(publicUrl)+'/oauth/callback</code></p>'+setupForm(csrf('configure'))+'</details>';
  }
  html(200,content);
 });
