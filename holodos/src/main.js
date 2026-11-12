@@ -63,7 +63,7 @@ const queue=[];
 function say(text){if(!text||queue.length>=25)return;queue.push(text.slice(0,450));void drain();}
 async function drain(){if(sending||!connected||!client)return;sending=true;try{while(queue.length&&connected&&client){const message=queue.shift();try{await client.say('#'+channel,message);}catch(e){console.error('chat send:',e.message);}if(queue.length)await new Promise(r=>setTimeout(r,3100));}}finally{sending=false;}}
 
-const DUEL_COOLDOWN_MS=5*60*1000;
+const DUEL_COOLDOWN_MS=150*1000;
 function duelCooldownMs(playerId,now){
  const result=db.prepare("SELECT MAX(resolved_at) AS last_finished FROM duels WHERE status='accepted' AND (initiator_id=? OR opponent_id=?)").get(playerId,playerId);
  return result?.last_finished?Math.max(0,result.last_finished+DUEL_COOLDOWN_MS-now):0;
