@@ -2,7 +2,7 @@ import http from 'node:http';
 import {DatabaseSync} from 'node:sqlite';
 import {mkdirSync} from 'node:fs';
 import {dirname} from 'node:path';
-import {randomInt,randomBytes,scryptSync,createCipheriv,createDecipheriv,timingSafeEqual} from 'node:crypto';
+import {randomInt,randomBytes,scryptSync,createCipheriv,createDecipheriv,createHmac,timingSafeEqual} from 'node:crypto';
 import tmi from 'tmi.js';
 
 const channel=(process.env.TWITCH_CHANNEL||'war1ouss').toLowerCase();
@@ -120,9 +120,38 @@ const server=http.createServer(async(req,res)=>{
   }catch(e){html(400,'Ошибка Twitch: '+escape(e.message));}
   return;
  }
- let password='';
- try{const hdr=req.headers.authorization||'';if(hdr.startsWith('Basic '))password=Buffer.from(hdr.slice(6),'base64').toString('utf8').split(':').slice(1).join(':');}catch{}
- if(!equal(password,pass)){res.writeHead(401,{'WWW-Authenticate':'Basic realm="Holodos admin"','Cache-Control':'no-store'});res.end('Введите пароль панели');return;}
+ // A normal HTML sign-in works in Twitch's and ChatGPT's in-app browsers; Basic Auth prompts often do not.
+ const cookieName='leha_admin';
+ const authAge=7*24*60*60*1000;
+ const signed=(expiry)=>createHmac('sha256',key).update('admin-session:'+expiry).digest('base64url');
+ const authenticated=()=>{
+  const token=(req.headers.cookie||'').split(';').map(s=>s.trim()).find(s=>s.startsWith(cookieName+'='))?.slice(cookieName.length+1);
+  if(!token)return false;
+  const [expiry,signature]=token.split('.');
+  if(!/^\\d{13}$/.test(expiry||'')||!signature||Number(expiry)<Date.now()||Number(expiry)>Date.now()+authAge)return false;
+  return equal(signature,signed(expiry));
+ };
+ let basicPassword='';
+ try{const hdr=req.headers.authorization||'';if(hdr.startsWith('Basic '))basicPassword=Buffer.from(hdr.slice(6),'base64').toString('utf8').split(':').slice(1).join(':');}catch{}
+ const isAdmin=authenticated()||(basicPassword.length>0&&equal(basicPassword,pass));
+ const loginPage=(error='')=>'<h2>Вход в Холодос</h2><p>Панель работает. Для настройки Twitch нужен пароль администратора.</p>'+(error?'<p style="color:#ffb9b9">'+escape(error)+'</p>':'')+'<form action="/login" method="post"><label>Пароль панели<input type="password" name="password" required autocomplete="current-password"></label><p><button type="submit">Войти</button></p></form><p><small>Пароль находится в Railway: holodos-bot → Variables → ADMIN_PASSWORD. Не присылай его в чат.</small></p>';
+ if(!isAdmin){
+  if(req.method==='POST'&&url.pathname==='/login'){
+   if(req.headers.origin!==publicUrl){html(403,loginPage('Неверный адрес запроса.'));return;}
+   try{
+    const form=await formData(req),candidate=String(form.get('password')||'');
+    if(candidate.length>1024||!equal(candidate,pass)){html(401,loginPage('Неверный пароль.'));return;}
+    const expiry=String(Date.now()+authAge),value=expiry+'.'+signed(expiry);
+    res.writeHead(303,{Location:'/',"Cache-Control":"no-store",'Set-Cookie':cookieName+'='+value+'; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800'});res.end();
+   }catch{html(400,loginPage('Не получилось обработать форму.'));}
+   return;
+  }
+  html(req.method==='GET'&&url.pathname==='/'?200:401,loginPage());return;
+ }
+ if(req.method==='POST'&&url.pathname==='/logout'){
+  if(req.headers.origin!==publicUrl){html(403,'Неверный адрес запроса');return;}
+  res.writeHead(303,{Location:'/',"Cache-Control":"no-store",'Set-Cookie':cookieName+'=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0'});res.end();return;
+ }
  if(req.method==='POST'){
   if(req.headers.origin!==publicUrl){html(403,'Неверный адрес запроса');return;}
   if(url.pathname==='/configure'){
