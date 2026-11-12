@@ -153,7 +153,7 @@ async function accept(channel:string,message:FeedMessage){
 
 export async function answerMonsterCommand(connection:Connection,channel:string,lease:string,message:FeedMessage){
  const now=Date.now(),command=message.text.trim().toLowerCase();
- const recognized=command==='!холодос'||command==='!баланс'||command==='!магазин'||command==='!топмонет'||command==='!принять'||command==='!отказ'||command.startsWith('!дуэль');
+ const recognized=command==='!холодос'||command==='!баланс'||command==='!магазин'||command==='!топмонет'||command==='!принять'||command==='!отказ'||/^!дуэль\s+@?[a-z0-9_]{1,25}\s+\d{1,8}$/i.test(command);
  if(!recognized||message.kind!=='message'||!message.id||message.id.length>200||!/^[a-z0-9_]{1,25}$/.test(channel)||(message.source&&message.source.toLowerCase()!==channel)||!/^[a-z0-9_]{1,25}$/i.test(message.login)||!(/^\d{1,30}$/.test(message.userId))||KNOWN_BOTS.has(message.login.toLowerCase())||!Number.isFinite(message.created)||message.created<now-45000||message.created>now+5000)return;
  const db=botDb();
  const gate=await db.prepare("SELECT 1 AS ok FROM twitch_bot_settings s JOIN chat_channels c ON c.channel=s.channel AND c.owner=s.owner WHERE s.channel=? AND s.owner=? AND s.enabled=1 AND c.collector_token=? AND c.collector_until>? AND EXISTS(SELECT 1 FROM chat_messages WHERE channel=? AND message_id=? AND user_id=? AND removed=0)")
