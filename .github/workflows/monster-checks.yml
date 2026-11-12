@@ -1,0 +1,25 @@
+name: Monster bot checks
+on:
+  pull_request:
+    branches:
+      - wariouss-full-project-2026-10-20
+  push:
+    branches:
+      - feature/monster-chat-economy
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec tsc --noEmit
+      - run: pnpm run build
