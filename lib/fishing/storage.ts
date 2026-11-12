@@ -86,7 +86,15 @@ export async function ingestFish(channel:string,lease:string,id:string,username:
  if(!commands.includes(text.trim().split(/\s+/)[0].toLowerCase()))return null;
  const name=cleanUsername(username);if(!name||!id||!lease)return null;
  const g=await fishDb().prepare('SELECT * FROM fishing_games WHERE channel=? AND enabled=1 AND collector_token=? AND collector_until>?').bind(channel,lease,Date.now()).first<Game>();if(!g)return null;
- if(duelCommands.includes(text.trim().split(/\s+/)[0].toLowerCase()))return ingestDuel(g,lease,id,name,text);
+ if(duelCommands.includes(text.trim().split(/\s+/)[0].toLowerCase())){
+  // "!дуэль @ник сумма" belongs to Monster, while "!дуэль @ник" stays a fish duel.
+  if(/^!дуэль\\s+@?[a-z0-9_]{1,25}\\s+\\d+$/i.test(text.trim()))return null;
+  if(/^!(принять|отказ)$/i.test(text.trim())){
+   const pendingMonster=await fishDb().prepare("SELECT 1 AS active FROM monster_duels WHERE channel=? AND opponent_login=? AND status='pending' AND expires>? LIMIT 1").bind(channel,name,Date.now()).first();
+   if(pendingMonster)return null;
+  }
+  return ingestDuel(g,lease,id,name,text);
+ }
  const result=await recordCommand(g,id,name,text,lease);
  return result.kind==='saved'&&!result.replayed?result.entry:null;
 }
