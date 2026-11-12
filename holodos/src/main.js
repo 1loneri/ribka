@@ -12,6 +12,7 @@ const port=Number(process.env.PORT||3000);
 const pass=process.env.ADMIN_PASSWORD||'';
 const secret=process.env.APP_SECRET||'';
 const dbPath=process.env.DB_PATH||'/data/leha.sqlite';
+const duelsEnabled=process.env.ENABLE_DUELS==='true';
 const invalidConfig=[];
 if(!/^[a-z0-9_]{1,25}$/.test(channel))invalidConfig.push('TWITCH_CHANNEL');
 if(!/^[a-z0-9_]{1,25}$/.test(botLogin))invalidConfig.push('BOT_USERNAME');
@@ -25,6 +26,8 @@ const db=new DatabaseSync(dbPath);
 db.exec("PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000; PRAGMA foreign_keys=ON;");
 db.exec("CREATE TABLE IF NOT EXISTS players(id TEXT PRIMARY KEY,login TEXT NOT NULL,balance INTEGER NOT NULL DEFAULT 0,last_opened INTEGER NOT NULL DEFAULT 0,opens INTEGER NOT NULL DEFAULT 0,wins INTEGER NOT NULL DEFAULT 0,jackpots INTEGER NOT NULL DEFAULT 0);");
 db.exec("CREATE TABLE IF NOT EXISTS seen(message_id TEXT PRIMARY KEY,created_at INTEGER NOT NULL);");
+db.exec("CREATE TABLE IF NOT EXISTS duels(id INTEGER PRIMARY KEY AUTOINCREMENT,initiator_id TEXT NOT NULL,initiator_login TEXT NOT NULL,opponent_login TEXT NOT NULL,opponent_id TEXT,wager INTEGER NOT NULL CHECK(wager>0),status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','accepted','declined','expired','cancelled')),created_at INTEGER NOT NULL,expires_at INTEGER NOT NULL,resolved_at INTEGER,winner_id TEXT,fee INTEGER NOT NULL DEFAULT 0);");
+db.exec("CREATE INDEX IF NOT EXISTS idx_duels_pending ON duels(status,opponent_login,expires_at);");
 db.exec("CREATE TABLE IF NOT EXISTS twitch_app(id INTEGER PRIMARY KEY CHECK(id=1),client_id TEXT NOT NULL,client_secret TEXT NOT NULL);");
 db.exec("CREATE TABLE IF NOT EXISTS twitch_token(id INTEGER PRIMARY KEY CHECK(id=1),login TEXT NOT NULL,user_id TEXT NOT NULL,access TEXT NOT NULL,refresh TEXT NOT NULL,expires_at INTEGER NOT NULL);");
 const key=scryptSync(secret,'leha-holodos-v1',32);
@@ -54,9 +57,66 @@ let client=null,connected=false,starting=false,ending=false,sending=false;
 const queue=[];
 function say(text){if(!text||queue.length>=25)return;queue.push(text.slice(0,450));void drain();}
 async function drain(){if(sending||!connected||!client)return;sending=true;try{while(queue.length&&connected&&client){const message=queue.shift();try{await client.say('#'+channel,message);}catch(e){console.error('chat send:',e.message);}if(queue.length)await new Promise(r=>setTimeout(r,3100));}}finally{sending=false;}}
+
+function duelFee(wager){
+ const rate=wager<100?2:wager<500?5:wager<2000?8:12;
+ return Math.floor(wager*2*rate/100);
+}
+function expireDuels(now,announce=false){
+ if(!duelsEnabled)return;
+ const rows=db.prepare("UPDATE duels SET status='expired',resolved_at=? WHERE status='pending' AND expires_at<=? RETURNING initiator_login,opponent_login,wager").all(now,now);
+ if(announce)for(const d of rows)say('@'+d.initiator_login+', дуэль с @'+d.opponent_login+' на '+d.wager+' W отменена: время вышло.');
+}
+function duelChallenge(login,id,target,wager,mid,now){
+ return transaction(()=>{
+  if(!seen(mid,now))return null;
+  expireDuels(now);
+  if(target===login)return '@'+login+', нельзя вызвать себя.';
+  if(target===botLogin)return '@'+login+', Лёха в дуэли не участвует.';
+  if(!Number.isSafeInteger(wager)||wager<1||wager>100000000)return '@'+login+', ставка должна быть от 1 до 100 000 000 W.';
+  const sender=player(id,login);
+  if(sender.balance<wager)return '@'+login+', не хватает W-монет: у тебя '+sender.balance+' W.';
+  const active=db.prepare("SELECT id FROM duels WHERE status='pending' AND expires_at>? AND (initiator_id=? OR initiator_login=? OR opponent_login=? OR opponent_login=?) LIMIT 1").get(now,id,login,login,target);
+  if(active)return '@'+login+', у тебя или у @'+target+' уже есть незавершённая дуэль.';
+  db.prepare("INSERT INTO duels(initiator_id,initiator_login,opponent_login,wager,created_at,expires_at) VALUES(?,?,?,?,?,?)").run(id,login,target,wager,now,now+60000);
+  return '@'+target+', тебя вызывает @'+login+' на дуэль: '+wager+' W! Напиши !принять или !отказ за 60 сек.';
+ });
+}
+function duelRespond(login,id,answer,mid,now){
+ return transaction(()=>{
+  if(!seen(mid,now))return null;
+  expireDuels(now);
+  const d=db.prepare("SELECT * FROM duels WHERE status='pending' AND opponent_login=? AND expires_at>? ORDER BY created_at LIMIT 1").get(login,now);
+  if(!d)return null;
+  if(answer==='!отказ'){
+   db.prepare("UPDATE duels SET status='declined',resolved_at=?,opponent_id=? WHERE id=? AND status='pending'").run(now,id,d.id);
+   return '@'+login+' отказался от дуэли с @'+d.initiator_login+'.';
+  }
+  const challenger=db.prepare('SELECT * FROM players WHERE id=?').get(d.initiator_id);
+  const recipient=player(id,login);
+  if(!challenger||challenger.balance<d.wager||recipient.balance<d.wager){
+   db.prepare("UPDATE duels SET status='cancelled',resolved_at=?,opponent_id=? WHERE id=? AND status='pending'").run(now,id,d.id);
+   return 'Дуэль @'+d.initiator_login+' и @'+login+' отменена: кому-то не хватает W-монет.';
+  }
+  const winner=randomInt(2)===0?d.initiator_id:id;
+  const winnerName=winner===id?login:d.initiator_login;
+  const pot=d.wager*2,fee=duelFee(d.wager);
+  db.prepare('UPDATE players SET balance=balance-? WHERE id=?').run(d.wager,d.initiator_id);
+  db.prepare('UPDATE players SET balance=balance-? WHERE id=?').run(d.wager,id);
+  db.prepare('UPDATE players SET balance=balance+? WHERE id=?').run(pot-fee,winner);
+  db.prepare("UPDATE duels SET status='accepted',resolved_at=?,opponent_id=?,winner_id=?,fee=? WHERE id=? AND status='pending'").run(now,id,winner,fee,d.id);
+  return 'Дуэль @'+d.initiator_login+' vs @'+login+': победил @'+winnerName+'! Банк '+pot+' W, комиссия '+fee+' W, приз '+(pot-fee)+' W.';
+ });
+}
+
 function handle(login,id,msg,mid,now){
  const cmd=msg.trim().toLowerCase();let output=null;
- if(cmd==='!холодос')output=transaction(()=>{
+ if(duelsEnabled&&(cmd==='!принять'||cmd==='!отказ'))output=duelRespond(login,id,cmd,mid,now);
+ else if(duelsEnabled&&/^!дуэль\s+@?[a-z0-9_]{1,25}\s+[1-9]\d{0,8}$/.test(cmd)){
+  const [,target,amount]=/^!дуэль\s+@?([a-z0-9_]{1,25})\s+([1-9]\d{0,8})$/.exec(cmd);
+  output=duelChallenge(login,id,target,Number(amount),mid,now);
+ }
+ else if(cmd==='!холодос')output=transaction(()=>{
   if(!seen(mid,now))return null;
   const p=player(id,login);
   if(now-p.last_opened<90000)return '@'+login+', холодос можно открыть через '+Math.ceil((90000-now+p.last_opened)/1000)+' сек.';
@@ -193,7 +253,7 @@ const server=http.createServer(async(req,res)=>{
  }
  if(url.pathname!=='/'){html(404,'Не найдено');return;}
  const a=app(),linked=current();
- let content='<h2>'+ (linked?'@'+escape(linked.login)+' авторизован':a?'Twitch-приложение настроено':'Подключение Twitch')+'</h2><p>Канал: <code>#'+escape(channel)+'</code> · '+(connected?'Бот в чате':'Бот не в чате')+'</p><p>Команды: <code>!холодос</code>, <code>!баланс</code>, <code>!топмонет</code>, <code>!статмонет</code>, <code>!магазин</code>.</p>';
+ let content='<h2>'+ (linked?'@'+escape(linked.login)+' авторизован':a?'Twitch-приложение настроено':'Подключение Twitch')+'</h2><p>Канал: <code>#'+escape(channel)+'</code> · '+(connected?'Бот в чате':'Бот не в чате')+'</p><p>Команды: <code>!холодос</code>, <code>!баланс</code>, <code>!топмонет</code>, <code>!статмонет</code>, <code>!магазин</code>.'+(duelsEnabled?' Дуэли: <code>!дуэль @ник 500</code>, <code>!принять</code>, <code>!отказ</code>.':' Дуэли пока выключены.')+'</p>';
  if(!a)content+='<h3>Шаг 1. Создай Twitch-приложение</h3><p>Открой <a class="link" href="https://dev.twitch.tv/console/apps" target="_blank" rel="noopener">Twitch Developer Console</a> и зарегистрируй приложение типа Confidential. В OAuth Redirect URLs добавь:</p><p><code>'+escape(publicUrl)+'/oauth/callback</code></p><p>Нажми Manage → New Secret и введи ID и Secret ниже (не отправляй секрет в чат ChatGPT).</p>'+setupForm(csrf('configure'));
  else{
   content+=linked?'<form method="post" action="/disconnect"><input type="hidden" name="csrf" value="'+csrf('disconnect')+'"><button type="submit">Отключить Twitch</button></form>':'<h3>Шаг 2. Войди как @'+escape(botLogin)+'</h3><p>Авторизуй именно аккаунт бота, чтобы он писал команды в чате.</p><a href="/connect">Подключить Twitch</a>';
@@ -203,7 +263,8 @@ const server=http.createServer(async(req,res)=>{
 });
 server.listen(port,'0.0.0.0',()=>console.log('Holodos panel listening on '+port+' for #'+channel));
 if(current()&&app())void start();
+const duelTimer=setInterval(()=>{try{expireDuels(Date.now(),true);}catch(e){console.error('Duel expiration:',e.message);}},5000);
 const heartbeat=setInterval(async()=>{if(ending||starting)return;try{if(!current()||!app())return;if(current().expires_at<Date.now()+30*60*1000){await refresh();await start();}else if(!connected)await start();db.prepare('DELETE FROM seen WHERE created_at<?').run(Date.now()-7*86400000);}catch(e){console.error('Twitch heartbeat:',e.message);}},60000);
-async function shutdown(){ending=true;clearInterval(heartbeat);await stop();server.close();db.close();}
+async function shutdown(){ending=true;clearInterval(heartbeat);clearInterval(duelTimer);await stop();server.close();db.close();}
 process.once('SIGINT',()=>void shutdown().then(()=>process.exit(0)));
 process.once('SIGTERM',()=>void shutdown().then(()=>process.exit(0)));
