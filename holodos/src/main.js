@@ -149,7 +149,7 @@ function handle(login,id,msg,mid,now){
  else if(cmd==='!холодос')output=transaction(()=>{
   if(!seen(mid,now))return null;
   const p=player(id,login);
-  if(now-p.last_opened<90000)return '@'+login+', холодос можно открыть через '+Math.ceil((90000-now+p.last_opened)/1000)+' сек.';
+  if(now-p.last_opened<120000)return '@'+login+', холодос можно открыть через '+Math.ceil((120000-now+p.last_opened)/1000)+' сек.';
   const d=draw();
   db.prepare('UPDATE players SET last_opened=?,balance=balance+?,opens=opens+1,wins=wins+?,jackpots=jackpots+? WHERE id=?').run(now,d.gain,Number(d.gain>0),Number(d.gain===100),id);
   return '@'+login+' открыл холодос: '+d.cans.map(i=>cans[i]).join(' | ')+' — '+d.description+' +'+d.gain+' W';
