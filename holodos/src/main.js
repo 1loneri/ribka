@@ -128,16 +128,23 @@ const server=http.createServer(async(req,res)=>{
   const token=(req.headers.cookie||'').split(';').map(s=>s.trim()).find(s=>s.startsWith(cookieName+'='))?.slice(cookieName.length+1);
   if(!token)return false;
   const [expiry,signature]=token.split('.');
-  if(!/^\\d{13}$/.test(expiry||'')||!signature||Number(expiry)<Date.now()||Number(expiry)>Date.now()+authAge)return false;
+  if(!/^\d{13}$/.test(expiry||'')||!signature||Number(expiry)<Date.now()||Number(expiry)>Date.now()+authAge)return false;
   return equal(signature,signed(expiry));
  };
  let basicPassword='';
  try{const hdr=req.headers.authorization||'';if(hdr.startsWith('Basic '))basicPassword=Buffer.from(hdr.slice(6),'base64').toString('utf8').split(':').slice(1).join(':');}catch{}
+ // Only accept form submissions from this exact Railway hostname.
+ const sameOrigin=()=>{
+  try{
+   const hostname='holodos-bot-production.up.railway.app';
+   return req.headers.host===hostname&&new URL(String(req.headers.origin||'')).origin==='https://'+hostname;
+  }catch{return false;}
+ };
  const isAdmin=authenticated()||(basicPassword.length>0&&equal(basicPassword,pass));
  const loginPage=(error='')=>'<h2>Вход в Холодос</h2><p>Панель работает. Для настройки Twitch нужен пароль администратора.</p>'+(error?'<p style="color:#ffb9b9">'+escape(error)+'</p>':'')+'<form action="/login" method="post"><label>Пароль панели<input type="password" name="password" required autocomplete="current-password"></label><p><button type="submit">Войти</button></p></form><p><small>Пароль находится в Railway: holodos-bot → Variables → ADMIN_PASSWORD. Не присылай его в чат.</small></p>';
  if(!isAdmin){
   if(req.method==='POST'&&url.pathname==='/login'){
-   if(req.headers.origin!==publicUrl){html(403,loginPage('Неверный адрес запроса.'));return;}
+   if(!sameOrigin()){html(403,loginPage('Неверный адрес запроса.'));return;}
    try{
     const form=await formData(req),candidate=String(form.get('password')||'');
     if(candidate.length>1024||!equal(candidate,pass)){html(401,loginPage('Неверный пароль.'));return;}
@@ -149,11 +156,11 @@ const server=http.createServer(async(req,res)=>{
   html(req.method==='GET'&&url.pathname==='/'?200:401,loginPage());return;
  }
  if(req.method==='POST'&&url.pathname==='/logout'){
-  if(req.headers.origin!==publicUrl){html(403,'Неверный адрес запроса');return;}
+  if(!sameOrigin()){html(403,'Неверный адрес запроса');return;}
   res.writeHead(303,{Location:'/',"Cache-Control":"no-store",'Set-Cookie':cookieName+'=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0'});res.end();return;
  }
  if(req.method==='POST'){
-  if(req.headers.origin!==publicUrl){html(403,'Неверный адрес запроса');return;}
+  if(!sameOrigin()){html(403,'Неверный адрес запроса');return;}
   if(url.pathname==='/configure'){
    try{
     const f=await formData(req),id=(f.get('client_id')||'').trim(),s=(f.get('client_secret')||'').trim();
