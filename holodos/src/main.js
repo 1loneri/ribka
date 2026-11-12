@@ -63,6 +63,19 @@ const queue=[];
 function say(text){if(!text||queue.length>=25)return;queue.push(text.slice(0,450));void drain();}
 async function drain(){if(sending||!connected||!client)return;sending=true;try{while(queue.length&&connected&&client){const message=queue.shift();try{await client.say('#'+channel,message);}catch(e){console.error('chat send:',e.message);}if(queue.length)await new Promise(r=>setTimeout(r,3100));}}finally{sending=false;}}
 
+const DUEL_COOLDOWN_MS=5*60*1000;
+function duelCooldownMs(playerId,now){
+ const result=db.prepare("SELECT MAX(resolved_at) AS last_finished FROM duels WHERE status='accepted' AND (initiator_id=? OR opponent_id=?)").get(playerId,playerId);
+ return result?.last_finished?Math.max(0,result.last_finished+DUEL_COOLDOWN_MS-now):0;
+}
+function duelCooldownByLogin(login,now){
+ const target=db.prepare("SELECT id FROM players WHERE login=? LIMIT 1").get(login);
+ return target?duelCooldownMs(target.id,now):0;
+}
+function duelCooldownTime(ms){
+ const seconds=Math.ceil(ms/1000);
+ return Math.floor(seconds/60)+' мин '+(seconds%60)+' сек.';
+}
 function duelFee(wager){
  const rate=wager<100?2:wager<500?5:wager<2000?8:12;
  return Math.floor(wager*2*rate/100);
@@ -80,6 +93,10 @@ function duelChallenge(login,id,target,wager,mid,now){
   if(target===botLogin)return '@'+login+', Лёха в дуэли не участвует.';
   if(!Number.isSafeInteger(wager)||wager<1||wager>100000000)return '@'+login+', ставка должна быть от 1 до 100 000 000 W.';
   const sender=player(id,login);
+  const ownCooldown=duelCooldownMs(id,now);
+  if(ownCooldown>0)return '@'+login+', после дуэли подожди ещё '+duelCooldownTime(ownCooldown)+'.';
+  const opponentCooldown=duelCooldownByLogin(target,now);
+  if(opponentCooldown>0)return '@'+login+', у @'+target+' кулдаун после дуэли ещё '+duelCooldownTime(opponentCooldown)+'.';
   if(sender.balance<wager)return '@'+login+', не хватает W-монет: у тебя '+sender.balance+' W.';
   const active=db.prepare("SELECT id FROM duels WHERE status='pending' AND expires_at>? AND (initiator_id=? OR initiator_login=? OR opponent_login=? OR opponent_login=?) LIMIT 1").get(now,id,login,login,target);
   if(active)return '@'+login+', у тебя или у @'+target+' уже есть незавершённая дуэль.';
@@ -99,6 +116,13 @@ function duelRespond(login,id,answer,mid,now){
   }
   const challenger=db.prepare('SELECT * FROM players WHERE id=?').get(d.initiator_id);
   const recipient=player(id,login);
+  const challengerCooldown=duelCooldownMs(d.initiator_id,now);
+  const recipientCooldown=duelCooldownMs(id,now);
+  if(challengerCooldown>0||recipientCooldown>0){
+   db.prepare("UPDATE duels SET status='cancelled',resolved_at=?,opponent_id=? WHERE id=? AND status='pending'").run(now,id,d.id);
+   const who=challengerCooldown>0?'@'+d.initiator_login:'@'+login;
+   return 'Дуэль отменена: у '+who+' кулдаун ещё '+duelCooldownTime(Math.max(challengerCooldown,recipientCooldown))+'.';
+  }
   if(!challenger||challenger.balance<d.wager||recipient.balance<d.wager){
    db.prepare("UPDATE duels SET status='cancelled',resolved_at=?,opponent_id=? WHERE id=? AND status='pending'").run(now,id,d.id);
    return 'Дуэль @'+d.initiator_login+' и @'+login+' отменена: кому-то не хватает W-монет.';
