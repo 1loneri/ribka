@@ -10,6 +10,7 @@ import {asText,asTime,chatMessage,type TwitchPacket} from './types';
 import {flushBot} from '../twitch-bot/storage';
 import {answerBotQuestion} from '../twitch-bot/conversation';
 import {answerChatCommand} from '../twitch-bot/commands';
+import {answerMonsterCommand} from '../twitch-bot/monster';
 import {BOT_INTERVAL} from '../twitch-bot/messages';
 import {ingestLevelMessage,levelStreamEvent,refreshLevelStream} from '../levels/storage';
 import {ingestGuessVote} from '../reviews/guess-storage';
@@ -69,7 +70,7 @@ export async function connectFeed(req:Request,user:ChatGPTUser,initial:Connectio
   if(type==='channel.chat.message'||type==='channel.chat.notification'){
    const message=chatMessage(event,asText(event.message_id,200)||eventId,created,type==='channel.chat.notification');
    const fresh=await appendMessage(channel,lease,message);
-   if(type==='channel.chat.message'&&fresh&&(!event.source_broadcaster_user_id||event.source_broadcaster_user_id===broadcaster)){waitUntil(ingestLevelMessage(connection,channel,lease,message).catch(()=>{}));waitUntil(ingestGuessVote(channel,lease,message).catch(()=>{}));waitUntil(ingestMysteryGuess(channel,lease,message).catch(()=>{}));waitUntil(answerChatCommand(connection,channel,lease,message).catch(()=>{}));}
+   if(type==='channel.chat.message'&&fresh&&(!event.source_broadcaster_user_id||event.source_broadcaster_user_id===broadcaster)){waitUntil(ingestLevelMessage(connection,channel,lease,message).catch(()=>{}));waitUntil(ingestGuessVote(channel,lease,message).catch(()=>{}));waitUntil(ingestMysteryGuess(channel,lease,message).catch(()=>{}));waitUntil(answerChatCommand(connection,channel,lease,message).catch(()=>{}));waitUntil(answerMonsterCommand(connection,channel,lease,message).catch(()=>{}));}
    if(type==='channel.chat.message'&&fresh&&fishWanted&&(!event.source_broadcaster_user_id||event.source_broadcaster_user_id===broadcaster)){
     waitUntil(answerBotQuestion(connection,channel,lease,message).catch(()=>{}));
     const entry=await ingestFish(channel,lease,message.id,message.login,message.text);
