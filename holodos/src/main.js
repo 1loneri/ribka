@@ -105,12 +105,13 @@ function duelRespond(login,id,answer,mid,now){
   }
   const winner=randomInt(2)===0?d.initiator_id:id;
   const winnerName=winner===id?login:d.initiator_login;
+  const loserName=winner===id?d.initiator_login:login;
   const pot=d.wager*2,fee=duelFee(d.wager);
   db.prepare('UPDATE players SET balance=balance-? WHERE id=?').run(d.wager,d.initiator_id);
   db.prepare('UPDATE players SET balance=balance-? WHERE id=?').run(d.wager,id);
   db.prepare('UPDATE players SET balance=balance+? WHERE id=?').run(pot-fee,winner);
   db.prepare("UPDATE duels SET status='accepted',resolved_at=?,opponent_id=?,winner_id=?,fee=? WHERE id=? AND status='pending'").run(now,id,winner,fee,d.id);
-  return 'Дуэль @'+d.initiator_login+' vs @'+login+': победил @'+winnerName+'! Банк '+pot+' W, комиссия '+fee+' W, приз '+(pot-fee)+' W.';
+  return 'Банка @'+loserName+' взорвалась, он проиграл, победил @'+winnerName+'!';
  });
 }
 
