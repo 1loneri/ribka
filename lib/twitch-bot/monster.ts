@@ -159,6 +159,12 @@ export async function answerMonsterCommand(connection:Connection,channel:string,
  const gate=await db.prepare("SELECT 1 AS ok FROM twitch_bot_settings s JOIN chat_channels c ON c.channel=s.channel AND c.owner=s.owner WHERE s.channel=? AND s.owner=? AND s.enabled=1 AND c.collector_token=? AND c.collector_until>? AND EXISTS(SELECT 1 FROM chat_messages WHERE channel=? AND message_id=? AND user_id=? AND removed=0)")
   .bind(channel,connection.user,lease,now,channel,message.id,message.userId).first<{ok:number}>();
  if(!gate)return;
+ // A bare !принять / !отказ is also used by fishing duels: only intercept
+ // when this viewer is the opponent of an active Monster duel.
+ if(command==='!принять'||command==='!отказ'){
+  const active=await pending(channel,message.userId,Date.now());
+  if(!active)return;
+ }
  await signup(channel,message);
  let response:string;
  if(command==='!холодос')response=await fridge(channel,message);
