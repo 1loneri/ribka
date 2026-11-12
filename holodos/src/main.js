@@ -135,7 +135,7 @@ function duelRespond(login,id,answer,mid,now){
   db.prepare('UPDATE players SET balance=balance-? WHERE id=?').run(d.wager,id);
   db.prepare('UPDATE players SET balance=balance+? WHERE id=?').run(pot-fee,winner);
   db.prepare("UPDATE duels SET status='accepted',resolved_at=?,opponent_id=?,winner_id=?,fee=? WHERE id=? AND status='pending'").run(now,id,winner,fee,d.id);
-  return 'Банка @'+loserName+' взорвалась, он проиграл, победил @'+winnerName+'!';
+  return '💥 Банка @'+loserName+' взорвалась, он проиграл! Победил @'+winnerName+' — выигрыш '+(pot-fee).toLocaleString('ru-RU')+' W (банк '+pot.toLocaleString('ru-RU')+' W, комиссия '+fee.toLocaleString('ru-RU')+' W).';
  });
 }
 
