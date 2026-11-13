@@ -1,0 +1,181 @@
+'use strict';
+const $=id=>document.getElementById(id);
+const routes=new Set(['/','/casino','/cases','/duels','/top','/chat','/profile','/shop']);
+const state={me:null,public:null,history:null,duels:null,busy:false,timer:null};
+const fmt=n=>Number(n||0).toLocaleString('ru-RU');
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
+const ruTime=t=>new Date(Number(t)).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+function notice(message){
+ const el=$('toast');el.textContent=message;el.classList.add('visible');
+ clearTimeout(notice.timer);notice.timer=setTimeout(()=>el.classList.remove('visible'),4000);
+}
+async function api(path,options={}){
+ let response;
+ try{response=await fetch(path,{credentials:'same-origin',cache:'no-store',...options});}
+ catch{throw Error('Нет связи с сервером. Попробуй ещё раз.');}
+ let data;try{data=await response.json();}catch{throw Error('Сервер вернул неверный ответ.');}
+ if(!response.ok)throw Object.assign(Error(data.error||'Не удалось выполнить запрос'),{status:response.status,remaining:data.remaining});
+ return data;
+}
+function safeAvatar(src){
+ return typeof src==='string'&&/^https:\/\/(static-cdn\.jtvnw\.net|.*\.twitch\.tv)\//i.test(src)?src:'';
+}
+function currentRoute(){return routes.has(location.pathname)?location.pathname:'/';}
+function navigate(path,replace=false){
+ if(!routes.has(path))path='/';
+ if(replace)history.replaceState({},'',path);else if(location.pathname!==path)history.pushState({},'',path);
+ document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.dataset.view===path));
+ document.querySelectorAll('.nav-link').forEach(el=>{el.classList.toggle('active',el.getAttribute('href')===path);if(el.getAttribute('href')===path)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});
+ $('main-nav').classList.remove('open');$('menu-btn').setAttribute('aria-expanded','false');
+ const titles={'/':'Главная','/casino':'Холодос','/cases':'Кейсы','/duels':'Дуэли','/top':'Топ игроков','/chat':'Топ чата','/profile':'Профиль','/shop':'Магазин'};
+ document.title=(titles[path]||'Главная')+' — War1ouss';
+ window.scrollTo({top:0,behavior:'instant'});
+ if(path==='/duels')refreshDuels();
+ if(path==='/casino')refreshSpins();
+ if(path==='/profile')renderProfile();
+}
+function rankHtml(list,kind='balance'){
+ if(!list||!list.length)return '<p class="muted">Пока нет данных. Рейтинг обновляется по мере активности игроков.</p>';
+ return list.map((r,i)=>'<div class="rank-item"><span class="rank-position">'+(i+1)+'</span><div class="rank-name"><b>@'+esc(r.login)+'</b>'+(kind==='balance'?'<small>Открытий: '+fmt(r.opens)+'</small>':'<small>Сообщений с начала учёта</small>')+'</div><div class="rank-score">'+fmt(kind==='balance'?r.balance:r.message_count)+' '+(kind==='balance'?'W':'сообщ.')+'</div></div>').join('');
+}
+function winsHtml(list){
+ if(!list||!list.length)return '<p class="muted">Реальные выигрыши появятся здесь после следующих открытий. Прошлые игры бота ещё не записывались в историю.</p>';
+ return list.map(r=>'<div class="win-item"><span class="win-cans">'+esc((r.cans||[]).join(' '))+'</span><div><b>@'+esc(r.login)+'</b><small>'+esc(r.source==='chat'?'Twitch':'Сайт')+' · '+ruTime(r.created_at)+'</small></div><strong class="win-gain">+'+fmt(r.gain)+' W</strong></div>').join('');
+}
+function historyHtml(list){
+ if(!list||!list.length)return '<p class="muted">Открытий пока нет. История сохраняется с запуска сайта.</p>';
+ return list.map(r=>'<div class="history-item"><strong>@'+esc(r.login)+'</strong><span>'+esc((r.cans||[]).join(' '))+'</span><em>+'+fmt(r.gain)+' W</em><time>'+ruTime(r.created_at)+'</time></div>').join('');
+}
+function renderPublic(){
+ const p=state.public;if(!p)return;
+ $('home-top').innerHTML=rankHtml(p.top);
+ $('home-wins').innerHTML=winsHtml(p.recent);
+ $('top-list').innerHTML=rankHtml(p.top);
+ $('chat-list').innerHTML=rankHtml(p.chat,'chat');
+}
+function renderMe(){
+ const me=state.me;
+ const logged=!!(me&&me.authenticated);
+ $('login-btn').hidden=logged;
+ $('avatar-link').hidden=!logged;
+ $('wallet-amount').textContent=logged?fmt(me.player.balance)+' W':'—';
+ if(logged){
+  $('top-name').textContent=me.player.display_name||me.player.login;
+  const avatar=safeAvatar(me.player.avatar);
+  if(avatar)$('top-avatar').src=avatar;else $('top-avatar').src='data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect width="100%25" height="100%25" fill="%23244056"/%3E%3Ctext x="50%25" y="58%25" font-size="35" text-anchor="middle" fill="white"%3EW%3C/text%3E%3C/svg%3E';
+ }
+ updateCooldown();
+ renderProfile();
+}
+function renderProfile(){
+ const me=state.me;if(!me)return;
+ if(!me.authenticated){
+  $('profile-content').innerHTML='<h3>Войди через Twitch</h3><p class="muted">После входа здесь появятся твой реальный баланс, статистика «Холодоса» и магазинные заявки.</p><a class="button button-primary" href="/auth/twitch">Войти через Twitch ↗</a>';
+  return;
+ }
+ const p=me.player,orders=me.orders||[];
+ const avatar=safeAvatar(p.avatar);
+ $('profile-content').innerHTML='<div class="profile-card">'+(avatar?'<img class="profile-avatar" src="'+esc(avatar)+'" alt="Аватар Twitch">':'<span class="coin-icon" style="width:75px;height:75px;font-size:27px">W</span>')+'<div><div class="profile-name">@'+esc(p.display_name||p.login)+'</div><span class="profile-muted">Аккаунт Twitch · W-монеты синхронизированы с чатом</span></div></div>'
+  +'<div class="stats-grid"><div class="stat"><strong>'+fmt(p.balance)+'</strong><span>Баланс W</span></div><div class="stat"><strong>'+fmt(p.opens)+'</strong><span>Открытий</span></div><div class="stat"><strong>'+fmt(p.wins)+'</strong><span>Выигрышей</span></div><div class="stat"><strong>'+fmt(p.jackpots)+'</strong><span>Суперджекпотов</span></div></div>'
+  +'<div class="profile-orders"><h3>Заявки магазина</h3>'+(orders.length?orders.map(o=>'<div class="history-item"><strong>№'+o.id+' · '+o.vp+' VP</strong><span>'+esc(o.status==='pending'?'Ожидает выдачи':o.status==='fulfilled'?'Выдано':'Отменено')+'</span><em>'+fmt(o.price)+' W</em><time>'+ruTime(o.created_at)+'</time></div>').join(''):'<p class="muted">Пока нет заявок. Оформить можно через команду !купить в чате.</p>')+'</div>'
+  +'<button type="button" class="logout-btn" id="logout-btn">Выйти из профиля</button>';
+ $('logout-btn').addEventListener('click',logout);
+}
+async function logout(){
+ try{await api('/api/logout',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':state.me?.csrf||''},body:'{}'});state.me={authenticated:false};renderMe();notice('Ты вышел из профиля');navigate('/');}
+ catch(e){notice(e.message);}
+}
+function updateCooldown(){
+ const me=state.me,button=$('spin-button'),message=$('spin-result');
+ if(state.busy)return;
+ if(!me?.authenticated){
+  button.disabled=false;button.textContent='Войти через Twitch ↗';
+  return;
+ }
+ const remains=Math.max(0,Math.ceil((Number(me.player.last_opened||0)+120000-Date.now())/1000));
+ button.disabled=remains>0;
+ if(remains>0){
+  const m=Math.floor(remains/60),s=String(remains%60).padStart(2,'0');
+  button.textContent='Следующее открытие через '+m+':'+s;
+ }else button.textContent='Открыть холодос ↗';
+}
+async function spin(){
+ if(state.busy)return;
+ if(!state.me?.authenticated){location.href='/auth/twitch';return;}
+ state.busy=true;
+ const reels=['reel-1','reel-2','reel-3'].map($);
+ const chars=['⚪','🟢','🥭','🌸','🔵','⚫','🍉','🟡'];
+ reels.forEach(e=>e.classList.add('spinning'));
+ $('spin-button').disabled=true;$('spin-button').textContent='Открываем…';
+ $('spin-result').classList.remove('win');$('spin-result').textContent='Холодос открывается…';
+ let cycling=setInterval(()=>reels.forEach(e=>e.textContent=chars[Math.floor(Math.random()*chars.length)]),80);
+ const started=Date.now();
+ try{
+  const result=await api('/api/holodos',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':state.me.csrf},body:JSON.stringify({requestId:crypto.randomUUID()})});
+  await new Promise(resolve=>setTimeout(resolve,Math.max(0,1200-(Date.now()-started))));
+  clearInterval(cycling);reels.forEach((e,i)=>{e.classList.remove('spinning');e.textContent=result.cans[i];});
+  $('spin-result').textContent=result.description+' +'+fmt(result.gain)+' W';
+  if(result.gain>0)$('spin-result').classList.add('win');
+  state.me.player.balance=result.balance;state.me.player.last_opened=result.last_opened;state.me.player.opens++;state.me.player.wins+=result.gain>0?1:0;state.me.player.jackpots+=result.gain===400?1:0;
+  renderMe();await Promise.all([refreshPublic(),refreshSpins()]);
+ }catch(e){
+  clearInterval(cycling);reels.forEach(el=>el.classList.remove('spinning'));
+  $('spin-result').textContent=e.message;
+  if(e.status===429)state.me.player.last_opened=Date.now()+(e.remaining||1)*1000-120000;
+ }finally{state.busy=false;updateCooldown();}
+}
+async function refreshPublic(){
+ try{state.public=await api('/api/public');renderPublic();}
+ catch(e){const text='<p class="muted">'+esc(e.message)+'</p>';['home-top','home-wins','top-list','chat-list'].forEach(id=>$(id).innerHTML=text);}
+}
+async function refreshMe(){
+ try{state.me=await api('/api/me');renderMe();}
+ catch(e){state.me={authenticated:false};renderMe();notice(e.message);}
+}
+async function refreshSpins(){
+ try{const v=await api('/api/spins');state.history=v.spins;$('casino-history').innerHTML=historyHtml(v.spins);}
+ catch(e){$('casino-history').textContent=e.message;}
+}
+async function refreshDuels(){
+ try{
+  const data=await api('/api/duels');state.duels=data;
+  const pending=data.pending||[],recent=data.recent||[],logged=state.me?.authenticated;
+  $('pending-duels').innerHTML=pending.length?pending.map(d=>{
+   const mine=logged&&d.opponent_login===state.me.player.login.toLowerCase();
+   return '<div class="duel-item"><div><strong>@'+esc(d.initiator_login)+' → @'+esc(d.opponent_login)+'</strong><p>Банк '+fmt(d.wager*2)+' W · ставка '+fmt(d.wager)+' W · до '+new Date(d.expires_at).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})+'</p></div>'+(mine?'<div class="duel-actions"><button data-duel-answer="accept">Принять</button><button class="decline" data-duel-answer="decline">Отказ</button></div>':'')+'</div>';
+  }).join(''):'<p class="muted">Активных вызовов пока нет. Создай первый!</p>';
+  $('duel-history').innerHTML=recent.length?recent.map(d=>'<div class="history-item"><strong>@'+esc(d.initiator_login)+' ↔ @'+esc(d.opponent_login)+'</strong><span>'+esc(d.winner_login?'Победил @'+d.winner_login:d.status)+'</span><em>'+fmt(d.wager*2-d.fee)+' W</em><time>'+ruTime(d.resolved_at||d.created_at)+'</time></div>').join(''):'<p class="muted">Завершённых дуэлей пока нет.</p>';
+ }catch(e){$('pending-duels').textContent=e.message;$('duel-history').textContent=e.message;}
+}
+async function duelAction(answer){
+ if(!state.me?.authenticated){location.href='/auth/twitch';return;}
+ try{
+  const result=await api('/api/duels/respond',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':state.me.csrf},body:JSON.stringify({answer,requestId:crypto.randomUUID()})});
+  notice(result.message||'Ответ отправлен');await Promise.all([refreshDuels(),refreshMe(),refreshPublic()]);
+ }catch(e){notice(e.message);}
+}
+async function challenge(event){
+ event.preventDefault();if(!state.me?.authenticated){location.href='/auth/twitch';return;}
+ const target=$('duel-target').value.trim().replace(/^@/,'').toLowerCase();
+ const wager=Number($('duel-wager').value);
+ if(!/^[a-z0-9_]{1,25}$/.test(target)||!Number.isSafeInteger(wager)||wager<1||wager>100000000){$('duel-message').textContent='Укажи правильный Twitch-ник и ставку от 1 W.';return;}
+ const btn=$('duel-form').querySelector('button');btn.disabled=true;
+ try{
+  const result=await api('/api/duels/challenge',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':state.me.csrf},body:JSON.stringify({target,wager,requestId:crypto.randomUUID()})});
+  $('duel-message').textContent=result.message;await refreshDuels();
+ }catch(e){$('duel-message').textContent=e.message;}
+ finally{btn.disabled=false;}
+}
+document.addEventListener('click',e=>{
+ const link=e.target.closest('a[data-route]');if(link){e.preventDefault();navigate(link.getAttribute('href'));return;}
+ const action=e.target.closest('[data-duel-answer]');if(action)duelAction(action.dataset.duelAnswer);
+});
+window.addEventListener('popstate',()=>navigate(currentRoute(),true));
+$('menu-btn').addEventListener('click',()=>{const nav=$('main-nav');const open=nav.classList.toggle('open');$('menu-btn').setAttribute('aria-expanded',open?'true':'false');});
+$('spin-button').addEventListener('click',spin);
+$('duel-form').addEventListener('submit',challenge);
+$('refresh-duels').addEventListener('click',refreshDuels);
+navigate(currentRoute(),true);
+Promise.all([refreshPublic(),refreshMe(),refreshSpins()]).then(()=>{if(currentRoute()==='/duels')refreshDuels();});
+setInterval(updateCooldown,1000);
+setInterval(()=>{if(document.visibilityState==='visible'){refreshPublic();if(currentRoute()==='/duels')refreshDuels();}},30000);
