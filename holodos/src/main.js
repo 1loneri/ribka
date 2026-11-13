@@ -48,7 +48,7 @@ function transaction(fn){db.exec('BEGIN IMMEDIATE');try{const result=fn();db.exe
 function seen(msg,now){return db.prepare('INSERT OR IGNORE INTO seen(message_id,created_at) VALUES(?,?)').run(msg,now).changes===1;}
 function player(id,login){db.prepare('INSERT OR IGNORE INTO players(id,login) VALUES(?,?)').run(id,login);db.prepare('UPDATE players SET login=? WHERE id=? AND login<>?').run(login,id,login);return db.prepare('SELECT * FROM players WHERE id=?').get(id);}
 const regularCans=['⚪','🟢','🥭','🌸','🔵','⚫','🍉','🟡'];
-const cans=[...regularCans,'ⓦ'];
+const cans=[...regularCans,'👑'];
 const wEditionIndex=cans.length-1;
 function randomRegularCan(){return randomInt(regularCans.length);}
 function chooseExcluding(excluded){const a=regularCans.map((_,i)=>i).filter(i=>!excluded.includes(i));return a[randomInt(a.length)];}
