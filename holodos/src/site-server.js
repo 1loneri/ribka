@@ -6,8 +6,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  const sitePages=new Set(['/','/casino','/cases','/duels','/top','/chat','/shop','/profile']);
  const assetFiles={
   '/assets/site.css':{file:new URL('./site/site.css',import.meta.url),type:'text/css; charset=utf-8'},
-  '/assets/site.js':{file:new URL('./site/site.js',import.meta.url),type:'text/javascript; charset=utf-8'},
-  '/assets/hero.webp':{file:new URL('./site/hero.webp',import.meta.url),type:'image/webp'}
+  '/assets/site.js':{file:new URL('./site/site.js',import.meta.url),type:'text/javascript; charset=utf-8'}
  };
  const shell=readFileSync(new URL('./site/index.html',import.meta.url));
  const staticAssets={};
@@ -145,7 +144,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
    states.set(state,{type:'site',until:Date.now()+600000});
    for(const [k,v] of states){const expiration=typeof v==='number'?v:v?.until;if(!expiration||expiration<Date.now())states.delete(k);}
    const target=new URL('https://id.twitch.tv/oauth2/authorize');
-   target.search=new URLSearchParams({client_id:config.id,redirect_uri:publicUrl+'/oauth/callback',response_type:'code',state}).toString();
+   target.search=new URLSearchParams({client_id:config.id,redirect_uri:publicUrl+'/oauth/callback',response_type:'code',scope:'openid',state}).toString();
    res.writeHead(302,{'Location':target.toString(),'Cache-Control':'no-store','Set-Cookie':'war_oauth='+state+'; Path=/oauth/callback; HttpOnly; SameSite=Lax'+secure+'; Max-Age=600'});res.end();
    return true;
   }
