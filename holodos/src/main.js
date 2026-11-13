@@ -152,7 +152,7 @@ function handle(login,id,msg,mid,now){
   if(now-p.last_opened<120000)return '@'+login+', холодос можно открыть через '+Math.ceil((120000-now+p.last_opened)/1000)+' сек.';
   const d=draw();
   db.prepare('UPDATE players SET last_opened=?,balance=balance+?,opens=opens+1,wins=wins+?,jackpots=jackpots+? WHERE id=?').run(now,d.gain,Number(d.gain>0),Number(d.gain===100),id);
-  return '@'+login+' открыл холодос: '+d.cans.map(i=>cans[i]).join(' | ')+' — '+d.description+' +'+d.gain+' W';
+  return '@'+login+' открыл холодос: '+d.cans.map(i=>cans[i]).join('')+' — '+d.description+' +'+d.gain+' W';
  });
  else if(cmd==='!баланс')output=transaction(()=>seen(mid,now)?'@'+login+', у тебя '+player(id,login).balance.toLocaleString('ru-RU')+' W-монет.':null);
  else if(cmd==='!топмонет')output=transaction(()=>{
