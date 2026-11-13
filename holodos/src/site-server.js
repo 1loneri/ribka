@@ -6,17 +6,15 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  const sitePages=new Set(['/','/casino','/cases','/duels','/top','/chat','/shop','/profile']);
  const assetFiles={
   '/assets/site.css':{file:new URL('./site/site.css',import.meta.url),type:'text/css; charset=utf-8'},
-  '/assets/site.js':{file:new URL('./site/site.js',import.meta.url),type:'text/javascript; charset=utf-8'}
+  '/assets/site.js':{file:new URL('./site/site.js',import.meta.url),type:'text/javascript; charset=utf-8'},
+  '/assets/hero-ultra-2026.webp':{file:new URL('./site/hero-ultra-2026.webp',import.meta.url),type:'image/webp'}
  };
  const shell=readFileSync(new URL('./site/index.html',import.meta.url));
  const staticAssets={};
  for(const [name,info] of Object.entries(assetFiles)){
   try{staticAssets[name]={bytes:readFileSync(info.file),type:info.type};}catch(error){console.warn('War1ouss asset missing:',name,error.message);}
  }
- const heroBase64=Array.from({length:5},(_,i)=>readFileSync(new URL('./site/hero-part-'+String(i).padStart(2,'0')+'.b64',import.meta.url),'utf8')).join('');
- const heroBytes=Buffer.from(heroBase64,'base64');
- if(heroBytes.length!==28208||heroBytes.subarray(0,4).toString()!=='RIFF'||heroBytes.subarray(8,12).toString()!=='WEBP')throw Error('War1ouss hero image failed integrity checks');
- staticAssets['/assets/hero-main.webp']={bytes:heroBytes,type:'image/webp'};
+
  db.exec("CREATE TABLE IF NOT EXISTS web_sessions(token_hash TEXT PRIMARY KEY,player_id TEXT NOT NULL,login TEXT NOT NULL,display_name TEXT NOT NULL,avatar TEXT NOT NULL DEFAULT '',expires_at INTEGER NOT NULL,created_at INTEGER NOT NULL);");
  db.exec("CREATE INDEX IF NOT EXISTS idx_web_sessions_expires ON web_sessions(expires_at);");
  db.exec("CREATE TABLE IF NOT EXISTS fridge_spins(id INTEGER PRIMARY KEY AUTOINCREMENT,request_id TEXT UNIQUE NOT NULL,player_id TEXT NOT NULL,login TEXT NOT NULL,cans_json TEXT NOT NULL,gain INTEGER NOT NULL,description TEXT NOT NULL,source TEXT NOT NULL CHECK(source IN ('chat','web')),created_at INTEGER NOT NULL);");
