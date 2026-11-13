@@ -18,17 +18,17 @@
   <a class="brand" href="/" data-route="/" aria-label="War1ouss, главная">W<span class="brand-dot">.</span></a>
   <button class="mobile-menu" type="button" id="menu-btn" aria-label="Открыть меню" aria-expanded="false">☰</button>
   <nav class="nav" id="main-nav" aria-label="Разделы">
-    <a href="/" data-route="/" class="nav-link active"><span class="nav-symbol">⌂</span> Главная</a>
-    <a href="/casino" data-route="/casino" class="nav-link"><span class="nav-symbol">⚄</span> Казино</a>
-    <a href="/cases" data-route="/cases" class="nav-link"><span class="nav-symbol">◇</span> Кейсы</a>
-    <a href="/duels" data-route="/duels" class="nav-link"><span class="nav-symbol">⚔</span> Дуэли</a>
-    <a href="/top" data-route="/top" class="nav-link"><span class="nav-symbol">▥</span> Топ игроков</a>
-    <a href="/chat" data-route="/chat" class="nav-link"><span class="nav-symbol">≋</span> Топ чата</a>
-    <a href="/shop" data-route="/shop" class="nav-link"><span class="nav-symbol">◈</span> Магазин</a>
+    <a href="/" data-route="/" class="nav-link active">Главная</a>
+    <a href="/casino" data-route="/casino" class="nav-link">Казино</a>
+    <a href="/cases" data-route="/cases" class="nav-link">Кейсы</a>
+    <a href="/duels" data-route="/duels" class="nav-link">Дуэли</a>
+    <a href="/top" data-route="/top" class="nav-link">Топ игроков</a>
+    <a href="/chat" data-route="/chat" class="nav-link">Топ чата</a>
+    <a href="/shop" data-route="/shop" class="nav-link">Магазин</a>
   </nav>
   <div class="user-actions">
     <span class="wallet" id="wallet" title="Баланс W-монет"><span class="coin-icon">W</span> <span id="wallet-amount">—</span></span>
-    <a class="login-btn" id="login-btn" href="/auth/twitch"><span class="twitch-icon">▣</span><span class="login-label">Войти через Twitch</span></a>
+    <a class="login-btn" id="login-btn" href="/auth/twitch"><span class="login-label">Войти через Twitch</span></a>
     <a class="avatar-link" href="/profile" data-route="/profile" id="avatar-link" hidden aria-label="Мой профиль"><img id="top-avatar" src="" alt="Аватар"><span id="top-name"></span></a>
   </div>
 </header>
@@ -41,7 +41,7 @@
       <h1>ТВОЙ<br><em>ХОЛОДОС.</em></h1>
       <p class="hero-description">Ищи банки, выигрывай W-монеты,<br>открывай кейсы и участвуй в дуэлях.</p>
       <div class="hero-actions">
-        <a class="button button-primary" href="/casino" data-route="/casino">◧ <span>Открыть холодос</span> <span>↗</span></a>
+        <a class="button button-primary" href="/casino" data-route="/casino"><span>Открыть холодос</span> <span aria-hidden="true">→</span></a>
         <a class="button button-ghost" href="/shop" data-route="/shop">Как заработать VP? <span>↗</span></a>
       </div>
       <p class="hero-note"><span class="live-dot"></span> W-монеты общие с Twitch-чатом</p>
@@ -55,7 +55,7 @@
   <div class="mode-grid">
     <a class="mode-card" href="/casino" data-route="/casino"><div class="mode-text"><div class="mode-index">01 / ИГРА</div><h3>Казино</h3><p>Открывай холодос и<br>собирай W-монеты.</p><span class="mode-arrow">↗</span></div><div class="mode-illustration slots-art"><div class="slot-head"></div><div class="slot-screen"><span>⚪</span><span>🔵</span><span>🌸</span></div><div class="slot-base"></div></div></a>
     <a class="mode-card" href="/cases" data-route="/cases"><div class="mode-text"><div class="mode-index">02 / КОЛЛЕКЦИЯ</div><h3>Кейсы</h3><p>Холодные кейсы,<br>новые открытия.</p><span class="mode-arrow">↗</span></div><div class="mode-illustration case-art"><div class="case-lid"></div><div class="case-body"><div class="case-glyph">W</div></div><div class="case-foot"></div></div></a>
-    <a class="mode-card" href="/duels" data-route="/duels"><div class="mode-text"><div class="mode-index">03 / PVP</div><h3>Дуэли</h3><p>Брось вызов другу<br>и забери его W.</p><span class="mode-arrow">↗</span></div><div class="mode-illustration duels-art"><div class="can can-light"><span>⚡</span></div><div class="can can-dark"><span>⚡</span></div></div></a>
+    <a class="mode-card" href="/duels" data-route="/duels"><div class="mode-text"><div class="mode-index">03 / PVP</div><h3>Дуэли</h3><p>Брось вызов другу<br>и забери его W.</p><span class="mode-arrow">↗</span></div><div class="mode-illustration duels-art"><div class="can can-light"><span aria-hidden="true"></span></div><div class="can can-dark"><span aria-hidden="true"></span></div></div></a>
   </div>
   <div class="bottom-grid">
     <section class="panel"><div class="panel-header"><h3>↗ Последние выигрыши</h3><a href="/casino" data-route="/casino" class="text-link">Холодос ↗</a></div><div class="wins-list" id="home-wins"><p class="muted">Загружаем реальные результаты…</p></div></section>
@@ -68,7 +68,7 @@
   <div class="page-header"><p class="eyebrow">КАЗИНО / ХОЛОДОС</p><h1>Твой холодос<span class="period">.</span></h1><p>Три банки, один результат. Играй здесь или в Twitch — баланс и кулдаун общие.</p></div>
   <div class="casino-layout">
     <div class="slot-game panel">
-      <div class="panel-header"><h3>◧ Холодос</h3><span class="small-pill">1 открытие / 2 минуты</span></div>
+      <div class="panel-header"><h3>Холодос</h3><span class="small-pill">1 открытие / 2 минуты</span></div>
       <div class="reels"><div class="reel" id="reel-1">⚪</div><div class="reel" id="reel-2">🔵</div><div class="reel" id="reel-3">🥭</div></div>
       <div class="spin-result" id="spin-result" aria-live="polite">Войди через Twitch, чтобы открыть холодос.</div>
       <button class="button button-primary spin-button" id="spin-button" type="button">Открыть холодос <span>↗</span></button>
