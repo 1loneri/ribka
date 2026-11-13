@@ -145,7 +145,7 @@ function duelRespond(login,id,answer,mid,now){
 
 
 function shopText(){
- return 'Магазин VP (выдача вручную): 240 VP — 18 000 W; 475 VP — 35 625 W; 1000 VP — 75 000 W. Заказать: !купить 240. Проверить: !заказ.';
+ return 'Магазин VP: 240 VP · 18 000 W; 475 VP · 35 625 W; 1000 VP · 75 000 W. Заказать: !купить 240. Проверить: !заказ.';
 }
 function buyVp(login,id,vp,mid,now){
  return transaction(()=>{
