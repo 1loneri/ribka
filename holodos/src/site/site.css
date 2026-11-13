@@ -375,87 +375,153 @@ main{max-width:1640px;padding:28px var(--page-gutter) 90px}
 
 
 
-/* Home-only photographic background. The photo is NOT an element in the layout. */
+/* War1ouss home hero: full-width photo, clean header clearance, and extended fade.
+   Scoped to the homepage only; no other view receives a photographic background. */
+#view-home{isolation:isolate}
 #view-home .hero{
-  position:relative;isolation:isolate;
+  position:relative;
+  isolation:isolate;
   overflow:visible;
-  display:grid;grid-template-columns:minmax(0,47%) minmax(0,53%);
+  display:grid;
+  grid-template-columns:minmax(0,48%) minmax(0,52%);
   align-items:center;
-  height:clamp(550px,36vw,650px);min-height:0;
-  margin:0 0 32px;
-  background:transparent;
+  width:100%;
+  min-width:0;
+  height:clamp(550px,34vw,625px);
+  min-height:0;
+  /* Visible clear space above the image, and breathing room before the games. */
+  margin:54px 0 104px;
+  background:none;
 }
 #view-home .hero::before{
-  content:"";position:absolute;
-  top:-28px;bottom:0;left:50%;width:100vw;height:calc(100% + 28px);
+  content:"";
+  position:absolute;
+  z-index:0;
+  top:0;bottom:0;
+  left:50%;
+  width:100vw;
   transform:translateX(-50%);
-  z-index:0;pointer-events:none;
+  pointer-events:none;
   background-color:#081019;
   background-image:
-    linear-gradient(90deg,rgba(8,16,25,.78) 0%,rgba(8,16,25,.42) 27%,rgba(8,16,25,.10) 50%,transparent 73%),
-    linear-gradient(180deg,rgba(8,16,25,.06) 0%,transparent 46%,rgba(8,16,25,.25) 69%,#081019 100%),
+    /* The upper edge starts in the site color; the lower 45% fades gradually to it. */
+    linear-gradient(to bottom,
+      #081019 0%,
+      rgba(8,16,25,.86) 6%,
+      rgba(8,16,25,.42) 16%,
+      rgba(8,16,25,.08) 28%,
+      rgba(8,16,25,.12) 53%,
+      rgba(8,16,25,.35) 67%,
+      rgba(8,16,25,.67) 80%,
+      rgba(8,16,25,.91) 92%,
+      #081019 100%
+    ),
+    /* Keep the heading comfortably legible over the photograph. */
+    linear-gradient(to right,
+      #081019 0%,
+      rgba(8,16,25,.92) 13%,
+      rgba(8,16,25,.64) 31%,
+      rgba(8,16,25,.14) 54%,
+      transparent 75%
+    ),
     url('/assets/hero-ultra-2026.webp');
   background-repeat:no-repeat;
   background-size:100% 100%,100% 100%,cover;
-  background-position:center,center,center 17%;
+  background-position:center,center,center 14%;
 }
 #view-home .hero::after{display:none}
 #view-home .hero-copy{
-  position:relative;z-index:1;
-  padding:20px 0 20px 0;
-  width:100%;max-width:675px;min-width:0;
+  position:relative;
+  z-index:1;
+  width:100%;
+  max-width:675px;
+  min-width:0;
+  padding:20px 0;
 }
-#view-home .hero h1{font-size:clamp(52px,5.3vw,86px);max-width:100%;overflow-wrap:normal}
+#view-home .hero h1{
+  font-size:clamp(52px,5.3vw,86px);
+  max-width:100%;
+  overflow-wrap:normal;
+}
 #view-home .hero-description{max-width:580px}
 #view-home .section-heading{
-  position:relative;z-index:1;
-  margin:12px 0 25px;
+  position:relative;
+  z-index:1;
+  margin:20px 0 28px;
 }
 #view-home .mode-grid{position:relative;z-index:1}
-#view-home .bottom-grid{margin-top:42px}
+#view-home .bottom-grid{margin-top:44px}
 @media(max-width:1150px){
-  #view-home .hero{height:clamp(535px,46vw,605px);grid-template-columns:minmax(0,51%) minmax(0,49%)}
+  #view-home .hero{
+    height:clamp(535px,46vw,600px);
+    grid-template-columns:minmax(0,51%) minmax(0,49%);
+    margin-top:44px;
+    margin-bottom:86px;
+  }
   #view-home .hero h1{font-size:clamp(45px,6vw,70px)}
+  #view-home .hero::before{background-position:center,center,61% 15%}
 }
 @media(max-width:820px){
   #view-home .hero{
     display:block;
     width:100%;
-    height:auto;min-height:670px;
-    margin:0 0 26px;
+    height:auto;
+    min-height:690px;
+    margin:34px 0 78px;
   }
   #view-home .hero::before{
-    top:-28px;height:calc(100% + 28px);
+    top:0;bottom:0;height:100%;
     background-image:
-      linear-gradient(180deg,#081019 0%,rgba(8,16,25,.97) 25%,rgba(8,16,25,.86) 44%,rgba(8,16,25,.17) 66%,#081019 100%),
+      linear-gradient(to bottom,
+        #081019 0%,
+        rgba(8,16,25,.98) 13%,
+        rgba(8,16,25,.90) 27%,
+        rgba(8,16,25,.50) 45%,
+        rgba(8,16,25,.10) 62%,
+        rgba(8,16,25,.46) 79%,
+        #081019 100%
+      ),
+      linear-gradient(to right,rgba(8,16,25,.30),transparent 70%),
       url('/assets/hero-ultra-2026.webp');
-    background-size:100% 100%,auto 66%;
-    background-position:center,right bottom;
+    background-size:100% 100%,100% 100%,auto 68%;
+    background-position:center,center,right bottom;
   }
   #view-home .hero-copy{
-    width:100%;max-width:100%;padding:42px 0 0;
+    width:100%;
+    max-width:100%;
+    padding:46px 0 0;
   }
-  #view-home .hero h1{font-size:clamp(46px,9vw,70px);max-width:100%}
+  #view-home .hero h1{
+    font-size:clamp(46px,9vw,70px);
+    max-width:100%;
+  }
   #view-home .hero-description{font-size:clamp(13px,2vw,16px);max-width:540px}
   #view-home .hero-actions{flex-wrap:wrap}
   #view-home .hero-note{margin-top:20px}
-  #view-home .section-heading{margin:12px 0 24px}
+  #view-home .section-heading{margin:14px 0 24px}
 }
 @media(max-width:540px){
-  #view-home .hero{min-height:675px;margin-bottom:24px}
-  #view-home .hero-copy{padding:32px 0 0}
-  #view-home .hero h1{font-size:clamp(43px,11vw,58px);letter-spacing:-.073em}
+  #view-home .hero{
+    min-height:695px;
+    margin-top:30px;
+    margin-bottom:66px;
+  }
+  #view-home .hero-copy{padding:35px 0 0}
+  #view-home .hero h1{
+    font-size:clamp(43px,11vw,58px);
+    letter-spacing:-.073em;
+  }
   #view-home .hero .eyebrow{font-size:8px;letter-spacing:.17em}
   #view-home .hero-description{font-size:13px;line-height:1.6}
   #view-home .hero-actions{gap:10px}
   #view-home .hero-actions .button{white-space:normal;max-width:100%}
   #view-home .hero::before{
-    background-size:100% 100%,auto 62%;
-    background-position:center,right bottom;
+    background-size:100% 100%,100% 100%,auto 64%;
+    background-position:center,center,right bottom;
   }
 }
 @media(max-width:360px){
-  #view-home .hero{min-height:700px}
+  #view-home .hero{min-height:715px;margin-top:26px;margin-bottom:60px}
   #view-home .hero-copy{padding-top:30px}
   #view-home .hero h1{font-size:clamp(40px,10.7vw,44px)}
   #view-home .hero-actions .button{min-height:43px}
