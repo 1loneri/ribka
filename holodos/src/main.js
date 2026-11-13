@@ -47,8 +47,11 @@ async function access(){const r=current();if(!r)return null;return r.expires_at<
 function transaction(fn){db.exec('BEGIN IMMEDIATE');try{const result=fn();db.exec('COMMIT');return result;}catch(e){db.exec('ROLLBACK');throw e;}}
 function seen(msg,now){return db.prepare('INSERT OR IGNORE INTO seen(message_id,created_at) VALUES(?,?)').run(msg,now).changes===1;}
 function player(id,login){db.prepare('INSERT OR IGNORE INTO players(id,login) VALUES(?,?)').run(id,login);db.prepare('UPDATE players SET login=? WHERE id=? AND login<>?').run(login,id,login);return db.prepare('SELECT * FROM players WHERE id=?').get(id);}
-const cans=['⚪','🟢','🥭','🌸','🔵','⚫','ⓦ'];
-function chooseExcluding(excluded){const a=[0,1,2,3,4,5].filter(i=>!excluded.includes(i));return a[randomInt(a.length)];}
+const regularCans=['⚪','🟢','🥭','🌸','🔵','⚫','🍉','🟡'];
+const cans=[...regularCans,'ⓦ'];
+const wEditionIndex=cans.length-1;
+function randomRegularCan(){return randomInt(regularCans.length);}
+function chooseExcluding(excluded){const a=regularCans.map((_,i)=>i).filter(i=>!excluded.includes(i));return a[randomInt(a.length)];}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=randomInt(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;}
 function draw(){
  // Exactly 2000 equally likely outcomes:
@@ -56,10 +59,10 @@ function draw(){
  // 540 pairs (27%), 1449 three-different (72.45%).
  // W Edition never appears in ordinary outcomes.
  const n=randomInt(2000);
- if(n===0)return {cans:[6,6,6],gain:100,description:'W EDITION! РЕДКИЙ ДЖЕКПОТ!'};
- if(n<11){const c=randomInt(6);return {cans:[c,c,c],gain:20,description:'ДЖЕКПОТ!'};}
- if(n<551){const c=randomInt(6);return {cans:shuffle([c,c,chooseExcluding([c])]),gain:5,description:'ПАРА!'};}
- const a=randomInt(6),b=chooseExcluding([a]),c=chooseExcluding([a,b]);
+ if(n===0)return {cans:[wEditionIndex,wEditionIndex,wEditionIndex],gain:100,description:'W EDITION! РЕДКИЙ ДЖЕКПОТ!'};
+ if(n<11){const c=randomRegularCan();return {cans:[c,c,c],gain:20,description:'ДЖЕКПОТ!'};}
+ if(n<551){const c=randomRegularCan();return {cans:shuffle([c,c,chooseExcluding([c])]),gain:5,description:'ПАРА!'};}
+ const a=randomRegularCan(),b=chooseExcluding([a]),c=chooseExcluding([a,b]);
  return {cans:shuffle([a,b,c]),gain:0,description:'не повезло.'};
 }
 let client=null,connected=false,starting=false,ending=false,sending=false;
