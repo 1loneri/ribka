@@ -198,13 +198,13 @@ function handle(login,id,msg,mid,now){
   if(now-p.last_opened<120000)return '@'+login+', холодос можно открыть через '+Math.ceil((120000-now+p.last_opened)/1000)+' сек.';
   const d=draw();
   db.prepare('UPDATE players SET last_opened=?,balance=balance+?,opens=opens+1,wins=wins+?,jackpots=jackpots+? WHERE id=?').run(now,d.gain,Number(d.gain>0),Number(d.gain===100),id);
-  return '@'+login+' открыл холодос: '+d.cans.map(i=>cans[i]).join(' ')+' — '+d.description+' +'+d.gain+' W';
+  return '@'+login+' открыл холодос: '+d.cans.map(i=>cans[i]).join(' · ')+' — '+d.description+' +'+d.gain+' W';
  });
  else if(cmd==='!баланс')output=transaction(()=>seen(mid,now)?'@'+login+', у тебя '+player(id,login).balance.toLocaleString('ru-RU')+' W-монет.':null);
  else if(cmd==='!топмонет')output=transaction(()=>{
   if(!seen(mid,now))return null;
   const top=db.prepare('SELECT login,balance FROM players ORDER BY balance DESC,login ASC LIMIT 5').all();
-  return top.length?'Топ W-монет: '+top.map((p,i)=>(i+1)+'. @'+p.login+' '+p.balance+' W').join(' | '):'Топ W-монет пуст. Открой !холодос.';
+  return top.length?'Топ W-монет: '+top.map((p,i)=>(i+1)+'. @'+p.login+' '+p.balance+' W').join(' · '):'Топ W-монет пуст. Открой !холодос.';
  });
  else if(cmd==='!статмонет')output=transaction(()=>{
   if(!seen(mid,now))return null;
