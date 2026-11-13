@@ -1,6 +1,7 @@
 import http from 'node:http';
 import {DatabaseSync} from 'node:sqlite';
-import {mkdirSync} from 'node:fs';
+import {mkdirSync,existsSync} from 'node:fs';
+import {createSite} from './site-server.js';
 import {dirname} from 'node:path';
 import {randomInt,randomBytes,scryptSync,createCipheriv,createDecipheriv,createHmac,timingSafeEqual} from 'node:crypto';
 import tmi from 'tmi.js';
@@ -59,7 +60,7 @@ function draw(){
  // 540 pairs (27%), 1449 three-different (72.45%).
  // W Edition never appears in ordinary outcomes.
  const n=randomInt(2000);
- if(n===0)return {cans:[wEditionIndex,wEditionIndex,wEditionIndex],gain:100,description:'W EDITION! РЕДКИЙ ДЖЕКПОТ!'};
+ if(n===0)return {cans:[wEditionIndex,wEditionIndex,wEditionIndex],gain:400,description:'W EDITION! РЕДКИЙ ДЖЕКПОТ!'};
  if(n<11){const c=randomRegularCan();return {cans:[c,c,c],gain:20,description:'ДЖЕКПОТ!'};}
  if(n<551){const c=randomRegularCan();return {cans:shuffle([c,c,chooseExcluding([c])]),gain:5,description:'ПАРА!'};}
  const a=randomRegularCan(),b=chooseExcluding([a]),c=chooseExcluding([a,b]);
@@ -200,7 +201,8 @@ function handle(login,id,msg,mid,now){
   const p=player(id,login);
   if(now-p.last_opened<120000)return '@'+login+', холодос можно открыть через '+Math.ceil((120000-now+p.last_opened)/1000)+' сек.';
   const d=draw();
-  db.prepare('UPDATE players SET last_opened=?,balance=balance+?,opens=opens+1,wins=wins+?,jackpots=jackpots+? WHERE id=?').run(now,d.gain,Number(d.gain>0),Number(d.gain===100),id);
+  db.prepare('UPDATE players SET last_opened=?,balance=balance+?,opens=opens+1,wins=wins+?,jackpots=jackpots+? WHERE id=?').run(now,d.gain,Number(d.gain>0),Number(d.gain===400),id);
+  site.recordSpin(id,login,d,now,'chat:'+mid,'chat');
   return '@'+login+' открыл холодос: '+d.cans.map(i=>cans[i]).join(' ')+' - '+d.description+' +'+d.gain+' W';
  });
  else if(cmd==='!баланс')output=transaction(()=>seen(mid,now)?'@'+login+', у тебя '+player(id,login).balance.toLocaleString('ru-RU')+' W-монет.':null);
@@ -233,15 +235,22 @@ async function start(){
   conn.on('connected',()=>{connected=true;console.log('Connected to #'+channel+' as '+botLogin);void drain();});
   conn.on('disconnected',reason=>{connected=false;console.warn('Twitch IRC disconnected:',reason);});
   conn.on('message',(_room,tags,msg,self)=>{
-   if(self||!msg.trim().startsWith('!'))return;
+   if(self||!msg.trim())return;
    const login=String(tags.username||'').toLowerCase(),id=String(tags['user-id']||''),mid=String(tags.id||'');
    if(login===botLogin||!/^[a-z0-9_]{1,25}$/.test(login)||!/^\d+$/.test(id)||!mid||mid.length>200)return;
-   try{handle(login,id,msg,mid,Date.now());}catch(e){console.error('command:',e.message);}
+   try{const now=Date.now();site.trackChat(id,login,now);if(msg.trim().startsWith('!'))handle(login,id,msg,mid,now);}catch(e){console.error('chat message:',e.message);}
   });
   await conn.connect();
  }catch(e){connected=false;console.error('Could not connect to Twitch:',e.message);}finally{starting=false;}
 }
 const states=new Map();
+// Keep a consistent pre-site snapshot of the existing W balances on the persistent volume.
+const siteBackupPath=dirname(dbPath)+'/leha-pre-war1ouss-site.sqlite';
+if(!existsSync(siteBackupPath)){
+ db.prepare('VACUUM INTO ?').run(siteBackupPath);
+ console.log('Pre-website SQLite backup created on persistent volume');
+}
+const site=createSite({db,publicUrl,app,tokenRequest,validate,player,transaction,draw,cans,duelChallenge,duelRespond,say,channel,duelsEnabled,states,secret});
 function equal(a,b){const x=Buffer.from(a),y=Buffer.from(b);return x.length===y.length&&timingSafeEqual(x,y);}
 function escape(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function page(body){
@@ -255,10 +264,11 @@ function setupForm(token){
 const server=http.createServer(async(req,res)=>{
  const url=new URL(req.url,'http://localhost');
  const html=(status,body)=>{res.writeHead(status,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','X-Frame-Options':'DENY','Referrer-Policy':'no-referrer','Content-Security-Policy':"default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'"});res.end(page(body));};
- const redirect=()=>{res.writeHead(303,{Location:'/',"Cache-Control":"no-store"});res.end();};
+ const redirect=()=>{res.writeHead(303,{Location:'/admin',"Cache-Control":"no-store"});res.end();};
  if(url.pathname==='/health'){res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify({ok:true,twitch_connected:connected}));return;}
  if(url.pathname==='/oauth/callback'){
   const state=url.searchParams.get('state')||'',until=states.get(state);states.delete(state);
+  if(until&&typeof until==='object'&&until.type==='site'){await site.oauthCallback(req,res,url,state,until);return;}
   if(!until||until<Date.now()){html(403,'Подключение истекло. Начни заново в панели.');return;}
   if(url.searchParams.has('error')){html(400,'Twitch отменил подключение.');return;}
   try{
@@ -267,10 +277,11 @@ const server=http.createServer(async(req,res)=>{
    if(user.client_id!==a.id||user.login.toLowerCase()!==botLogin)throw Error('Войти нужно именно в аккаунт @'+botLogin);
    if(!user.scopes?.includes('chat:read')||!user.scopes?.includes('chat:edit'))throw Error('Не получены разрешения Twitch chat:read и chat:edit');
    saveToken(data,user);await start();
-   html(200,'<h2>Аккаунт @'+escape(user.login)+' авторизован!</h2><p>Бот подключается к #'+escape(channel)+'.</p><a href="/">Панель</a>');
+   html(200,'<h2>Аккаунт @'+escape(user.login)+' авторизован!</h2><p>Бот подключается к #'+escape(channel)+'.</p><a href="/admin">Панель</a>');
   }catch(e){html(400,'Ошибка Twitch: '+escape(e.message));}
   return;
  }
+ if(await site.handle(req,res,url))return;
  // A normal HTML sign-in works in Twitch's and ChatGPT's in-app browsers; Basic Auth prompts often do not.
  const cookieName='leha_admin';
  const authAge=7*24*60*60*1000;
@@ -299,11 +310,11 @@ const server=http.createServer(async(req,res)=>{
     if(!validCsrf(form,'login')){html(403,loginPage('Обнови страницу и попробуй ещё раз.'));return;}
     if(candidate.length>1024||!equal(candidate,pass)){html(401,loginPage('Неверный пароль.'));return;}
     const expiry=String(Date.now()+authAge),value=expiry+'.'+signed(expiry);
-    res.writeHead(303,{Location:'/',"Cache-Control":"no-store",'Set-Cookie':cookieName+'='+value+'; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800'});res.end();
+    res.writeHead(303,{Location:'/admin',"Cache-Control":"no-store",'Set-Cookie':cookieName+'='+value+'; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800'});res.end();
    }catch{html(400,loginPage('Не получилось обработать форму.'));}
    return;
   }
-  html(req.method==='GET'&&url.pathname==='/'?200:401,loginPage());return;
+  html(req.method==='GET'&&url.pathname==='/admin'?200:401,loginPage());return;
  }
  if(req.method==='POST'&&url.pathname==='/logout'){
   const form=await formData(req);
@@ -347,7 +358,7 @@ const server=http.createServer(async(req,res)=>{
   u.search=new URLSearchParams({client_id:a.id,redirect_uri:publicUrl+'/oauth/callback',response_type:'code',scope:'chat:read chat:edit',state,force_verify:'true'}).toString();
   res.writeHead(302,{Location:u.toString(),'Cache-Control':'no-store'});res.end();return;
  }
- if(url.pathname!=='/'){html(404,'Не найдено');return;}
+ if(url.pathname!=='/admin'){html(404,'Не найдено');return;}
  const a=app(),linked=current();
  let content='<h2>'+ (linked?'@'+escape(linked.login)+' авторизован':a?'Twitch-приложение настроено':'Подключение Twitch')+'</h2><p>Канал: <code>#'+escape(channel)+'</code> · '+(connected?'Бот в чате':'Бот не в чате')+'</p><p>Команды: <code>!холодос</code>, <code>!баланс</code>, <code>!топмонет</code>, <code>!статмонет</code>, <code>!магазин</code>, <code>!купить 240</code>, <code>!заказ</code>.'+(duelsEnabled?' Дуэли: <code>!дуэль @ник 500</code>, <code>!принять</code>, <code>!отказ</code>.':' Дуэли пока выключены.')+'</p>';
  if(!a)content+='<h3>Шаг 1. Создай Twitch-приложение</h3><p>Открой <a class="link" href="https://dev.twitch.tv/console/apps" target="_blank" rel="noopener">Twitch Developer Console</a> и зарегистрируй приложение типа Confidential. В OAuth Redirect URLs добавь:</p><p><code>'+escape(publicUrl)+'/oauth/callback</code></p><p>Нажми Manage → New Secret и введи ID и Secret ниже (не отправляй секрет в чат ChatGPT).</p>'+setupForm(csrf('configure'));
