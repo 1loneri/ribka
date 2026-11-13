@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#09111b">
+<meta name="description" content="War1ouss — игровой портал сообщества Twitch. Холодос, W-монеты, дуэли и кейсы.">
+<title>War1ouss — твой холодос</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/site.css">
+<script src="/assets/site.js" defer></script>
+</head>
+<body>
+<div class="shell">
+<header class="topbar">
+  <a class="brand" href="/" data-route="/" aria-label="War1ouss, главная">W<span class="brand-dot">.</span></a>
+  <button class="mobile-menu" type="button" id="menu-btn" aria-label="Открыть меню" aria-expanded="false">☰</button>
+  <nav class="nav" id="main-nav" aria-label="Разделы">
+    <a href="/" data-route="/" class="nav-link active"><span class="nav-symbol">⌂</span> Главная</a>
+    <a href="/casino" data-route="/casino" class="nav-link"><span class="nav-symbol">⚄</span> Казино</a>
+    <a href="/cases" data-route="/cases" class="nav-link"><span class="nav-symbol">◇</span> Кейсы</a>
+    <a href="/duels" data-route="/duels" class="nav-link"><span class="nav-symbol">⚔</span> Дуэли</a>
+    <a href="/top" data-route="/top" class="nav-link"><span class="nav-symbol">▥</span> Топ игроков</a>
+    <a href="/chat" data-route="/chat" class="nav-link"><span class="nav-symbol">≋</span> Топ чата</a>
+    <a href="/shop" data-route="/shop" class="nav-link"><span class="nav-symbol">◈</span> Магазин</a>
+  </nav>
+  <div class="user-actions">
+    <span class="wallet" id="wallet" title="Баланс W-монет"><span class="coin-icon">W</span> <span id="wallet-amount">—</span></span>
+    <a class="login-btn" id="login-btn" href="/auth/twitch"><span class="twitch-icon">▣</span><span class="login-label">Войти через Twitch</span></a>
+    <a class="avatar-link" href="/profile" data-route="/profile" id="avatar-link" hidden aria-label="Мой профиль"><img id="top-avatar" src="" alt="Аватар"><span id="top-name"></span></a>
+  </div>
+</header>
+
+<main>
+<section class="view active" id="view-home" data-view="/">
+  <div class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow"><i></i> ИГРОВАЯ ПЛАТФОРМА WAR1OUSS</p>
+      <h1>ТВОЙ<br><em>ХОЛОДОС.</em></h1>
+      <p class="hero-description">Ищи банки, выигрывай W-монеты,<br>открывай кейсы и участвуй в дуэлях.</p>
+      <div class="hero-actions">
+        <a class="button button-primary" href="/casino" data-route="/casino">◧ <span>Открыть холодос</span> <span>↗</span></a>
+        <a class="button button-ghost" href="/shop" data-route="/shop">Как заработать VP? <span>↗</span></a>
+      </div>
+      <p class="hero-note"><span class="live-dot"></span> W-монеты общие с Twitch-чатом</p>
+    </div>
+    <div class="hero-art" role="img" aria-label="Белая банка Monster Ultra среди льда">
+      <div class="ice-haze"></div>
+      <img src="/assets/hero.webp" alt="Белая банка Monster Energy Ultra среди ледяных осколков" loading="eager">
+    </div>
+  </div>
+  <div class="section-heading"><div><p class="eyebrow">ВЫБЕРИ РЕЖИМ</p><h2>Игры платформы<span class="period">.</span></h2></div><a href="/casino" data-route="/casino" class="text-link">Все режимы ↗</a></div>
+  <div class="mode-grid">
+    <a class="mode-card" href="/casino" data-route="/casino"><div class="mode-text"><div class="mode-index">01 / ИГРА</div><h3>Казино</h3><p>Открывай холодос и<br>собирай W-монеты.</p><span class="mode-arrow">↗</span></div><div class="mode-illustration slots-art"><div class="slot-head"></div><div class="slot-screen"><span>⚪</span><span>🔵</span><span>🌸</span></div><div class="slot-base"></div></div></a>
+    <a class="mode-card" href="/cases" data-route="/cases"><div class="mode-text"><div class="mode-index">02 / КОЛЛЕКЦИЯ</div><h3>Кейсы</h3><p>Холодные кейсы,<br>новые открытия.</p><span class="mode-arrow">↗</span></div><div class="mode-illustration case-art"><div class="case-lid"></div><div class="case-body"><div class="case-glyph">W</div></div><div class="case-foot"></div></div></a>
+    <a class="mode-card" href="/duels" data-route="/duels"><div class="mode-text"><div class="mode-index">03 / PVP</div><h3>Дуэли</h3><p>Брось вызов другу<br>и забери его W.</p><span class="mode-arrow">↗</span></div><div class="mode-illustration duels-art"><div class="can can-light"><span>⚡</span></div><div class="can can-dark"><span>⚡</span></div></div></a>
+  </div>
+  <div class="bottom-grid">
+    <section class="panel"><div class="panel-header"><h3>↗ Последние выигрыши</h3><a href="/casino" data-route="/casino" class="text-link">Холодос ↗</a></div><div class="wins-list" id="home-wins"><p class="muted">Загружаем реальные результаты…</p></div></section>
+    <section class="panel"><div class="panel-header"><h3>♕ Топ W-монет</h3><a href="/top" data-route="/top" class="text-link">Весь рейтинг ↗</a></div><div class="rank-list" id="home-top"><p class="muted">Загружаем баланс игроков…</p></div></section>
+  </div>
+  <div class="community-strip"><div><span class="blue-mark"></span><strong>Сообщество War1ouss</strong><p>Сайт и чат живут в одной игре.</p></div><a class="button button-ghost" href="https://www.twitch.tv/war1ouss" target="_blank" rel="noopener noreferrer">Наш Twitch ↗</a></div>
+</section>
+
+<section class="view" id="view-casino" data-view="/casino">
+  <div class="page-header"><p class="eyebrow">КАЗИНО / ХОЛОДОС</p><h1>Твой холодос<span class="period">.</span></h1><p>Три банки, один результат. Играй здесь или в Twitch — баланс и кулдаун общие.</p></div>
+  <div class="casino-layout">
+    <div class="slot-game panel">
+      <div class="panel-header"><h3>◧ Холодос</h3><span class="small-pill">1 открытие / 2 минуты</span></div>
+      <div class="reels"><div class="reel" id="reel-1">⚪</div><div class="reel" id="reel-2">🔵</div><div class="reel" id="reel-3">🥭</div></div>
+      <div class="spin-result" id="spin-result" aria-live="polite">Войди через Twitch, чтобы открыть холодос.</div>
+      <button class="button button-primary spin-button" id="spin-button" type="button">Открыть холодос <span>↗</span></button>
+      <p class="muted microcopy">Открытие бесплатное. В игре используются виртуальные W-монеты.</p>
+    </div>
+    <div class="panel odds-panel"><h3>Награды и шансы</h3><div class="odd-row"><span>👑 👑 👑 <b>W EDITION</b></span><strong>+400 W</strong><small>0,05%</small></div><div class="odd-row"><span>⚪ ⚪ ⚪ <b>Джекпот</b></span><strong>+20 W</strong><small>0,5%</small></div><div class="odd-row"><span>🔵 🔵 🌸 <b>Пара</b></span><strong>+5 W</strong><small>27%</small></div><div class="odd-row"><span>🟢 🍉 ⚫ <b>Без совпадений</b></span><strong>+0 W</strong><small>72,45%</small></div><p class="muted odds-note">Символы: ⚪ 🟢 🥭 🌸 🔵 ⚫ 🍉 🟡. Три короны выпадают только в суперджекпоте.</p></div>
+  </div>
+  <div class="panel narrow-gap"><div class="panel-header"><h3>История открытий</h3><span class="muted">Реальные игры сайта и чата</span></div><div id="casino-history" class="history-table"><p class="muted">Загрузка истории…</p></div></div>
+</section>
+
+<section class="view" id="view-cases" data-view="/cases">
+  <div class="page-header"><p class="eyebrow">КОЛЛЕКЦИЯ / КЕЙСЫ</p><h1>Ледяные кейсы<span class="period">.</span></h1><p>Подготавливаем коллекцию. Цены и содержимое будут опубликованы после настройки.</p></div>
+  <div class="case-layout"><div class="case-preview panel"><div class="case-stage"><div class="mode-illustration case-art big-case"><div class="case-lid"></div><div class="case-body"><div class="case-glyph">W</div></div><div class="case-foot"></div></div></div><h2>Первый дроп скоро</h2><p class="muted">Здесь появятся кейсы, вероятности выпадения, анимация и история. Сейчас списания W-монет за кейсы отключены.</p><span class="small-pill">В разработке · без списаний</span></div><div class="panel"><h3>Прозрачные условия</h3><div class="feature-line">◇ Состав и стоимость каждого кейса</div><div class="feature-line">◇ Открытые вероятности наград</div><div class="feature-line">◇ Общий баланс с Twitch</div><div class="feature-line">◇ История и защита от повторных списаний</div></div></div>
+</section>
+
+<section class="view" id="view-duels" data-view="/duels">
+  <div class="page-header"><p class="eyebrow">PVP / ДУЭЛИ</p><h1>Брось вызов<span class="period">.</span></h1><p>Дуэли на W-монеты с теми же правилами, что и в чате. Перерыв после завершения — 2 минуты 30 секунд.</p></div>
+  <div class="duel-layout"><div class="panel"><h3>Новая дуэль</h3><form id="duel-form"><label for="duel-target">Игрок Twitch</label><input id="duel-target" name="target" placeholder="Ник игрока" minlength="1" maxlength="25" required autocomplete="off"><label for="duel-wager">Ставка W-монет</label><input id="duel-wager" name="wager" type="number" placeholder="500" min="1" max="100000000" required><button type="submit" class="button button-primary full-button">Вызвать на дуэль ↗</button></form><p class="form-message" id="duel-message" aria-live="polite"></p></div><div class="panel"><div class="panel-header"><h3>Ожидающие вызовы</h3><button class="text-button" type="button" id="refresh-duels">Обновить ↻</button></div><div id="pending-duels"><p class="muted">Загрузка…</p></div></div></div>
+  <div class="panel narrow-gap"><h3>Последние дуэли</h3><div id="duel-history" class="history-table"><p class="muted">Загрузка…</p></div></div>
+</section>
+
+<section class="view" id="view-top" data-view="/top"><div class="page-header"><p class="eyebrow">РЕЙТИНГ / W-МОНЕТЫ</p><h1>Топ игроков<span class="period">.</span></h1><p>Настоящие балансы игроков Twitch и сайта.</p></div><div class="panel leaderboard-panel" id="top-list"><p class="muted">Загрузка…</p></div></section>
+<section class="view" id="view-chat" data-view="/chat"><div class="page-header"><p class="eyebrow">СООБЩЕСТВО / ЧАТ</p><h1>Топ чата<span class="period">.</span></h1><p>Количество сообщений в чате #war1ouss. Статистика собирается с момента запуска этой функции, прошлые сообщения не учитываются.</p></div><div class="panel leaderboard-panel" id="chat-list"><p class="muted">Загрузка…</p></div></section>
+
+<section class="view" id="view-profile" data-view="/profile"><div class="page-header"><p class="eyebrow">АККАУНТ / TWITCH</p><h1>Мой профиль<span class="period">.</span></h1><p>Твои W-монеты, открытия холодоса и заявки из магазина.</p></div><div id="profile-content" class="panel"><p class="muted">Загрузка профиля…</p></div></section>
+
+<section class="view" id="view-shop" data-view="/shop"><div class="page-header"><p class="eyebrow">МАГАЗИН / VP</p><h1>Магазин VP<span class="period">.</span></h1><p>Три набора VP за W-монеты. Заявки сейчас оформляются в Twitch-чате, выдача осуществляется вручную.</p></div>
+  <div class="shop-grid"><div class="shop-card panel"><span class="shop-label">01 / START</span><h2>240 <small>VP</small></h2><p>18 000 W</p><code>!купить 240</code></div><div class="shop-card panel"><span class="shop-label">02 / PLUS</span><h2>475 <small>VP</small></h2><p>35 625 W</p><code>!купить 475</code></div><div class="shop-card panel"><span class="shop-label">03 / MAX</span><h2>1000 <small>VP</small></h2><p>75 000 W</p><code>!купить 1000</code></div></div><div class="panel narrow-gap"><h3>Как получить VP?</h3><p>Зарабатывай W-монеты в «Холодосе» и дуэлях. Закажи подходящий пакет командой <code>!купить 240</code> (или 475 / 1000) в чате <a href="https://www.twitch.tv/war1ouss" target="_blank" rel="noopener">war1ouss</a>. Списанные W и заявка сохраняются в общей базе. Администратор обрабатывает выдачу VP вручную. Проверяй состояние через <code>!заказ</code>.</p><p class="muted">VP не выдаются автоматически. Сайт не принимает реальные деньги.</p></div>
+</section>
+</main>
+
+<footer class="footer"><div><strong>W<span class="period">.</span></strong><span>War1ouss · Игровая платформа сообщества</span></div><div><a href="https://www.twitch.tv/war1ouss" target="_blank" rel="noopener noreferrer">Twitch ↗</a><a href="/shop" data-route="/shop">Магазин</a><span>Только виртуальные W-монеты</span></div></footer>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body></html>
