@@ -229,25 +229,25 @@ input::placeholder{color:#738da4}
 .wallet{padding:8px 13px}
 .login-btn{padding:9px 17px}
 .login-label{display:inline}
-main{max-width:1640px;padding-inline:var(--page-gutter);padding-bottom:80px}
+main{max-width:1640px;padding:28px var(--page-gutter) 90px}
 .hero{
-  height:clamp(386px,32vw,440px);
+  height:clamp(475px,38vw,530px);
   min-height:0;
   display:grid;
   grid-template-columns:44% 56%;
   align-items:center;
   position:relative;
-  margin:0 0 12px;
+  margin:22px 0 52px;
   overflow:hidden;
 }
 .hero:after{left:0;right:0;opacity:.45}
-.hero-copy{padding:10px 0 16px 9px;max-width:630px}
-.hero .eyebrow{margin-bottom:18px}
+.hero-copy{padding:34px 0 34px 9px;max-width:630px}
+.hero .eyebrow{margin-bottom:26px}
 .hero h1{font-size:clamp(51px,5.4vw,82px);line-height:1.01}
-.hero-description{font-size:clamp(13px,1.22vw,18px);margin:18px 0 23px;line-height:1.52}
+.hero-description{font-size:clamp(13px,1.22vw,18px);margin:25px 0 30px;line-height:1.52}
 .hero-actions{gap:14px}
 .hero-actions .button{gap:20px;padding:11px 20px;min-height:46px}
-.hero-note{margin-top:20px;margin-bottom:0}
+.hero-note{margin-top:24px;margin-bottom:0}
 .hero-art{
   width:61%;
   height:100%;
@@ -269,13 +269,13 @@ main{max-width:1640px;padding-inline:var(--page-gutter);padding-bottom:80px}
     linear-gradient(0deg,#081019 0%,transparent 23%,transparent 90%,#08101955 100%);
 }
 .ice-haze{opacity:.45}
-.section-heading{margin:0 0 18px;gap:24px;align-items:end;padding:5px 4px 0}
+.section-heading{margin:20px 0 30px;gap:24px;align-items:end;padding:8px 4px 0}
 .section-heading .eyebrow{margin-bottom:6px}
-.mode-grid{gap:22px}
+.mode-grid{gap:24px;margin-top:6px}
 .mode-card{min-height:192px}
 .mode-text{padding:24px 26px}
 .mode-arrow{left:26px}
-.bottom-grid{gap:22px;margin-top:26px}
+.bottom-grid{gap:24px;margin-top:44px}
 .panel{padding:clamp(21px,2vw,30px)}
 .panel-header{margin-bottom:20px}
 .community-strip{margin-top:28px;padding-top:29px}
@@ -314,7 +314,7 @@ main{max-width:1640px;padding-inline:var(--page-gutter);padding-bottom:80px}
   .nav-link{font-size:13px;padding:12px 0}
   .nav-link.active:after{bottom:5px;right:auto;width:62px}
   .user-actions{margin-left:auto}
-  .hero{height:410px}
+  .hero{height:480px;margin-top:18px;margin-bottom:38px}
   .hero h1{font-size:clamp(47px,6.6vw,68px)}
   .hero-art{width:62%;right:-7%;height:100%}
   .hero-actions .button{padding:10px 13px;gap:10px}
@@ -329,7 +329,7 @@ main{max-width:1640px;padding-inline:var(--page-gutter);padding-bottom:80px}
   .brand{font-size:36px}
   .hero{
     display:flex;flex-direction:column;align-items:stretch;
-    height:auto;min-height:0;overflow:hidden;margin:0 0 12px;
+    height:auto;min-height:0;overflow:hidden;margin:0 0 27px;
   }
   .hero-copy{padding:30px 2px 0;max-width:none}
   .hero h1{font-size:clamp(48px,10.3vw,72px)}
@@ -343,13 +343,13 @@ main{max-width:1640px;padding-inline:var(--page-gutter);padding-bottom:80px}
   }
   .hero-art img{object-position:50% 51%}
   .hero-art:before{background:linear-gradient(0deg,#081019 0%,transparent 24%,transparent 89%,#08101955)}
-  .section-heading{padding:0;margin:0 0 15px}
+  .section-heading{padding:0;margin:11px 0 22px}
   .mode-grid{grid-template-columns:1fr;gap:13px}
   .mode-card{min-height:175px}
   .mode-text{padding:22px 24px}
   .mode-arrow{left:24px}
   .mode-illustration{opacity:1}
-  .bottom-grid{gap:14px;margin-top:20px}
+  .bottom-grid{gap:15px;margin-top:34px}
   .page-header{padding:38px 0 24px}
   .panel{padding:21px}
   .casino-layout,.duel-layout,.case-layout{gap:15px}
@@ -357,7 +357,7 @@ main{max-width:1640px;padding-inline:var(--page-gutter);padding-bottom:80px}
 }
 @media(max-width:540px){
   .topbar{padding-inline:var(--page-gutter)}
-  .hero-copy{padding-top:25px}
+  .hero-copy{padding-top:34px}
   .hero .eyebrow{margin-bottom:14px}
   .hero h1{font-size:clamp(45px,11.8vw,60px)}
   .hero-description{font-size:13px}
@@ -369,6 +369,6 @@ main{max-width:1640px;padding-inline:var(--page-gutter);padding-bottom:80px}
   .mode-text{padding:20px}
   .mode-arrow{left:20px}
   .panel{padding:19px}
-  .page-header{padding:32px 0 20px}
+  .page-header{padding:38px 0 24px}
   .footer{padding-inline:var(--page-gutter)}
 }
