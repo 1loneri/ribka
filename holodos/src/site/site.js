@@ -48,7 +48,7 @@ function historyHtml(list){
 }
 function renderPublic(){
  const p=state.public;if(!p)return;
- $('home-top').innerHTML=rankHtml(p.top);
+ $('home-top').innerHTML=rankHtml((p.top||[]).slice(0,5));
  $('home-wins').innerHTML=winsHtml(p.recent);
  $('top-list').innerHTML=rankHtml(p.top);
  $('chat-list').innerHTML=rankHtml(p.chat,'chat');
