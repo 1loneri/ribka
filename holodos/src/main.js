@@ -13,6 +13,7 @@ const pass=process.env.ADMIN_PASSWORD||'';
 const secret=process.env.APP_SECRET||'';
 const dbPath=process.env.DB_PATH||'/data/leha.sqlite';
 const duelsEnabled=process.env.ENABLE_DUELS==='true';
+const SHOP_PRICES=Object.freeze({240:18000,475:35625,1000:75000});
 const invalidConfig=[];
 if(!/^[a-z0-9_]{1,25}$/.test(channel))invalidConfig.push('TWITCH_CHANNEL');
 if(!/^[a-z0-9_]{1,25}$/.test(botLogin))invalidConfig.push('BOT_USERNAME');
@@ -28,6 +29,9 @@ db.exec("CREATE TABLE IF NOT EXISTS players(id TEXT PRIMARY KEY,login TEXT NOT N
 db.exec("CREATE TABLE IF NOT EXISTS seen(message_id TEXT PRIMARY KEY,created_at INTEGER NOT NULL);");
 db.exec("CREATE TABLE IF NOT EXISTS duels(id INTEGER PRIMARY KEY AUTOINCREMENT,initiator_id TEXT NOT NULL,initiator_login TEXT NOT NULL,opponent_login TEXT NOT NULL,opponent_id TEXT,wager INTEGER NOT NULL CHECK(wager>0),status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','accepted','declined','expired','cancelled')),created_at INTEGER NOT NULL,expires_at INTEGER NOT NULL,resolved_at INTEGER,winner_id TEXT,fee INTEGER NOT NULL DEFAULT 0);");
 db.exec("CREATE INDEX IF NOT EXISTS idx_duels_pending ON duels(status,opponent_login,expires_at);");
+db.exec("CREATE TABLE IF NOT EXISTS shop_orders(id INTEGER PRIMARY KEY AUTOINCREMENT,player_id TEXT NOT NULL,login TEXT NOT NULL,vp INTEGER NOT NULL CHECK(vp IN (240,475,1000)),price INTEGER NOT NULL CHECK(price>0),status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','fulfilled','cancelled')),created_at INTEGER NOT NULL,updated_at INTEGER NOT NULL);");
+db.exec("CREATE INDEX IF NOT EXISTS idx_shop_user_orders ON shop_orders(player_id,id DESC);");
+db.exec("CREATE INDEX IF NOT EXISTS idx_shop_pending ON shop_orders(status,id);");
 db.exec("CREATE TABLE IF NOT EXISTS twitch_app(id INTEGER PRIMARY KEY CHECK(id=1),client_id TEXT NOT NULL,client_secret TEXT NOT NULL);");
 db.exec("CREATE TABLE IF NOT EXISTS twitch_token(id INTEGER PRIMARY KEY CHECK(id=1),login TEXT NOT NULL,user_id TEXT NOT NULL,access TEXT NOT NULL,refresh TEXT NOT NULL,expires_at INTEGER NOT NULL);");
 const key=scryptSync(secret,'leha-holodos-v1',32);
@@ -53,10 +57,10 @@ function draw(){
  // W Edition never appears in ordinary outcomes.
  const n=randomInt(2000);
  if(n===0)return {cans:[6,6,6],gain:100,description:'W EDITION! РЕДКИЙ ДЖЕКПОТ!'};
- if(n<11){const c=randomInt(6);return {cans:[c,c,c],gain:20,description:'три одинаковые банки! ДЖЕКПОТ!'};}
- if(n<551){const c=randomInt(6);return {cans:shuffle([c,c,chooseExcluding([c])]),gain:5,description:'две одинаковые банки!'};}
+ if(n<11){const c=randomInt(6);return {cans:[c,c,c],gain:20,description:'ДЖЕКПОТ!'};}
+ if(n<551){const c=randomInt(6);return {cans:shuffle([c,c,chooseExcluding([c])]),gain:5,description:'ПАРА!'};}
  const a=randomInt(6),b=chooseExcluding([a]),c=chooseExcluding([a,b]);
- return {cans:shuffle([a,b,c]),gain:0,description:'три разные банки.'};
+ return {cans:shuffle([a,b,c]),gain:0,description:'не повезло.'};
 }
 let client=null,connected=false,starting=false,ending=false,sending=false;
 const queue=[];
@@ -139,6 +143,48 @@ function duelRespond(login,id,answer,mid,now){
  });
 }
 
+
+function shopText(){
+ return 'Магазин VP (выдача вручную): 240 VP — 18 000 W; 475 VP — 35 625 W; 1000 VP — 75 000 W. Заказать: !купить 240. Проверить: !заказ.';
+}
+function buyVp(login,id,vp,mid,now){
+ return transaction(()=>{
+  if(!seen(mid,now))return null;
+  const price=SHOP_PRICES[vp];
+  if(!price)return '@'+login+', доступны 240, 475 и 1000 VP. Напиши !магазин.';
+  const playerRow=player(id,login);
+  const prior=db.prepare("SELECT id,vp FROM shop_orders WHERE player_id=? AND status='pending' LIMIT 1").get(id);
+  if(prior)return '@'+login+', у тебя уже есть заявка №'+prior.id+' на '+prior.vp+' VP. Статус: !заказ.';
+  if(playerRow.balance<price)return '@'+login+', не хватает W: '+vp+' VP стоят '+price.toLocaleString('ru-RU')+' W, у тебя '+playerRow.balance.toLocaleString('ru-RU')+' W.';
+  const debit=db.prepare('UPDATE players SET balance=balance-? WHERE id=? AND balance>=?').run(price,id,price);
+  if(debit.changes!==1)throw Error('Не получилось списать W');
+  const order=db.prepare("INSERT INTO shop_orders(player_id,login,vp,price,status,created_at,updated_at) VALUES(?,?,?,?,'pending',?,?)").run(id,login,vp,price,now,now);
+  return '@'+login+', заявка №'+order.lastInsertRowid+' на '+vp+' VP принята. Списано '+price.toLocaleString('ru-RU')+' W. VP выдаются вручную, статус: !заказ.';
+ });
+}
+function orderStatus(login,id,mid,now){
+ return transaction(()=>{
+  if(!seen(mid,now))return null;
+  const order=db.prepare('SELECT id,vp,price,status FROM shop_orders WHERE player_id=? ORDER BY id DESC LIMIT 1').get(id);
+  if(!order)return '@'+login+', у тебя ещё нет заказов. Напиши !магазин.';
+  const state={pending:'ожидает ручной выдачи',fulfilled:'выдан вручную',cancelled:'отменён, W возвращены'}[order.status]||'неизвестен';
+  return '@'+login+', заказ №'+order.id+': '+order.vp+' VP, '+order.price.toLocaleString('ru-RU')+' W. Статус: '+state+'.';
+ });
+}
+function resolveOrder(orderId,action,now){
+ return transaction(()=>{
+  const order=db.prepare("SELECT * FROM shop_orders WHERE id=? AND status='pending'").get(orderId);
+  if(!order)throw Error('Заявка уже обработана или не найдена');
+  if(action!=='fulfilled'&&action!=='cancelled')throw Error('Неверная операция');
+  if(action==='cancelled'){
+   const refund=db.prepare('UPDATE players SET balance=balance+? WHERE id=?').run(order.price,order.player_id);
+   if(refund.changes!==1)throw Error('Не получилось вернуть W');
+  }
+  db.prepare("UPDATE shop_orders SET status=?,updated_at=? WHERE id=? AND status='pending'").run(action,now,order.id);
+  return order;
+ });
+}
+
 function handle(login,id,msg,mid,now){
  const cmd=msg.trim().toLowerCase();let output=null;
  if(duelsEnabled&&(cmd==='!принять'||cmd==='!отказ'))output=duelRespond(login,id,cmd,mid,now);
@@ -152,7 +198,7 @@ function handle(login,id,msg,mid,now){
   if(now-p.last_opened<120000)return '@'+login+', холодос можно открыть через '+Math.ceil((120000-now+p.last_opened)/1000)+' сек.';
   const d=draw();
   db.prepare('UPDATE players SET last_opened=?,balance=balance+?,opens=opens+1,wins=wins+?,jackpots=jackpots+? WHERE id=?').run(now,d.gain,Number(d.gain>0),Number(d.gain===100),id);
-  return '@'+login+' открыл холодос: '+d.cans.map(i=>cans[i]).join('')+' — '+d.description+' +'+d.gain+' W';
+  return '@'+login+' открыл холодос: '+d.cans.map(i=>cans[i]).join(' ')+' — '+d.description+' +'+d.gain+' W';
  });
  else if(cmd==='!баланс')output=transaction(()=>seen(mid,now)?'@'+login+', у тебя '+player(id,login).balance.toLocaleString('ru-RU')+' W-монет.':null);
  else if(cmd==='!топмонет')output=transaction(()=>{
@@ -165,7 +211,12 @@ function handle(login,id,msg,mid,now){
   const p=player(id,login);
   return '@'+login+': открытий '+p.opens+', выигрышей '+p.wins+', W-джекпотов '+p.jackpots+', баланс '+p.balance+' W.';
  });
- else if(cmd==='!магазин')output=transaction(()=>seen(mid,now)?'Магазин (только справка): 240 VP = 18 000 W. Обмен и выдача VP пока не включены.':null);
+ else if(cmd==='!магазин')output=transaction(()=>seen(mid,now)?shopText():null);
+ else if(/^!купить\s+(240|475|1000)(?:\s*vp)?$/.test(cmd)){
+  const vp=Number(/^!купить\s+(240|475|1000)/.exec(cmd)[1]);
+  output=buyVp(login,id,vp,mid,now);
+ }
+ else if(cmd==='!заказ'||cmd==='!заказы')output=orderStatus(login,id,mid,now);
  if(output)say(output);
 }
 async function stop(){if(!client)return;const old=client;client=null;connected=false;try{await old.disconnect();}catch{}}
@@ -257,6 +308,18 @@ const server=http.createServer(async(req,res)=>{
   res.writeHead(303,{Location:'/',"Cache-Control":"no-store",'Set-Cookie':cookieName+'=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0'});res.end();return;
  }
  if(req.method==='POST'){
+  if(url.pathname==='/order'){
+   try{
+    const f=await formData(req);
+    if(!validCsrf(f,'shop-order')){html(403,'Форма устарела, обнови страницу.');return;}
+    const id=String(f.get('order_id')||'');
+    const action=String(f.get('action')||'');
+    if(!/^\d{1,12}$/.test(id)||!['fulfilled','cancelled'].includes(action)){html(400,'Неверный заказ или действие.');return;}
+    resolveOrder(Number(id),action,Date.now());
+    redirect();
+   }catch(err){html(400,'Не удалось обработать заказ: '+escape(err.message));}
+   return;
+  }
   if(url.pathname==='/configure'){
    try{
     const f=await formData(req);
@@ -283,11 +346,19 @@ const server=http.createServer(async(req,res)=>{
  }
  if(url.pathname!=='/'){html(404,'Не найдено');return;}
  const a=app(),linked=current();
- let content='<h2>'+ (linked?'@'+escape(linked.login)+' авторизован':a?'Twitch-приложение настроено':'Подключение Twitch')+'</h2><p>Канал: <code>#'+escape(channel)+'</code> · '+(connected?'Бот в чате':'Бот не в чате')+'</p><p>Команды: <code>!холодос</code>, <code>!баланс</code>, <code>!топмонет</code>, <code>!статмонет</code>, <code>!магазин</code>.'+(duelsEnabled?' Дуэли: <code>!дуэль @ник 500</code>, <code>!принять</code>, <code>!отказ</code>.':' Дуэли пока выключены.')+'</p>';
+ let content='<h2>'+ (linked?'@'+escape(linked.login)+' авторизован':a?'Twitch-приложение настроено':'Подключение Twitch')+'</h2><p>Канал: <code>#'+escape(channel)+'</code> · '+(connected?'Бот в чате':'Бот не в чате')+'</p><p>Команды: <code>!холодос</code>, <code>!баланс</code>, <code>!топмонет</code>, <code>!статмонет</code>, <code>!магазин</code>, <code>!купить 240</code>, <code>!заказ</code>.'+(duelsEnabled?' Дуэли: <code>!дуэль @ник 500</code>, <code>!принять</code>, <code>!отказ</code>.':' Дуэли пока выключены.')+'</p>';
  if(!a)content+='<h3>Шаг 1. Создай Twitch-приложение</h3><p>Открой <a class="link" href="https://dev.twitch.tv/console/apps" target="_blank" rel="noopener">Twitch Developer Console</a> и зарегистрируй приложение типа Confidential. В OAuth Redirect URLs добавь:</p><p><code>'+escape(publicUrl)+'/oauth/callback</code></p><p>Нажми Manage → New Secret и введи ID и Secret ниже (не отправляй секрет в чат ChatGPT).</p>'+setupForm(csrf('configure'));
  else{
   content+=linked?'<form method="post" action="/disconnect"><input type="hidden" name="csrf" value="'+csrf('disconnect')+'"><button type="submit">Отключить Twitch</button></form>':'<h3>Шаг 2. Войди как @'+escape(botLogin)+'</h3><p>Авторизуй именно аккаунт бота, чтобы он писал команды в чате.</p><a href="/connect">Подключить Twitch</a>';
   content+='<details style="margin-top:30px"><summary>Изменить Twitch Client ID / Secret</summary><p>Адрес OAuth Redirect: <code>'+escape(publicUrl)+'/oauth/callback</code></p>'+setupForm(csrf('configure'))+'</details>';
+ }
+ const orders=db.prepare("SELECT id,login,vp,price,created_at FROM shop_orders WHERE status='pending' ORDER BY id ASC LIMIT 40").all();
+ content+='<h3 style="margin-top:32px">Магазин VP — заявки на ручную выдачу</h3><p>240 VP = 18 000 W · 475 VP = 35 625 W · 1000 VP = 75 000 W. Новые заявки списывают W автоматически. VP нужно выдать игроку вручную. Отмена возвращает W.</p>';
+ if(orders.length===0)content+='<p>Пока нет заявок.</p>';
+ else for(const o of orders){
+  content+='<div style="padding:14px 0;border-top:1px solid #3b4b35"><b>Заказ №'+o.id+'</b> · @'+escape(o.login)+' · '+o.vp+' VP · '+o.price.toLocaleString('ru-RU')+' W<p><small>'+escape(new Date(o.created_at).toLocaleString('ru-RU',{timeZone:'Europe/Tallinn'}))+'</small></p>'+
+   '<form method="post" action="/order" style="display:inline-block;margin-right:10px"><input type="hidden" name="csrf" value="'+csrf('shop-order')+'"><input type="hidden" name="order_id" value="'+o.id+'"><input type="hidden" name="action" value="fulfilled"><button type="submit">Выдано вручную</button></form>'+
+   '<form method="post" action="/order" style="display:inline-block"><input type="hidden" name="csrf" value="'+csrf('shop-order')+'"><input type="hidden" name="order_id" value="'+o.id+'"><input type="hidden" name="action" value="cancelled"><button type="submit">Отмена + возврат W</button></form></div>';
  }
  html(200,content);
 });
