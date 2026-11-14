@@ -7,7 +7,10 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  const assetFiles={
   '/assets/site.css':{file:new URL('./site/site.css',import.meta.url),type:'text/css; charset=utf-8'},
   '/assets/site.js':{file:new URL('./site/site.js',import.meta.url),type:'text/javascript; charset=utf-8'},
-  '/assets/hero-ultra-2026.webp':{file:new URL('./site/hero-ultra-2026.webp',import.meta.url),type:'image/webp'}
+  '/assets/hero-ultra-2026.webp':{file:new URL('./site/hero-ultra-2026.webp',import.meta.url),type:'image/webp'},
+  '/assets/hero-main-2026.webp':{file:new URL('./site/hero-main-2026.webp',import.meta.url),type:'image/webp'},
+  '/assets/casino-main-2026.webp':{file:new URL('./site/casino-main-2026.webp',import.meta.url),type:'image/webp'},
+  '/assets/duels-main-2026.webp':{file:new URL('./site/duels-main-2026.webp',import.meta.url),type:'image/webp'}
  };
  const shell=readFileSync(new URL('./site/index.html',import.meta.url));
  const staticAssets={};
