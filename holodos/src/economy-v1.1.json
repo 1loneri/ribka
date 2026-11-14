@@ -229,6 +229,11 @@
     ],
     "rarestReward": "site_theme",
     "chessSkinInDevelopment": true,
-    "probabilities": null
+    "probabilities": {
+      "frame_effect": 0.45,
+      "title": 0.3,
+      "nickname_style": 0.24,
+      "site_theme": 0.01
+    }
   }
 }

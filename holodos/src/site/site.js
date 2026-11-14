@@ -64,6 +64,7 @@ function renderRoute(path,replace=false){
  if(path==='/casino')refreshSpins();
  if(path==='/profile')renderProfile();
  if(path==='/requests')refreshRequests();
+ if(path==='/shop')refreshReviews();
 }
 function chatBadgesHtml(row){
  let badges={};try{badges=JSON.parse(row.badges_json||'{}')}catch{}
@@ -114,6 +115,7 @@ function renderMe(){
  updateCooldown();
  renderProfile();
  renderNotificationBadges();
+ if(currentRoute()==='/shop')refreshReviews();
  if(logged)refreshAccountNotifications();else{notificationUser='';notificationLastSeenId=0;$('account-notifications').hidden=true;$('account-notification-list').replaceChildren();}
  if(currentRoute()==='/requests'&&!selectedSupportTicket)refreshRequests();
 }
@@ -379,3 +381,18 @@ async function hydrateAvatars(){
  for(const node of nodes){const src=avatarClientCache.get(node.dataset.playerAvatar);if(src&&!node.querySelector('img')){const img=document.createElement('img');img.src=src;img.alt='';img.loading='lazy';img.decoding='async';img.addEventListener('error',()=>node.replaceChildren(document.createTextNode(node.dataset.playerAvatar[0].toUpperCase())),{once:true});node.replaceChildren(img);}}
  }catch{}finally{avatarHydrationBusy=false;if(avatarHydrationAgain){avatarHydrationAgain=false;queueMicrotask(hydrateAvatars);}}
 }
+
+async function refreshReviews(){
+ try{
+  const data=await api('/api/reviews');
+  $('shop-review-list').innerHTML=data.reviews.length?data.reviews.map(r=>'<article class="shop-review"><div class="review-heading"><span class="player-line">'+(r.login?avatarHtml(r.login):'')+'<strong>'+esc(r.author_name)+'</strong></span><span class="review-rating" aria-label="'+r.rating+' из 5">'+('★'.repeat(r.rating))+'<span>'+('☆'.repeat(5-r.rating))+'</span></span></div><p>'+esc(r.body)+'</p><div class="review-meta"><span class="'+(r.source==='verified'?'review-verified':'')+'">'+(r.source==='verified'?'✓ VP получены на сайте':'Добавлено администрацией')+'</span><time>'+ruTime(r.created_at)+'</time></div></article>').join(''):'<p class="muted">Пока нет отзывов. Получи VP и поделись впечатлениями.</p>';
+  hydrateAvatars();
+  if(document.activeElement?.closest('#review-form'))return;
+  $('shop-review-form').innerHTML=!state.me?.authenticated?'<p class="muted">Войди через Twitch, чтобы оставить отзыв после получения VP.</p>':data.eligibleOrders.length?'<form id="review-form"><h4>Оставить отзыв</h4><div class="review-fields"><label>Полученная заявка<select name="orderId">'+data.eligibleOrders.map(o=>'<option value="'+o.id+'">№'+o.id+' · '+o.vp+' VP</option>').join('')+'</select></label><label>Оценка<select name="rating"><option value="5">5 из 5</option><option value="4">4 из 5</option><option value="3">3 из 5</option><option value="2">2 из 5</option><option value="1">1 из 5</option></select></label></div><label for="review-body">Твой отзыв</label><textarea id="review-body" name="body" rows="3" minlength="5" maxlength="1200" required placeholder="Расскажи о получении VP"></textarea><button class="button button-ghost" type="submit">Опубликовать отзыв</button><p class="muted">Один отзыв на выданную заявку. Ник и текст будут видны на сайте.</p></form>':'<p class="muted">Отзыв можно оставить после выдачи VP по твоей заявке. Для каждой полученной заявки доступен один отзыв.</p>';
+ }catch(e){$('shop-review-list').textContent=e.message;}
+}
+document.addEventListener('submit',async e=>{
+ if(e.target.id!=='review-form')return;e.preventDefault();const btn=e.submitter;btn.disabled=true;
+ try{const form=new FormData(e.target);await supportPost('/api/reviews',{orderId:Number(form.get('orderId')),rating:Number(form.get('rating')),body:form.get('body')});e.target.reset();$('shop-review-form').replaceChildren();notice('Спасибо! Твой отзыв опубликован.');await refreshReviews();}
+ catch(err){notice(err.message);}finally{btn.disabled=false;}
+});

@@ -1,3 +1,4 @@
+import {createReviews} from './reviews.js';
 import {createNotifications} from './notifications.js';
 import {createAvatars} from './avatars.js';
 import {createSupport} from './support.js';
@@ -6,6 +7,7 @@ import {createHash,randomBytes,createHmac,timingSafeEqual} from 'node:crypto';
 
 export function createSite({db,publicUrl,app,tokenRequest,validate,player,transaction,draw,cans,duelChallenge,duelRespond,say,channel,duelsEnabled,states,secret}){
  const support=createSupport(db,transaction);
+ const reviews=createReviews(db,transaction);
  db.exec("CREATE TABLE IF NOT EXISTS cosmetic_profiles(player_id TEXT PRIMARY KEY,frame TEXT NOT NULL DEFAULT '',title TEXT NOT NULL DEFAULT '',name_color TEXT NOT NULL DEFAULT '');");
  const siteKey=createHash('sha256').update('war1ouss-web:'+secret).digest();
  const sitePages=new Set(['/','/casino','/cases','/duels','/top','/chat','/shop','/profile','/help','/requests']);
@@ -186,6 +188,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   }
   if(path.startsWith('/api/')){
    if(method==='GET'){
+    if(path==='/api/reviews'){const session=getSession(req);json(res,200,{reviews:reviews.list(),eligibleOrders:reviews.eligible(session)});return true;}
     if(path==='/api/avatars'){const names=(url.searchParams.get('logins')||'').split(',').slice(0,50);json(res,200,{avatars:await avatars.get(names)});return true;}
     if(path==='/api/notifications'){const session=getSession(req);if(!session){json(res,401,{error:'Сначала войди через Twitch'});return true;}json(res,200,{notifications:notifications.list(session)});return true;}
     if(path==='/api/support'||path.startsWith('/api/support/')){
@@ -218,6 +221,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
    if(!constantTime(String(req.headers['x-csrf-token']||''),csrf(session))){json(res,403,{error:'Сессия устарела. Обнови страницу.'});return true;}
    try{
     const data=await readJson(req);
+    if(path==='/api/reviews'){json(res,200,reviews.create(session,data));return true;}
     if(path==='/api/notifications/read'){json(res,200,notifications.read(session,data.maxId));return true;}
     if(path==='/api/support'){json(res,200,support.create(session,data.body));return true;}
     if(path==='/api/support/reply'){json(res,200,support.reply(session,data.id,data.body));return true;}
@@ -274,5 +278,5 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   }
   return false;
  }
- return {handle,oauthCallback,recordSpin,trackChat,isAdminRequest,support,adminIdentity:req=>{const s=getSession(req);return s&&isAdminSession(s)?s:{player_id:'admin-panel',login:'Администратор'};}};
+ return {handle,oauthCallback,recordSpin,trackChat,isAdminRequest,support,reviews,adminIdentity:req=>{const s=getSession(req);return s&&isAdminSession(s)?s:{player_id:'admin-panel',login:'Администратор'};}};
 }

@@ -1406,11 +1406,11 @@ body:not(.inner-page) .topbar{border-bottom:0;box-shadow:none}
 @media(max-width:540px){#home-wins .win-item{padding:12px;gap:10px;min-height:76px}#home-wins .history-cans{gap:3px}#home-wins .history-cans img{width:17px;height:38px}.idle-edge-frost{background-size:auto 100%}}
 
 /* Cosmetic rewards use their own readable colour signatures. */
-#view-cases .case-hover-rewards .cosmetic-frame{color:#ffe59b;border-color:#ebc76066;text-shadow:0 0 9px #e9bd5b66;background:#d9b3410a}
-#view-cases .case-hover-rewards .cosmetic-title{color:#fff;text-shadow:0 0 9px #ffffff80;border-color:#ffffff40}
-#view-cases .case-hover-rewards .cosmetic-name{color:#f2b7d9;background:linear-gradient(100deg,#ffaab8,#ffdc9b,#b5efbd,#9ddfff,#c9b4ff,#ffaab8);background-size:250% 100%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:cosmeticRainbow 6s ease-in-out infinite;border-color:#d4b7f35c;filter:drop-shadow(0 0 3px #d1b8ed55)}
-#view-cases .case-hover-rewards .cosmetic-chess{color:#eee;background:linear-gradient(110deg,#80838b,#fff 35%,#999ca4 56%,#fff 80%);background-size:220% 100%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;border-color:#c5c8d144;filter:drop-shadow(0 0 4px #ffffff66);animation:cosmeticRainbow 7s ease-in-out infinite}
-#view-cases .case-hover-rewards .cosmetic-theme{color:#78b6ef;border-color:#529ada66;background:#3786c710;text-shadow:0 0 7px #398fd2aa,0 0 17px #25649c66}
+#view-cases :is(.case-hover-rewards,.case-reward-list) .cosmetic-frame{color:#ffe59b;border-color:#ebc76066;text-shadow:0 0 9px #e9bd5b66;background:#d9b3410a}
+#view-cases :is(.case-hover-rewards,.case-reward-list) .cosmetic-title{color:#fff;text-shadow:0 0 9px #ffffff80;border-color:#ffffff40}
+#view-cases :is(.case-hover-rewards,.case-reward-list) .cosmetic-name{color:#f2b7d9;background:linear-gradient(100deg,#ffaab8,#ffdc9b,#b5efbd,#9ddfff,#c9b4ff,#ffaab8);background-size:250% 100%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:cosmeticRainbow 6s ease-in-out infinite;border-color:#d4b7f35c;filter:drop-shadow(0 0 3px #d1b8ed55)}
+#view-cases :is(.case-hover-rewards,.case-reward-list) .cosmetic-chess{color:#eee;background:linear-gradient(110deg,#80838b,#fff 35%,#999ca4 56%,#fff 80%);background-size:220% 100%;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;border-color:#c5c8d144;filter:drop-shadow(0 0 4px #ffffff66);animation:cosmeticRainbow 7s ease-in-out infinite}
+#view-cases :is(.case-hover-rewards,.case-reward-list) .cosmetic-theme{color:#78b6ef;border-color:#529ada66;background:#3786c710;text-shadow:0 0 7px #398fd2aa,0 0 17px #25649c66}
 @keyframes cosmeticRainbow{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
 .collection-case--subscriber .case-artwork::after,.collection-case--vip .case-artwork::after{content:"";display:block;position:absolute;inset:0;z-index:2;pointer-events:none;border:0;border-radius:0;box-shadow:none;opacity:.38;mix-blend-mode:soft-light;mask-position:center;mask-repeat:no-repeat;mask-size:contain;-webkit-mask-position:center;-webkit-mask-repeat:no-repeat;-webkit-mask-size:contain;background-size:300% 100%;animation:caseQuietFloat 7s ease-in-out infinite,cosmeticRainbow 8s ease-in-out infinite;transform-origin:50% 65%}
 .collection-case--subscriber .case-artwork::after{mask-image:url('/assets/case-subscriber.webp?v=44');-webkit-mask-image:url('/assets/case-subscriber.webp?v=44');background-image:linear-gradient(110deg,#f3b944 0%,#ffefbc 22%,#fff 44%,#f7d592 66%,#fff 85%,#f3b944)}
@@ -1440,3 +1440,14 @@ body:not(.inner-page) .topbar{border-bottom:0;box-shadow:none}
 /* Six distinct short fissures, attached to screen edges. */
 .idle-edge-frost::after{background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201000%201000%22%20preserveAspectRatio%3D%22none%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23dbf4ff%22%20stroke-width%3D%22.65%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20opacity%3D%22.7%22%3E%3Cpath%20d%3D%22M0%20142l12-6%208%203%208-11%2011-3m-19%2014%203%2013%208%207%22%20vector-effect%3D%22non-scaling-stroke%22%2F%3E%3Cpath%20d%3D%22M259%200l-4%2012%206%209-3%2011m-3-20-9%204-4%209%22%20vector-effect%3D%22non-scaling-stroke%22%2F%3E%3Cpath%20d%3D%22M1000%20252l-13%204-8-6-13%205m13-5-3-11%22%20vector-effect%3D%22non-scaling-stroke%22%2F%3E%3Cpath%20d%3D%22M1000%20831l-9-8-12%202-7-8-11-2m18%2010-3%2010%22%20vector-effect%3D%22non-scaling-stroke%22%2F%3E%3Cpath%20d%3D%22M768%201000l4-12-6-9%202-10m4%2019%2010-3%22%20vector-effect%3D%22non-scaling-stroke%22%2F%3E%3Cpath%20d%3D%22M0%20774l12%204%208-7%2010%202m-10-2%202-10%22%20vector-effect%3D%22non-scaling-stroke%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");background-position:center;background-size:100% 100%;background-repeat:no-repeat;opacity:.5}
 @media(max-width:540px){.idle-edge-frost::after{background-size:100% 100%;opacity:.42}}
+
+.shop-review-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:22px}
+.shop-review{border:1px solid #b0c8dd26;background:#0b131c99;border-radius:13px;padding:18px;min-width:0}
+.review-heading,.review-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.review-heading strong{font-size:13px;overflow-wrap:anywhere}.review-rating{color:#e3c884;font-size:16px;letter-spacing:1px}.review-rating>span{color:#52606b}
+.shop-review>p{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.8;color:#c0cbd7;margin:14px 0}
+.review-meta{font-size:10px;color:#8395a6}.review-verified{color:#a5cdb9}
+#review-form{padding:0 0 22px;border-bottom:1px solid #ffffff14}#review-form h4{font-size:15px;margin:8px 0}
+.review-fields{display:flex;gap:15px;flex-wrap:wrap}.review-fields label{flex:1;min-width:150px}
+.review-fields select{display:block;margin-top:8px;padding:10px 12px;width:100%;border:1px solid #465263;border-radius:9px;background:#0b1119;color:#d5e2ee;font:inherit}
+@media(max-width:650px){.shop-review-list{grid-template-columns:1fr}}

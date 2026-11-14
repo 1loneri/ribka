@@ -322,6 +322,11 @@ const server=http.createServer(async(req,res)=>{
   res.writeHead(303,{Location:'/',"Cache-Control":"no-store",'Set-Cookie':cookieName+'=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0'});res.end();return;
  }
  if(req.method==='POST'){
+  if(url.pathname==='/review-add'){
+   try{const f=await formData(req);if(!validCsrf(f,'reviews')){html(403,'Форма устарела. Обнови страницу.');return;}
+    site.reviews.addByAdmin({author:f.get('author'),rating:f.get('rating'),body:f.get('body')});res.writeHead(303,{Location:'/admin#reviews','Cache-Control':'no-store'});res.end();
+   }catch(e){html(e.status||400,'<h2>Отзыв не добавлен</h2><p>'+escape(e.message)+'</p><a href="/admin#reviews">Вернуться</a>');}return;
+  }
   if(url.pathname==='/support-reply'){
    try{const f=await formData(req);if(!validCsrf(f,'support')){html(403,'Форма устарела. Обнови страницу.');return;}
     const actor=site.adminIdentity(req);site.support.reply(actor,f.get('ticket_id'),f.get('body'),true);res.writeHead(303,{Location:'/admin#support','Cache-Control':'no-store'});res.end();
@@ -397,6 +402,9 @@ const server=http.createServer(async(req,res)=>{
  for(const m of messages)content+='<article class="admin-support-message"><b>'+escape(m.role==='system'?'Автоматическое сообщение':m.role==='admin'?'Администратор · '+m.author:m.author)+'</b> <small>'+escape(new Date(m.created_at).toLocaleString('ru-RU',{timeZone:'Europe/Tallinn'}))+'</small><p>'+escape(m.body)+'</p></article>';
  content+='<form method="post" action="/support-reply"><input type="hidden" name="csrf" value="'+csrf('support')+'"><input type="hidden" name="ticket_id" value="'+t.id+'"><label>Ответ пользователю<textarea name="body" rows="4" minlength="2" maxlength="2000" required></textarea></label><button type="submit">Отправить ответ</button></form></details>';
  }content+='</section>';
+ content+='<section class="admin-panel" id="reviews"><h2>Отзывы магазина</h2><p class="admin-note">Отзывы пользователей доступны после выдачи VP. Внесённые вручную отзывы помечаются как добавленные администрацией.</p><form method="post" action="/review-add"><input type="hidden" name="csrf" value="'+csrf('reviews')+'"><label>Имя автора<input name="author" minlength="2" maxlength="60" required></label><label>Оценка<select name="rating"><option value="5">5 из 5</option><option value="4">4 из 5</option><option value="3">3 из 5</option><option value="2">2 из 5</option><option value="1">1 из 5</option></select></label><label>Текст отзыва<textarea name="body" minlength="5" maxlength="1200" rows="4" required></textarea></label><button type="submit">Добавить отзыв</button></form>';
+ for(const r of site.reviews.list())content+='<article class="admin-support-message"><b>'+escape(r.author_name)+'</b> · '+r.rating+'/5 <small>'+escape(r.source==='verified'?'VP получены на сайте':'Добавлено администрацией')+' · '+escape(new Date(r.created_at).toLocaleString('ru-RU',{timeZone:'Europe/Tallinn'}))+'</small><p>'+escape(r.body)+'</p></article>';
+ content+='</section>';
  html(200,content);
 });
 server.listen(port,'0.0.0.0',()=>console.log('Holodos panel listening on '+port+' for #'+channel));
