@@ -1565,3 +1565,13 @@ body:not(.inner-page) .topbar{border-bottom:0;box-shadow:none}
 /* Keep the case below the reward reel in every opening phase. */
 .case-demo-stage{height:395px}.case-demo-chest{top:auto;bottom:0}.case-demo-reel{top:22px}.case-demo-reward{top:25px}
 @media(max-width:540px){.case-demo-stage{height:365px}.case-demo-chest{top:auto;bottom:0}.case-demo-reel{top:20px}.case-demo-reward{top:25px}}
+
+/* Both open parts share a real hinge; the case footprint stays 180 × 124. */
+.case-demo-chest{perspective:650px;overflow:visible}
+.case-demo-chest>.case-demo-open-body,.case-demo-chest>.case-demo-open-lid{display:block;left:50%;right:auto;top:auto;bottom:-9px;width:196px;height:196px;max-width:none;opacity:0;transform:translateX(-50%);transition:opacity .3s ease}
+.case-demo-open-body{clip-path:inset(47% 0 0);z-index:2}
+.case-demo-chest>.case-demo-open-lid{clip-path:inset(0 0 53%);transform-origin:50% 47%;transform:translateX(-50%) rotateX(-86deg);transition:transform .85s cubic-bezier(.22,.75,.22,1),opacity .2s;z-index:3;backface-visibility:hidden}
+.case-demo-stage:is([data-phase="unsealing"],[data-phase="revealed"]) .case-demo-closed{opacity:0;transition:opacity .28s}
+.case-demo-stage:is([data-phase="unsealing"],[data-phase="revealed"]) .case-demo-open-body,.case-demo-stage:is([data-phase="unsealing"],[data-phase="revealed"]) .case-demo-open-lid{opacity:1;transform:translateX(-50%) rotateX(0deg)}
+.case-demo-stage[data-phase="unsealing"] .case-demo-reel{opacity:0;filter:blur(7px);pointer-events:none}
+.case-demo-stage:is([data-phase="unsealing"],[data-phase="revealed"]) .case-demo-chest{filter:drop-shadow(0 0 15px #b3e6ff25)}
