@@ -2,6 +2,7 @@ import http from 'node:http';
 import {DatabaseSync} from 'node:sqlite';
 import {mkdirSync,existsSync,readFileSync} from 'node:fs';
 import {createSite} from './site-server.js';
+import {createStreamStatus} from './stream-status.js';
 import {renderAdminPage} from './admin-page.js';
 import {dirname} from 'node:path';
 import {randomInt,randomBytes,scryptSync,createCipheriv,createDecipheriv,createHmac,timingSafeEqual} from 'node:crypto';
@@ -191,8 +192,9 @@ function resolveOrder(orderId,action,now){
  });
 }
 
-function handle(login,id,msg,mid,now){
+async function handle(login,id,msg,mid,now){
  const cmd=msg.trim().toLowerCase();let output=null;
+ if(cmd==='!холодос'&&!site.isAdminIdentity({player_id:id,login})){const status=await streamStatus.get();if(!status.live){say('@'+login+(status.known?', открывать Холодос можно во время стрима. Вне эфира доступ есть только у администраторов.':', сейчас не удалось проверить эфир. Попробуй немного позже.'));return;}now=Date.now();}
  if(duelsEnabled&&(cmd==='!принять'||cmd==='!отказ'))output=duelRespond(login,id,cmd,mid,now);
  else if(duelsEnabled&&/^!дуэль\s+@?[a-z0-9_]{1,25}\s+[1-9]\d{0,8}$/.test(cmd)){
   const [,target,amount]=/^!дуэль\s+@?([a-z0-9_]{1,25})\s+([1-9]\d{0,8})$/.exec(cmd);
@@ -236,11 +238,11 @@ async function start(){
   client=conn;
   conn.on('connected',()=>{connected=true;console.log('Connected to #'+channel+' as '+botLogin);void drain();});
   conn.on('disconnected',reason=>{connected=false;console.warn('Twitch IRC disconnected:',reason);});
-  conn.on('message',(_room,tags,msg,self)=>{
+  conn.on('message',async (_room,tags,msg,self)=>{
    if(self||!msg.trim())return;
    const login=String(tags.username||'').toLowerCase(),id=String(tags['user-id']||''),mid=String(tags.id||'');
    if(login===botLogin||!/^[a-z0-9_]{1,25}$/.test(login)||!/^\d+$/.test(id)||!mid||mid.length>200)return;
-   try{const now=Date.now();site.trackChat(id,login,now,tags);if(msg.trim().startsWith('!'))handle(login,id,msg,mid,now);}catch(e){console.error('chat message:',e.message);}
+   try{const now=Date.now();site.trackChat(id,login,now,tags);if(msg.trim().startsWith('!'))await handle(login,id,msg,mid,now);}catch(e){console.error('chat message:',e.message);}
   });
   await conn.connect();
  }catch(e){connected=false;console.error('Could not connect to Twitch:',e.message);}finally{starting=false;}
@@ -252,7 +254,8 @@ if(!existsSync(siteBackupPath)){
  db.prepare('VACUUM INTO ?').run(siteBackupPath);
  console.log('Pre-website SQLite backup created on persistent volume');
 }
-const site=createSite({db,publicUrl,app,tokenRequest,validate,player,transaction,draw,cans,duelChallenge,duelRespond,say,channel,duelsEnabled,states,secret});
+const streamStatus=createStreamStatus({app,tokenRequest,channel});
+const site=createSite({db,publicUrl,app,tokenRequest,validate,player,transaction,draw,cans,duelChallenge,duelRespond,say,channel,duelsEnabled,states,secret,streamStatus});
 function equal(a,b){const x=Buffer.from(a),y=Buffer.from(b);return x.length===y.length&&timingSafeEqual(x,y);}
 function escape(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function page(body){return renderAdminPage(body);}

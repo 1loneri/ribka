@@ -6,7 +6,7 @@ import {createSupport} from './support.js';
 import {readFileSync,existsSync} from 'node:fs';
 import {createHash,randomBytes,createHmac,timingSafeEqual} from 'node:crypto';
 
-export function createSite({db,publicUrl,app,tokenRequest,validate,player,transaction,draw,cans,duelChallenge,duelRespond,say,channel,duelsEnabled,states,secret}){
+export function createSite({db,publicUrl,app,tokenRequest,validate,player,transaction,draw,cans,duelChallenge,duelRespond,say,channel,duelsEnabled,states,secret,streamStatus={get:async()=>({live:false,known:false,checked_at:0})}}){
  const support=createSupport(db,transaction);
  const reviews=createReviews(db,transaction);
  const duelVisuals=createDuelVisuals(db);
@@ -28,6 +28,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  }
  for(const id of ['donation','twitch','chat','vip','coins','subscriber'])assetFiles['/assets/case-'+id+'.webp']={file:new URL('./site/case-'+id+'.webp',import.meta.url),type:'image/webp'};
  assetFiles['/assets/frost-edge.webp']={file:new URL('./site/frost-edge.webp',import.meta.url),type:'image/webp'};
+ for(const id of ['ultra','original','mango'])for(const ext of ['png','gif'])assetFiles['/assets/frame-'+id+'.'+ext]={file:new URL('./site/frame-'+id+'.'+ext,import.meta.url),type:'image/'+ext};
  assetFiles['/assets/notification.mp3']={file:new URL('./site/notification.mp3',import.meta.url),type:'audio/mpeg'};
  for(const id of Object.keys(duelVisuals.catalog))assetFiles['/assets/duel-can-'+id+'.webp']={file:new URL('./site/duel-can-'+id+'.webp',import.meta.url),type:'image/webp'};
  assetFiles['/assets/dela-gothic-one.ttf']={file:new URL('./site/dela-gothic-one.ttf',import.meta.url),type:'font/ttf'};
@@ -116,11 +117,11 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   return !!db.prepare('SELECT 1 FROM twitch_admin_accounts WHERE player_id=?').get(session.player_id);
  }
  function isAdminRequest(req){return isAdminSession(getSession(req));}
- function userMe(session){
+ function userMe(session,stream){
   if(!session)return {authenticated:false};
   const p=player(session.player_id,session.login);
   const orders=db.prepare('SELECT id,vp,price,status,created_at FROM shop_orders WHERE player_id=? ORDER BY id DESC LIMIT 10').all(session.player_id);
-  return {authenticated:true,is_admin:isAdminSession(session),support_unread:support.unread(session),notification_unread:notifications.unread(session),csrf:csrf(session),player:{id:p.id,login:p.login,display_name:session.display_name,avatar:session.avatar,balance:p.balance,opens:p.opens,wins:p.wins,jackpots:p.jackpots,last_opened:p.last_opened,message_count:db.prepare('SELECT message_count FROM chat_stats WHERE player_id=?').get(session.player_id)?.message_count||0},orders};
+  return {authenticated:true,is_admin:isAdminSession(session),stream,spin_allowed:isAdminSession(session)||stream?.live===true,support_unread:support.unread(session),notification_unread:notifications.unread(session),csrf:csrf(session),player:{id:p.id,login:p.login,display_name:session.display_name,avatar:session.avatar,balance:p.balance,opens:p.opens,wins:p.wins,jackpots:p.jackpots,last_opened:p.last_opened,message_count:db.prepare('SELECT message_count FROM chat_stats WHERE player_id=?').get(session.player_id)?.message_count||0},orders};
  }
  function spinsQuery(sql,...params){
   return db.prepare(sql).all(...params).map(x=>({login:x.login,cans:JSON.parse(x.cans_json),gain:x.gain,description:x.description,source:x.source,created_at:x.created_at}));
@@ -198,7 +199,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
      const session=getSession(req);if(!session){json(res,401,{error:'Сначала войди через Twitch'});return true;}
      try{json(res,200,path==='/api/support'?{tickets:support.list(session)}:support.thread(path.split('/').pop(),session));}catch(e){json(res,e.status||400,{error:e.message})}return true;
     }
-    if(path==='/api/me'){json(res,200,userMe(getSession(req)));return true;}
+    if(path==='/api/me'){const session=getSession(req);json(res,200,userMe(session,session?await streamStatus.get():null));return true;}
     if(path==='/api/public'){
      const top=db.prepare('SELECT login,balance,opens FROM players ORDER BY balance DESC,login ASC LIMIT 15').all();
      const chat=db.prepare("SELECT c.login,c.message_count,c.badges_json,COALESCE(p.frame,'') AS frame,COALESCE(p.title,'') AS title,COALESCE(p.name_color,'') AS name_color FROM chat_stats c LEFT JOIN cosmetic_profiles p ON p.player_id=c.player_id ORDER BY c.message_count DESC,c.login ASC LIMIT 15").all();
@@ -206,8 +207,9 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
      json(res,200,{top,chat,recent});return true;
     }
     if(path==='/api/spins'){
-     const spins=spinsQuery('SELECT login,cans_json,gain,description,source,created_at FROM fridge_spins ORDER BY id DESC LIMIT 35');
-     json(res,200,{spins});return true;
+     const mine=url.searchParams.get('scope')==='mine',session=mine?getSession(req):null;if(mine&&!session){json(res,401,{error:'Войди через Twitch, чтобы посмотреть свои открытия.'});return true;}
+     const spins=mine?spinsQuery('SELECT login,cans_json,gain,description,source,created_at FROM fridge_spins WHERE player_id=? ORDER BY id DESC LIMIT 50',session.player_id):spinsQuery('SELECT login,cans_json,gain,description,source,created_at FROM fridge_spins ORDER BY id DESC LIMIT 10');
+     json(res,200,{spins,scope:mine?'mine':'recent'});return true;
     }
     if(path==='/api/duels'){
      const now=Date.now();
@@ -234,6 +236,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
      json(res,200,{ok:true},{'Set-Cookie':'war_session=;'+baseCookies.slice(1)+'; Max-Age=0'});return true;
     }
     if(path==='/api/holodos'){
+     if(!isAdminSession(session)){const status=await streamStatus.get();if(!status.live){json(res,status.known?403:503,{error:status.known?'Открытия доступны во время стрима. Вне эфира — только администраторам.':'Не удалось проверить эфир Twitch. Попробуй позже.'});return true;}}
      const rid=actionId(data),now=Date.now();
      const outcome=transaction(()=>{
       const previous=db.prepare('SELECT * FROM fridge_spins WHERE request_id=?').get('web:'+rid);
@@ -281,5 +284,5 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   }
   return false;
  }
- return {handle,oauthCallback,recordSpin,trackChat,isAdminRequest,support,reviews,duelVisuals,adminIdentity:req=>{const s=getSession(req);return s&&isAdminSession(s)?s:{player_id:'admin-panel',login:'Администратор'};}};
+ return {handle,oauthCallback,recordSpin,trackChat,isAdminRequest,support,reviews,duelVisuals,isAdminIdentity:isAdminSession,adminIdentity:req=>{const s=getSession(req);return s&&isAdminSession(s)?s:{player_id:'admin-panel',login:'Администратор'};}};
 }

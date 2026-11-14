@@ -112,12 +112,14 @@ function renderMe(){
   const avatar=safeAvatar(me.player.avatar);
   if(avatar)$('top-avatar').src=avatar;else $('top-avatar').src='data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect width="100%25" height="100%25" fill="%23244056"/%3E%3Ctext x="50%25" y="58%25" font-size="35" text-anchor="middle" fill="white"%3EW%3C/text%3E%3C/svg%3E';
  }
+ for(const center of document.querySelectorAll('.frame-preview-center')){const url=logged?safeAvatar(me.player.avatar):'';if(url){const img=document.createElement('img');img.src=url;img.alt='';center.replaceChildren(img);}else center.textContent='W';}
  updateCooldown();
  renderProfile();
  renderNotificationBadges();
  if(currentRoute()==='/shop')refreshReviews();
  if(logged)refreshAccountNotifications();else{notificationUser='';notificationLastSeenId=0;$('account-notifications').hidden=true;$('account-notification-list').replaceChildren();}
  if(currentRoute()==='/requests'&&!selectedSupportTicket)refreshRequests();
+ if(historyScope==='mine'&&currentRoute()==='/casino')refreshSpins();
 }
 
 function renderProfile(){
@@ -145,6 +147,8 @@ function updateCooldown(){
   button.disabled=false;button.textContent='Войти через Twitch ↗';
   return;
  }
+ if(!me.spin_allowed){message.dataset.streamLocked='true';button.disabled=true;button.textContent=me.stream?.known?'Открытия во время стрима':'Проверяем эфир';message.textContent=me.stream?.known?'Холодос доступен во время стрима. Вне эфира — только администраторам.':'Статус эфира временно недоступен.';return;}
+ if(message.dataset.streamLocked){message.textContent='Холодос готов к открытию.';delete message.dataset.streamLocked;}
  const remains=Math.max(0,Math.ceil((Number(me.player.last_opened||0)+120000-Date.now())/1000));
  button.disabled=remains>0;
  if(remains>0){
@@ -188,6 +192,7 @@ for(const textNode of symbolNodes){
 async function spin(){
  if(state.busy)return;
  if(!state.me?.authenticated){location.href='/auth/twitch';return;}
+ if(!state.me.spin_allowed){notice('Открытия доступны во время стрима. Вне эфира — только администраторам.');return;}
  state.busy=true;
  const reels=['reel-1','reel-2','reel-3'].map($);
  const chars=['⚪','🟢','🥭','🌸','🔵','⚫','🍉','🟡'];
@@ -239,10 +244,16 @@ async function refreshMe(){
  try{state.me=await api('/api/me');renderMe();}
  catch(e){state.me={authenticated:false};renderMe();notice(e.message);}
 }
+let historyScope='recent';
+function setHistoryScope(scope){historyScope=scope==='mine'?'mine':'recent';for(const tab of document.querySelectorAll('[data-history-scope]')){const selected=tab.dataset.historyScope===historyScope;tab.setAttribute('aria-selected',String(selected));tab.tabIndex=selected?0:-1;} $('casino-history').setAttribute('aria-labelledby','history-tab-'+historyScope);$('casino-history').scrollTop=0;$('casino-history').textContent='Загружаем историю…';refreshSpins();}
 async function refreshSpins(){
- try{const v=await api('/api/spins');state.history=v.spins;$('casino-history').innerHTML=historyHtml(v.spins);hydrateAvatars();}
- catch(e){$('casino-history').textContent=e.message;}
+ const scope=historyScope,userId=state.me?.player?.id;
+ if(scope==='mine'&&!state.me?.authenticated){$('casino-history').innerHTML='<p class="muted">Войди через Twitch, чтобы увидеть свои 50 последних открытий.</p><a class="text-link" href="/auth/twitch">Войти через Twitch ↗</a>';return;}
+ try{const v=await api('/api/spins'+(scope==='mine'?'?scope=mine':''));if(scope!==historyScope||(scope==='mine'&&(!state.me?.authenticated||state.me.player.id!==userId)))return;state.history=v.spins;$('casino-history').innerHTML=historyHtml(v.spins);hydrateAvatars();}
+ catch(e){if(scope===historyScope)$('casino-history').textContent=e.message;}
 }
+document.addEventListener('click',e=>{const tab=e.target.closest('[data-history-scope]');if(tab)setHistoryScope(tab.dataset.historyScope);});
+document.addEventListener('keydown',e=>{const tab=e.target.closest('[data-history-scope]');if(!tab||!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const scope=e.key==='Home'?'recent':e.key==='End'?'mine':historyScope==='recent'?'mine':'recent';setHistoryScope(scope);$('history-tab-'+scope).focus();});
 let duelRefreshBusy=false;
 async function refreshDuels(){
  if(duelRefreshBusy)return;duelRefreshBusy=true;
@@ -315,7 +326,7 @@ document.addEventListener('visibilitychange',()=>{
 let selectedSupportTicket=null;
 async function supportPost(path,data){return api(path,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':state.me?.csrf||''},body:JSON.stringify(data)});}
 function renderNotificationBadges(){
- const unread=Number(state.me?.support_unread||0),ready=!!state.me?.authenticated&&Date.now()>=Number(state.me.player.last_opened||0)+120000;
+ const unread=Number(state.me?.support_unread||0),ready=!!state.me?.authenticated&&!!state.me?.spin_allowed&&Date.now()>=Number(state.me.player.last_opened||0)+120000;
  const accountUnread=Number(state.me?.notification_unread||0);
  const text=[unread?unread+' ответов поддержки':'',accountUnread?accountUnread+' уведомлений аккаунта':''].filter(Boolean).join('. ');
  for(const el of document.querySelectorAll('#avatar-link,.side-link[href="/profile"]')){el.classList.toggle('has-notice',!!text);el.dataset.notice=text?'•':'';if(text)el.title=text;else el.removeAttribute('title');}
@@ -344,7 +355,7 @@ for(const b of document.querySelectorAll('.notify-toggle'))b.addEventListener('c
 updateBellButtons();
 setInterval(()=>{
  renderNotificationBadges();const opened=Number(state.me?.player?.last_opened||0);
- if(!cooldownAlerts||!state.me?.authenticated||!opened||opened<=Number(localStorageSafeRead('war1ouss-last-cooldown-alert-'+state.me.player.id))||Date.now()<opened+120000)return;
+ if(!cooldownAlerts||!state.me?.authenticated||!state.me?.spin_allowed||!opened||opened<=Number(localStorageSafeRead('war1ouss-last-cooldown-alert-'+state.me.player.id))||Date.now()<opened+120000)return;
  lastAlerted=opened;try{localStorage.setItem('war1ouss-last-cooldown-alert-'+state.me.player.id,String(opened))}catch{}notice('Холодос снова готов к открытию!');
  if('Notification'in window&&Notification.permission==='granted')try{new Notification('Холодос готов',{body:'Можно снова открыть Холодос на War1ouss.',tag:'war1ouss-cooldown'})}catch{}
 },1000);
