@@ -727,3 +727,66 @@ body.inner-page .view.active{animation:slideIn .25s ease both}
   body.inner-page .side-navigation,.side-links,.side-toggle span,.mode-photo img{transition:none}
   #view-home .hero::after{animation:none;opacity:.22}
 }
+
+
+/* 2026-11-14: Fix visible horizontal bands INSIDE photo cards.
+   Use the existing user-approved pictures; no new artwork or layout changes. */
+#view-home .mode-card--casino,
+#view-home .mode-card--duels{
+  background:linear-gradient(125deg,#171a1e 0%,#101317 45%,#0b0d10 100%);
+}
+#view-home .mode-card--casino .mode-photo,
+#view-home .mode-card--duels .mode-photo{
+  inset:0 0 0 auto;
+  width:81%;
+  height:100%;
+  overflow:hidden;
+  background:transparent;
+  /* A single elliptical mask fades left, right and LOWER edge together,
+     so the bottom highlight in the photograph cannot appear as a line. */
+  -webkit-mask-image:radial-gradient(ellipse 88% 83% at 76% 33%,
+    #000 0%,#000 29%,rgba(0,0,0,.95) 44%,
+    rgba(0,0,0,.63) 62%,rgba(0,0,0,.18) 83%,transparent 100%);
+  mask-image:radial-gradient(ellipse 88% 83% at 76% 33%,
+    #000 0%,#000 29%,rgba(0,0,0,.95) 44%,
+    rgba(0,0,0,.63) 62%,rgba(0,0,0,.18) 83%,transparent 100%);
+}
+#view-home .mode-card--casino .mode-photo img,
+#view-home .mode-card--duels .mode-photo img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:62% 39%;
+  filter:none; /* Preserve detail; no extra blur or resampling filters. */
+  transform:none;
+}
+#view-home .mode-card--duels .mode-photo img{object-position:55% 37%}
+#view-home .mode-card--casino .mode-photo::after,
+#view-home .mode-card--duels .mode-photo::after{
+  /* Transparent above; progressively blend the final third into the dark card. */
+  background:linear-gradient(to bottom,
+    transparent 0%,transparent 49%,
+    rgba(13,15,18,.18) 60%,
+    rgba(12,14,17,.62) 79%,
+    #0b0d10 100%);
+}
+#view-home .mode-card--casino .mode-text::before,
+#view-home .mode-card--duels .mode-text::before{
+  background:linear-gradient(to right,
+    #15181cfb 0%,rgba(17,19,23,.95) 28%,
+    rgba(15,17,20,.68) 52%,transparent 90%);
+}
+#view-home .mode-card--casino::after,
+#view-home .mode-card--duels::after{display:none}
+#view-home .mode-card--casino:hover .mode-photo img,
+#view-home .mode-card--duels:hover .mode-photo img{
+  transform:none;filter:none;
+}
+@media(max-width:540px){
+  #view-home .mode-card--casino .mode-photo,
+  #view-home .mode-card--duels .mode-photo{width:85%}
+  #view-home .mode-card--casino .mode-text::before,
+  #view-home .mode-card--duels .mode-text::before{
+    background:linear-gradient(to right,#15181c 0%,rgba(15,17,20,.96) 35%,rgba(15,17,20,.65) 66%,transparent 100%);
+  }
+}
