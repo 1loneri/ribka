@@ -75,7 +75,7 @@ function rankHtml(list,kind='balance'){
 }
 function winsHtml(list){
  if(!list||!list.length)return '<p class="muted">Реальные выигрыши появятся здесь после следующих открытий. Прошлые игры бота ещё не записывались в историю.</p>';
- return list.map(r=>'<div class="win-item"><span class="win-cans">'+esc((r.cans||[]).join(' '))+'</span><div><b>@'+esc(r.login)+'</b><small>'+esc(r.source==='chat'?'Twitch':'Сайт')+' · '+ruTime(r.created_at)+'</small></div><strong class="win-gain">+'+fmt(r.gain)+' W</strong></div>').join('');
+ return list.map(r=>'<div class="win-item"><span class="win-cans">'+historySymbolsHtml(r.cans)+'</span><div><b>@'+esc(r.login)+'</b><small>'+esc(r.source==='chat'?'Twitch':'Сайт')+' · '+ruTime(r.created_at)+'</small></div><strong class="win-gain">+'+fmt(r.gain)+' W</strong></div>').join('');
 }
 function historySymbolsHtml(symbols){
  return '<span class="history-cans">'+(symbols||[]).map(symbol=>{
