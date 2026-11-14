@@ -502,3 +502,108 @@ main{max-width:1640px;padding:28px var(--page-gutter) 90px}
   #view-home .hero h1{font-size:clamp(32px,9.5vw,38px)}
   #view-home .hero-actions .button{min-height:43px}
 }
+
+
+/* WAR1OUSS — black chrome with slow breathing accent reflections.
+   Animation changes only the light overlays; text, layout, buttons and W/game data stay static. */
+:root{
+  --bg:#090a0c;--bg2:#101215;--surface:#15171b;--surface2:#1c1e22;
+  --border:#383c41;--bright:#f5f5f5;--text:#e5e6e8;--muted:#999da3;
+  --ice:#c7d0d7;--ice2:#f1f3f5;--shadow:rgba(0,0,0,.65);
+}
+body{
+  background:radial-gradient(ellipse 72% 45% at 62% 8%,#1a1c20 0%,transparent 63%),
+             radial-gradient(ellipse 58% 36% at 14% 58%,#131518 0%,transparent 82%),
+             #090a0c;
+}
+.topbar{background:rgba(10,11,13,.95);border-bottom-color:rgba(220,226,233,.16)}
+.brand-dot,.period{color:#cbd0d4}
+.nav-link{color:#b6b9be}
+.nav-link.active:after{
+  background:linear-gradient(90deg,#a3a7ac,#f7f9fa);
+  box-shadow:0 0 12px rgba(228,236,243,.35);
+}
+.wallet,.avatar-link,.button-ghost{border-color:#555b61;background:rgba(19,21,24,.72)}
+.wallet,.coin-icon,.avatar-link{color:#eceef0}
+.button-primary{
+  color:#131517;
+  border-color:#e4e7ea;
+  background:linear-gradient(135deg,#f7f8f9,#b7bbc1 60%,#dedfe1);
+  box-shadow:0 3px 22px rgba(220,228,235,.12);
+}
+.button-primary:hover{box-shadow:0 5px 25px rgba(227,230,232,.25)}
+.button-ghost:hover{background:#24272b;border-color:#989da3}
+.login-btn{border-color:#6d6978;background:linear-gradient(135deg,#494452,#342f3f)}
+.eyebrow,.mode-index{color:#aeb3b9}
+.eyebrow i{background:#c4cbd0}
+.hero h1{color:#f3f4f5;text-shadow:0 5px 28px rgba(0,0,0,.55)}
+.hero h1 em{
+  background:linear-gradient(#fafafa,#a4a8ac);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.hero-description,.hero-note{color:#bfc2c7}
+.live-dot{background:#d8dde2;box-shadow:0 0 10px rgba(242,242,243,.38)}
+#view-home .hero::before{
+  background-color:#090a0c;
+  filter:grayscale(1) saturate(0) contrast(1.06);
+}
+/* Faint frosted glints over the hero photo, beneath text. */
+#view-home .hero::after{
+  content:"";display:block;position:absolute;z-index:0;pointer-events:none;
+  top:-48px;bottom:-45px;left:35%;right:-6%;
+  height:auto;
+  background:
+    radial-gradient(ellipse 28% 38% at 80% 32%,rgba(140,204,237,.15),transparent 82%),
+    radial-gradient(ellipse 21% 32% at 58% 64%,rgba(190,236,255,.09),transparent 83%),
+    radial-gradient(ellipse 20% 25% at 91% 76%,rgba(218,143,192,.065),transparent 80%);
+  border:0;filter:blur(12px);
+  animation:warHeroGlimmer 16s ease-in-out infinite;
+}
+.mode-card,.panel,.shop-card{
+  border-color:rgba(187,193,200,.25);
+  background:linear-gradient(135deg,rgba(28,30,34,.94),rgba(12,14,17,.96));
+}
+.mode-card{isolation:isolate}
+.mode-card::before{
+  content:"";position:absolute;inset:-12%;pointer-events:none;z-index:1;
+  background:
+    radial-gradient(ellipse 42% 54% at 78% 69%,rgba(139,215,248,.14),transparent 85%),
+    linear-gradient(120deg,transparent 22%,rgba(239,249,255,.045) 51%,transparent 75%);
+  opacity:.15;animation:warGlint 15s ease-in-out infinite;
+}
+.mode-card:nth-child(1)::before{
+  background:radial-gradient(ellipse 53% 63% at 79% 64%,rgba(165,201,71,.16),transparent 82%),
+             radial-gradient(ellipse 35% 42% at 65% 70%,rgba(109,179,220,.11),transparent 90%);
+  animation-duration:17s;
+}
+.mode-card:nth-child(2)::before{
+  background:radial-gradient(ellipse 50% 62% at 80% 70%,rgba(96,188,238,.20),transparent 82%),
+             linear-gradient(114deg,transparent 24%,rgba(235,246,255,.06) 53%,transparent 77%);
+  animation-duration:19s;animation-delay:-5s;
+}
+.mode-card:nth-child(3)::before{
+  background:radial-gradient(ellipse 48% 60% at 77% 64%,rgba(207,120,177,.14),transparent 84%),
+             radial-gradient(ellipse 34% 44% at 69% 63%,rgba(98,184,222,.09),transparent 88%);
+  animation-duration:18s;animation-delay:-10s;
+}
+.mode-card:hover{border-color:#a6adb5;box-shadow:0 14px 35px rgba(0,0,0,.5)}
+.mode-card:after{background:rgba(215,224,234,.06)}
+.mode-text,.mode-illustration{z-index:2}
+.mode-text h3,.panel h3,.section-heading h2{color:#f3f4f5}
+.mode-arrow{border-color:#666c72;color:#eceff2}
+.text-link{color:#cbd2d8}
+.panel-header h3{color:#f2f3f4}
+.win-item,.rank-item{border-color:#34383e}
+.small-pill{background:#27292d;border-color:#575e64;color:#e4e6e8}
+@keyframes warGlint{
+  0%,100%{opacity:.12}
+  48%,56%{opacity:.72}
+}
+@keyframes warHeroGlimmer{
+  0%,100%{opacity:.10}
+  42%,62%{opacity:.72}
+}
+@media(prefers-reduced-motion:reduce){
+  #view-home .hero::after,.mode-card::before{animation:none;opacity:.22}
+}
