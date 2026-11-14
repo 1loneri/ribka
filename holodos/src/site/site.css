@@ -1370,3 +1370,19 @@ textarea{display:block;width:100%;resize:vertical;padding:13px;background:#0b0e1
 #profile-content .stat+p{margin-top:16px}
 
 .help-actions{display:flex;gap:12px;margin:0 0 22px}.support-requests-button{min-width:210px;justify-content:space-between}.page-back-button{min-width:230px;margin-top:24px;justify-content:center;gap:12px}.page-back-button+.page-header{padding-top:24px}@media(max-width:540px){.page-back-button{min-width:220px;max-width:100%}}
+
+/* Shared card baseline and subscription accents. */
+.cases-collection{align-items:stretch}
+.collection-case{display:flex;flex-direction:column}
+.case-artwork{flex:none}
+.case-content{display:flex;flex-direction:column;flex:1;min-height:0}
+.case-content>.case-category{align-self:flex-start;margin:2px 0 12px}
+.case-content>.case-title-line,.case-content>h2{min-height:27px;margin:0}
+.case-content>h2{font-size:22px;letter-spacing:-.04em;color:#f0f2f5;line-height:1.2}
+.case-content>.case-description{min-height:72px}
+.case-content>.case-open-button{margin-top:auto}
+.case-content>.case-cost{min-height:24px}
+.collection-case--subscriber{--case-accent:#eab47d;box-shadow:0 0 24px -7px #e6a36142,0 10px 30px #0005}
+.collection-case--subscriber .case-artwork{background:radial-gradient(ellipse at 50% 82%,#eba45f19,transparent 65%),linear-gradient(90deg,#0a0c10,#1c1916 50%,#0b0d11)}
+.collection-case--subscriber .case-category{color:#efbc88;border-color:#efa95e4d;background:#efa95e09}
+.collection-case--subscriber:hover{border-color:#efbc88;box-shadow:0 0 30px -5px #efa95e55,0 12px 30px #0006}
