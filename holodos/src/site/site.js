@@ -34,11 +34,11 @@ function applySidebarMode(mode){
  try{localStorage.setItem('war1ouss-sidebar',mode);}catch{}
 }
 function closeSidebar(){applySidebarMode('icons');}
-function toggleSidebar(){applySidebarMode(sidebarMode==='hidden'?'icons':sidebarMode==='icons'?'expanded':'hidden');}
+function toggleSidebar(){applySidebarMode(sidebarMode==='expanded'?'icons':sidebarMode==='hidden'?'icons':'expanded');}
 applySidebarMode(sidebarMode);
 let sidebarClickTimer;
 function sidebarClick(event){clearTimeout(sidebarClickTimer);if(event.detail>1)return;sidebarClickTimer=setTimeout(toggleSidebar,230);}
-function sidebarDoubleClick(){clearTimeout(sidebarClickTimer);applySidebarMode('hidden');}
+function sidebarDoubleClick(){clearTimeout(sidebarClickTimer);applySidebarMode(sidebarMode==='hidden'?'icons':'hidden');}
 let routeTransition;
 function navigate(path,replace=false){
  if(!routes.has(path))path='/';
