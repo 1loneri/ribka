@@ -1300,3 +1300,20 @@ body.inner-page .view.active{animation:slideIn .25s ease both}
 #view-cases .reward-glow--popmart{color:#ff9b9b;text-shadow:0 0 7px #ff4c4c99,0 0 18px #ff24244d}
 #view-cases .case-hover-rewards .reward-glow--vp{border-color:#ffb65366;background:#ff9b1610;box-shadow:0 0 13px #ff8e2424}
 #view-cases .case-hover-rewards .reward-glow--popmart{border-color:#ff555566;background:#ff303010;box-shadow:0 0 14px #ff303029}
+
+#view-cases .reward-glow--vip{color:#ffacd9;text-shadow:0 0 7px #ff69bc80,0 0 17px #ff399b4d}
+#view-cases .case-hover-rewards .reward-glow--vip{border-color:#ff83ca66;background:#ff54af10;box-shadow:0 0 13px #ff54af24}
+
+/* Persistent three-state navigation: icons, full names, burger only. */
+body.inner-page .side-links{opacity:1;pointer-events:auto;visibility:visible;transform:none;transition:none}
+.side-link{display:flex;align-items:center;gap:13px;min-height:42px;padding:10px 13px;flex-shrink:0}
+.side-icon{width:21px;height:21px;flex:none}.side-label{overflow:hidden;transition:opacity .2s ease}
+.side-navigation:not(.expanded) .side-link{justify-content:center;padding:10px 0}.side-navigation:not(.expanded) .side-label{display:none}
+.side-navigation:not(.expanded) .side-wallets{display:none}.side-navigation.expanded .side-links{transition-delay:0}
+body.inner-page[data-sidebar="expanded"] .shell{padding-left:250px}
+body.inner-page .side-navigation.fully-hidden{width:0;padding:0;border:0;background:none;box-shadow:none;overflow:visible}
+.side-navigation.fully-hidden .side-brand,.side-navigation.fully-hidden .side-links{display:none}
+.side-navigation.fully-hidden .side-toggle{position:fixed;left:12px;top:15px}
+body.inner-page[data-sidebar="hidden"] .shell{padding-left:0}
+@media(max-width:780px){body.inner-page[data-sidebar="expanded"] .shell{padding-left:72px}}
+@media(prefers-reduced-motion:reduce){body.inner-page .side-navigation,body.inner-page .shell{transition:none}}

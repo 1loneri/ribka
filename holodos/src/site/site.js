@@ -21,20 +21,24 @@ function safeAvatar(src){
  return typeof src==='string'&&/^https:\/\/(static-cdn\.jtvnw\.net|.*\.twitch\.tv)\//i.test(src)?src:'';
 }
 function currentRoute(){return routes.has(location.pathname)?location.pathname:'/';}
-function closeSidebar(){
- const side=$('side-navigation'),backdrop=$('side-backdrop'),toggle=$('side-toggle');
- if(!side||!backdrop||!toggle)return;
- side.classList.remove('expanded');backdrop.hidden=true;
- toggle.setAttribute('aria-expanded','false');toggle.setAttribute('aria-label','Открыть боковое меню');
+let sidebarMode='icons';
+try{const saved=localStorage.getItem('war1ouss-sidebar');if(['icons','expanded','hidden'].includes(saved))sidebarMode=saved;}catch{}
+function applySidebarMode(mode){
+ sidebarMode=mode;const side=$('side-navigation');
+ side.classList.toggle('expanded',mode==='expanded');side.classList.toggle('fully-hidden',mode==='hidden');
+ document.body.dataset.sidebar=mode;
+ $('side-backdrop').hidden=mode!=='expanded'||!window.matchMedia('(max-width:780px)').matches;
+ $('side-toggle').setAttribute('aria-expanded',String(mode==='expanded'));
+ $('side-toggle').setAttribute('aria-label',mode==='expanded'?'Свернуть до иконок':'Открыть полные названия. Двойное нажатие — скрыть меню');
+ $('side-links').inert=mode==='hidden';
+ try{localStorage.setItem('war1ouss-sidebar',mode);}catch{}
 }
-function toggleSidebar(){
- const side=$('side-navigation'),backdrop=$('side-backdrop'),toggle=$('side-toggle');
- const open=!side.classList.contains('expanded');
- side.classList.toggle('expanded',open);backdrop.hidden=!open;
- toggle.setAttribute('aria-expanded',String(open));
- if(open)side.querySelector('.side-link[data-route]')?.focus({preventScroll:true});
- toggle.setAttribute('aria-label',open?'Закрыть боковое меню':'Открыть боковое меню');
-}
+function closeSidebar(){applySidebarMode('icons');}
+function toggleSidebar(){applySidebarMode(sidebarMode==='expanded'?'icons':'expanded');}
+applySidebarMode(sidebarMode);
+let sidebarClickTimer;
+function sidebarClick(event){clearTimeout(sidebarClickTimer);if(event.detail>1)return;sidebarClickTimer=setTimeout(toggleSidebar,230);}
+function sidebarDoubleClick(){clearTimeout(sidebarClickTimer);applySidebarMode('hidden');}
 function navigate(path,replace=false){
  if(!routes.has(path))path='/';
  if(replace)history.replaceState({},'',path);else if(location.pathname!==path)history.pushState({},'',path);
@@ -43,7 +47,7 @@ function navigate(path,replace=false){
  $('main-nav').classList.remove('open');$('menu-btn').setAttribute('aria-expanded','false');
  document.body.classList.toggle('inner-page',path!=='/');
  document.querySelectorAll('.side-link[data-route]').forEach(el=>{el.classList.toggle('active',el.getAttribute('href')===path);if(el.getAttribute('href')===path)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});
- closeSidebar();
+ applySidebarMode(sidebarMode);
  const titles={'/':'Главная','/casino':'Холодос','/cases':'Кейсы','/duels':'Дуэли','/top':'Топ игроков','/chat':'Топ чата','/profile':'Профиль','/shop':'Магазин'};
  document.title=(titles[path]||'Главная')+' — War1ouss';
  window.scrollTo({top:0,behavior:'instant'});
@@ -252,7 +256,8 @@ document.addEventListener('click',e=>{
  const action=e.target.closest('[data-duel-answer]');if(action)duelAction(action.dataset.duelAnswer);
 });
 window.addEventListener('popstate',()=>navigate(currentRoute(),true));
-$('side-toggle').addEventListener('click',toggleSidebar);
+$('side-toggle').addEventListener('click',sidebarClick);
+$('side-toggle').addEventListener('dblclick',sidebarDoubleClick);
 $('side-backdrop').addEventListener('click',closeSidebar);
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSidebar()});
 $('menu-btn').addEventListener('click',()=>{const nav=$('main-nav');const open=nav.classList.toggle('open');$('menu-btn').setAttribute('aria-expanded',open?'true':'false');});

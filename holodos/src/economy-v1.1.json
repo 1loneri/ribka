@@ -1,0 +1,158 @@
+{
+  "version": "1.1",
+  "source": "war1ouss_hub_economy_v1_1.xlsx",
+  "shopPricesW": {
+    "240": 25000,
+    "475": 55000,
+    "1000": 115000
+  },
+  "caseRewards": {
+    "donation": [
+      {
+        "label": "3000 W",
+        "probability": 0.15,
+        "w": 3000,
+        "vpCostRub": 0
+      },
+      {
+        "label": "5000 W",
+        "probability": 0.35,
+        "w": 5000,
+        "vpCostRub": 0
+      },
+      {
+        "label": "10000 W",
+        "probability": 0.15,
+        "w": 10000,
+        "vpCostRub": 0
+      },
+      {
+        "label": "15000 W",
+        "probability": 0.05,
+        "w": 15000,
+        "vpCostRub": 0
+      },
+      {
+        "label": "240 VP",
+        "probability": 0.25,
+        "w": 0,
+        "vpCostRub": 209
+      },
+      {
+        "label": "475 VP",
+        "probability": 0.04,
+        "w": 0,
+        "vpCostRub": 459
+      },
+      {
+        "label": "1000 VP",
+        "probability": 0.01,
+        "w": 0,
+        "vpCostRub": 949
+      }
+    ],
+    "chat": [
+      {
+        "label": "100 W",
+        "probability": 0.35,
+        "w": 100,
+        "vpCostRub": 0
+      },
+      {
+        "label": "250 W",
+        "probability": 0.35,
+        "w": 250,
+        "vpCostRub": 0
+      },
+      {
+        "label": "1000 W",
+        "probability": 0.2,
+        "w": 1000,
+        "vpCostRub": 0
+      },
+      {
+        "label": "3000 W",
+        "probability": 0.07,
+        "w": 3000,
+        "vpCostRub": 0
+      },
+      {
+        "label": "8000 W",
+        "probability": 0.025,
+        "w": 8000,
+        "vpCostRub": 0
+      },
+      {
+        "label": "240 VP",
+        "probability": 0.005,
+        "w": 0,
+        "vpCostRub": 209
+      }
+    ],
+    "vip": [
+      {
+        "label": "500 W",
+        "probability": 0.35,
+        "w": 500,
+        "vpCostRub": 0
+      },
+      {
+        "label": "2000 W",
+        "probability": 0.3,
+        "w": 2000,
+        "vpCostRub": 0
+      },
+      {
+        "label": "5000 W",
+        "probability": 0.2,
+        "w": 5000,
+        "vpCostRub": 0
+      },
+      {
+        "label": "10000 W",
+        "probability": 0.12,
+        "w": 10000,
+        "vpCostRub": 0
+      },
+      {
+        "label": "240 VP",
+        "probability": 0.03,
+        "w": 0,
+        "vpCostRub": 209
+      }
+    ]
+  },
+  "donation": {
+    "priceRub": 400,
+    "guaranteedW": 2000,
+    "enabled": false
+  },
+  "chat": {
+    "threshold": 1500,
+    "countIntervalSeconds": 120,
+    "enabled": false
+  },
+  "vip": {
+    "intervalDays": 7,
+    "enabled": false
+  },
+  "watch": {
+    "wPerHour": 100,
+    "enabled": false
+  },
+  "weeklyTask": {
+    "w": 500,
+    "maxPerMonth": 4,
+    "enabled": false
+  },
+  "twitch": {
+    "pricePoints": 10000,
+    "cosmeticOnly": true,
+    "enabled": false
+  },
+  "budget": {
+    "monthlyRub": 25000,
+    "eventsRub": 3000,
+    "targetReserveRub": 5000
+  }
+}

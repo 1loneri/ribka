@@ -1,6 +1,6 @@
 import http from 'node:http';
 import {DatabaseSync} from 'node:sqlite';
-import {mkdirSync,existsSync} from 'node:fs';
+import {mkdirSync,existsSync,readFileSync} from 'node:fs';
 import {createSite} from './site-server.js';
 import {dirname} from 'node:path';
 import {randomInt,randomBytes,scryptSync,createCipheriv,createDecipheriv,createHmac,timingSafeEqual} from 'node:crypto';
@@ -14,7 +14,8 @@ const pass=process.env.ADMIN_PASSWORD||'';
 const secret=process.env.APP_SECRET||'';
 const dbPath=process.env.DB_PATH||'/data/leha.sqlite';
 const duelsEnabled=process.env.ENABLE_DUELS==='true';
-const SHOP_PRICES=Object.freeze({240:18000,475:35625,1000:75000});
+const ECONOMY=JSON.parse(readFileSync(new URL('./economy-v1.1.json',import.meta.url),'utf8'));
+const SHOP_PRICES=Object.freeze(ECONOMY.shopPricesW);
 const invalidConfig=[];
 if(!/^[a-z0-9_]{1,25}$/.test(channel))invalidConfig.push('TWITCH_CHANNEL');
 if(!/^[a-z0-9_]{1,25}$/.test(botLogin))invalidConfig.push('BOT_USERNAME');
@@ -149,7 +150,7 @@ function duelRespond(login,id,answer,mid,now){
 
 
 function shopText(){
- return 'Магазин VP: 240 VP - 18 000 W; 475 VP - 35 625 W; 1000 VP - 75 000 W. Заказать: !купить 240. Проверить: !заказ.';
+ return 'Магазин VP: 240 VP - 25 000 W; 475 VP - 55 000 W; 1000 VP - 115 000 W. Заказать: !купить 240. Проверить: !заказ.';
 }
 function buyVp(login,id,vp,mid,now){
  return transaction(()=>{
@@ -367,7 +368,7 @@ const server=http.createServer(async(req,res)=>{
   content+='<details style="margin-top:30px"><summary>Изменить Twitch Client ID / Secret</summary><p>Адрес OAuth Redirect: <code>'+escape(publicUrl)+'/oauth/callback</code></p>'+setupForm(csrf('configure'))+'</details>';
  }
  const orders=db.prepare("SELECT id,login,vp,price,created_at FROM shop_orders WHERE status='pending' ORDER BY id ASC LIMIT 40").all();
- content+='<h3 style="margin-top:32px">Магазин VP — заявки на ручную выдачу</h3><p>240 VP = 18 000 W · 475 VP = 35 625 W · 1000 VP = 75 000 W. Новые заявки списывают W автоматически. VP нужно выдать игроку вручную. Отмена возвращает W.</p>';
+ content+='<h3 style="margin-top:32px">Магазин VP — заявки на ручную выдачу</h3><p>240 VP = 25 000 W · 475 VP = 55 000 W · 1000 VP = 115 000 W. Новые заявки списывают W автоматически. VP нужно выдать игроку вручную. Отмена возвращает W.</p>';
  if(orders.length===0)content+='<p>Пока нет заявок.</p>';
  else for(const o of orders){
   content+='<div style="padding:14px 0;border-top:1px solid #3b4b35"><b>Заказ №'+o.id+'</b> · @'+escape(o.login)+' · '+o.vp+' VP · '+o.price.toLocaleString('ru-RU')+' W<p><small>'+escape(new Date(o.created_at).toLocaleString('ru-RU',{timeZone:'Europe/Tallinn'}))+'</small></p>'+
