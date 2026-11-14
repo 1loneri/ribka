@@ -1204,3 +1204,7 @@ body.inner-page .view.active{animation:slideIn .25s ease both}
 @keyframes containerFrostGlow{0%,100%{box-shadow:0 0 0 transparent}22%{border-color:#d7f4ff;box-shadow:0 0 20px #b7e9ff66,inset 0 0 20px #b7e9ff33}65%{border-color:#8dbbcc;box-shadow:0 0 12px #b7e9ff33}}
 @keyframes containerFrostRim{0%{opacity:0}22%{opacity:1}65%{opacity:.6}100%{opacity:0}}
 @media(prefers-reduced-motion:reduce){#view-casino .slot-game.container-freeze,#view-casino .slot-game.container-freeze::after{animation:none}}
+
+/* Keep the arrow below the description in every game card. */
+#view-home .mode-card .mode-text p{margin-bottom:0}
+#view-home .mode-card .mode-arrow{position:relative;left:auto;bottom:auto;margin-top:18px}
