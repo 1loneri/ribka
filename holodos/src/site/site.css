@@ -1212,3 +1212,6 @@ body.inner-page .view.active{animation:slideIn .25s ease both}
 #view-casino .odds-panel .odds-symbol{display:inline-flex;width:20px;height:36px;vertical-align:middle;align-items:center;justify-content:center;margin:0 1px}
 #view-casino .odds-panel .odds-symbol img{display:block;width:100%;height:100%;object-fit:contain}
 #view-casino .odds-panel .odds-note .odds-symbol{width:15px;height:28px}
+
+.history-item .history-cans{display:inline-flex;align-items:center;gap:6px;overflow:visible;min-height:40px}
+.history-cans img{display:block;width:20px;height:40px;object-fit:contain;flex-shrink:0}

@@ -59,9 +59,15 @@ function winsHtml(list){
  if(!list||!list.length)return '<p class="muted">Реальные выигрыши появятся здесь после следующих открытий. Прошлые игры бота ещё не записывались в историю.</p>';
  return list.map(r=>'<div class="win-item"><span class="win-cans">'+esc((r.cans||[]).join(' '))+'</span><div><b>@'+esc(r.login)+'</b><small>'+esc(r.source==='chat'?'Twitch':'Сайт')+' · '+ruTime(r.created_at)+'</small></div><strong class="win-gain">+'+fmt(r.gain)+' W</strong></div>').join('');
 }
+function historySymbolsHtml(symbols){
+ return '<span class="history-cans">'+(symbols||[]).map(symbol=>{
+  const sprite=slotSprites[symbol];
+  return sprite?'<img src="/assets/slot-'+sprite[0]+'.webp?v=14" alt="'+esc(sprite[1])+'" title="'+esc(sprite[1])+'" width="20" height="40">':esc(symbol);
+ }).join('')+'</span>';
+}
 function historyHtml(list){
  if(!list||!list.length)return '<p class="muted">Открытий пока нет. История сохраняется с запуска сайта.</p>';
- return list.map(r=>'<div class="history-item"><strong>@'+esc(r.login)+'</strong><span>'+esc((r.cans||[]).join(' '))+'</span><em>+'+fmt(r.gain)+' W</em><time>'+ruTime(r.created_at)+'</time></div>').join('');
+ return list.map(r=>'<div class="history-item"><strong>@'+esc(r.login)+'</strong>'+historySymbolsHtml(r.cans)+'<em>+'+fmt(r.gain)+' W</em><time>'+ruTime(r.created_at)+'</time></div>').join('');
 }
 function renderPublic(){
  const p=state.public;if(!p)return;
