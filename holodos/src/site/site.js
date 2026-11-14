@@ -21,12 +21,28 @@ function safeAvatar(src){
  return typeof src==='string'&&/^https:\/\/(static-cdn\.jtvnw\.net|.*\.twitch\.tv)\//i.test(src)?src:'';
 }
 function currentRoute(){return routes.has(location.pathname)?location.pathname:'/';}
+function closeSidebar(){
+ const side=$('side-navigation'),backdrop=$('side-backdrop'),toggle=$('side-toggle');
+ if(!side||!backdrop||!toggle)return;
+ side.classList.remove('expanded');backdrop.hidden=true;
+ toggle.setAttribute('aria-expanded','false');toggle.setAttribute('aria-label','Открыть боковое меню');
+}
+function toggleSidebar(){
+ const side=$('side-navigation'),backdrop=$('side-backdrop'),toggle=$('side-toggle');
+ const open=!side.classList.contains('expanded');
+ side.classList.toggle('expanded',open);backdrop.hidden=!open;
+ toggle.setAttribute('aria-expanded',String(open));
+ toggle.setAttribute('aria-label',open?'Закрыть боковое меню':'Открыть боковое меню');
+}
 function navigate(path,replace=false){
  if(!routes.has(path))path='/';
  if(replace)history.replaceState({},'',path);else if(location.pathname!==path)history.pushState({},'',path);
  document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.dataset.view===path));
  document.querySelectorAll('.nav-link').forEach(el=>{el.classList.toggle('active',el.getAttribute('href')===path);if(el.getAttribute('href')===path)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});
  $('main-nav').classList.remove('open');$('menu-btn').setAttribute('aria-expanded','false');
+ document.body.classList.toggle('inner-page',path!=='/');
+ document.querySelectorAll('.side-link[data-route]').forEach(el=>{el.classList.toggle('active',el.getAttribute('href')===path);if(el.getAttribute('href')===path)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});
+ closeSidebar();
  const titles={'/':'Главная','/casino':'Холодос','/cases':'Кейсы','/duels':'Дуэли','/top':'Топ игроков','/chat':'Топ чата','/profile':'Профиль','/shop':'Магазин'};
  document.title=(titles[path]||'Главная')+' — War1ouss';
  window.scrollTo({top:0,behavior:'instant'});
@@ -59,6 +75,8 @@ function renderMe(){
  $('login-btn').hidden=logged;
  $('avatar-link').hidden=!logged;
  $('wallet-amount').textContent=logged?fmt(me.player.balance)+' W':'—';
+ if($('side-balance'))$('side-balance').textContent=logged?fmt(me.player.balance)+' W':'W —';
+ if($('side-login'))$('side-login').hidden=logged;
  if(logged){
   $('top-name').textContent=me.player.display_name||me.player.login;
   const avatar=safeAvatar(me.player.avatar);
@@ -171,6 +189,9 @@ document.addEventListener('click',e=>{
  const action=e.target.closest('[data-duel-answer]');if(action)duelAction(action.dataset.duelAnswer);
 });
 window.addEventListener('popstate',()=>navigate(currentRoute(),true));
+$('side-toggle').addEventListener('click',toggleSidebar);
+$('side-backdrop').addEventListener('click',closeSidebar);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSidebar()});
 $('menu-btn').addEventListener('click',()=>{const nav=$('main-nav');const open=nav.classList.toggle('open');$('menu-btn').setAttribute('aria-expanded',open?'true':'false');});
 $('spin-button').addEventListener('click',spin);
 $('duel-form').addEventListener('submit',challenge);
