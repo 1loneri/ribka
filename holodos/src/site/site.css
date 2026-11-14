@@ -1223,3 +1223,19 @@ body.inner-page .view.active{animation:slideIn .25s ease both}
 @media(max-width:1050px){.cases-collection{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.cases-collection{grid-template-columns:1fr;gap:18px}.case-artwork{aspect-ratio:492/300}.case-description{min-height:0}.cases-status{line-height:1.7;align-items:baseline}.cases-footnote{align-items:flex-start;flex-direction:column;gap:12px}.case-content{padding:8px 22px 22px}}
 @media(prefers-reduced-motion:reduce){.collection-case{transition:none}.collection-case:hover{transform:none}}
+
+/* User-selected display font for the Holodos page title. */
+#view-casino .page-header h1{font-family:'Dela Gothic One',sans-serif;font-weight:400;letter-spacing:-.035em;font-size:clamp(30px,4.2vw,56px);line-height:1.2}
+@media(max-width:540px){#view-casino .page-header h1{font-size:clamp(27px,7.5vw,40px);letter-spacing:-.04em}}
+
+/* A quiet miniature room behind each approved case, without moving the card layout. */
+.case-artwork{isolation:isolate;perspective:700px;background:radial-gradient(ellipse at 50% 82%,color-mix(in srgb,var(--case-accent) 12%,transparent),transparent 60%),linear-gradient(90deg,#0a0c10,#171a20 50%,#0b0d11)}
+.case-artwork::before{content:"";position:absolute;z-index:0;pointer-events:none;left:-22%;right:-22%;height:47%;bottom:-9%;transform:rotateX(61deg);transform-origin:center bottom;background:repeating-linear-gradient(90deg,transparent 0 54px,#dce8ff0a 55px 56px),repeating-linear-gradient(0deg,transparent 0 32px,#dce8ff09 33px 34px),radial-gradient(ellipse at 50% 30%,color-mix(in srgb,var(--case-accent) 17%,#11151b),#090b10 72%);border-top:1px solid #c6d4e31a;box-shadow:0 -16px 45px #0009}
+.case-artwork::after{content:"";position:absolute;inset:13% 10% 18%;z-index:0;pointer-events:none;border:1px solid #b4c7df0c;border-bottom-color:#c8d6e523;border-radius:7px 7px 0 0;background:linear-gradient(90deg,#0008,transparent 24%,transparent 76%,#0008),linear-gradient(180deg,#ffffff03,transparent 65%);box-shadow:inset 0 14px 26px #0005,0 0 40px #0004}
+.case-artwork img{position:relative;z-index:1;mix-blend-mode:screen;animation:caseQuietFloat 7s ease-in-out infinite;transform-origin:50% 65%;will-change:transform}
+.collection-case:nth-child(2) .case-artwork img{animation-delay:-1.4s}.collection-case:nth-child(3) .case-artwork img{animation-delay:-2.8s}.collection-case:nth-child(4) .case-artwork img{animation-delay:-4.2s}.collection-case:nth-child(5) .case-artwork img{animation-delay:-5.6s}
+.collection-case--donation .case-artwork{background:radial-gradient(ellipse at 50% 65%,#c1a6f132,transparent 65%),linear-gradient(90deg,#0a0c10,#1a1722 50%,#0b0d11)}
+.collection-case--donation .case-artwork img{animation:caseQuietFloat 7s ease-in-out infinite,donationCaseGlow 4.8s ease-in-out infinite;filter:drop-shadow(0 0 9px #c5adf14d)}
+@keyframes caseQuietFloat{0%,100%{transform:translateY(2px) rotate(-.35deg)}50%{transform:translateY(-5px) rotate(.35deg)}}
+@keyframes donationCaseGlow{0%,100%{filter:drop-shadow(0 0 6px #c5adf138) brightness(1.02)}50%{filter:drop-shadow(0 0 14px #c5adf16b) brightness(1.1)}}
+@media(prefers-reduced-motion:reduce){.case-artwork img,.collection-case--donation .case-artwork img{animation:none;transform:none;will-change:auto}}
