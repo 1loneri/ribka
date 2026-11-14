@@ -73,7 +73,7 @@ function chatBadgesHtml(row){
 }
 function rankHtml(list,kind='balance'){
  if(!list||!list.length)return '<p class="muted">Пока нет данных. Рейтинг обновляется по мере активности игроков.</p>';
- return list.map((r,i)=>'<div class="rank-item '+(kind==='chat'&&['ice','rose','amber','violet'].includes(r.frame)?'chat-frame-'+r.frame:'')+'"><span class="rank-position">'+(i+1)+'</span><div class="rank-name"><span class="player-line">'+avatarHtml(r.login)+'<b>@'+esc(r.login)+'</b></span>'+(kind==='balance'?'<small>Открытий: '+fmt(r.opens)+'</small>':'<small>'+chatBadgesHtml(r)+(r.title?'<span class="chat-title">'+esc(r.title)+'</span>':'')+'</small><small>Сообщений с начала учёта</small>')+'</div><div class="rank-score">'+fmt(kind==='balance'?r.balance:r.message_count)+' '+(kind==='balance'?'W':'сообщ.')+'</div></div>').join('');
+ return list.map((r,i)=>'<div class="rank-item '+(kind==='chat'&&['ice','rose','amber','violet'].includes(r.frame)?'chat-frame-'+r.frame:'')+'"><span class="rank-position">'+(i+1)+'</span><div class="rank-name"><span class="player-line">'+avatarHtml(r.login)+'<b>@'+esc(r.login)+'</b></span>'+(kind==='balance'?'<small>Открытий: '+fmt(r.opens)+'</small>':'<small>'+chatBadgesHtml(r)+(r.title?'<span class="chat-title">'+esc(r.title)+'</span>':'')+'</small>')+'</div><div class="rank-score">'+fmt(kind==='balance'?r.balance:r.message_count)+' '+(kind==='balance'?'W':'сообщ.')+'</div></div>').join('');
 }
 function winsHtml(list){
  if(!list||!list.length)return '<p class="muted">Реальные выигрыши появятся здесь после следующих открытий. Прошлые игры бота ещё не записывались в историю.</p>';
@@ -243,22 +243,25 @@ async function refreshSpins(){
  try{const v=await api('/api/spins');state.history=v.spins;$('casino-history').innerHTML=historyHtml(v.spins);hydrateAvatars();}
  catch(e){$('casino-history').textContent=e.message;}
 }
+let duelRefreshBusy=false;
 async function refreshDuels(){
+ if(duelRefreshBusy)return;duelRefreshBusy=true;
  try{
   const data=await api('/api/duels');state.duels=data;
   const pending=data.pending||[],recent=data.recent||[],logged=state.me?.authenticated;
   $('pending-duels').innerHTML=pending.length?pending.map(d=>{
    const mine=logged&&d.opponent_login===state.me.player.login.toLowerCase();
-   return '<div class="duel-item"><div><strong>@'+esc(d.initiator_login)+' → @'+esc(d.opponent_login)+'</strong><p>Банк '+fmt(d.wager*2)+' W · ставка '+fmt(d.wager)+' W · до '+new Date(d.expires_at).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})+'</p></div>'+(mine?'<div class="duel-actions"><button data-duel-answer="accept">Принять</button><button class="decline" data-duel-answer="decline">Отказ</button></div>':'')+'</div>';
+   return '<div class="duel-item"><div class="duel-mini-cans">'+duelCanImage(d.leftCan)+duelCanImage(d.rightCan)+'</div><div><strong>@'+esc(d.initiator_login)+' → @'+esc(d.opponent_login)+'</strong><p>Банк '+fmt(d.wager*2)+' W · ставка '+fmt(d.wager)+' W · до '+new Date(d.expires_at).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})+'</p></div>'+(mine?'<div class="duel-actions"><button data-duel-answer="accept">Принять</button><button class="decline" data-duel-answer="decline">Отказ</button></div>':'')+'</div>';
   }).join(''):'<p class="muted">Активных вызовов пока нет. Создай первый!</p>';
-  $('duel-history').innerHTML=recent.length?recent.map(d=>'<div class="history-item"><strong>@'+esc(d.initiator_login)+' ↔ @'+esc(d.opponent_login)+'</strong><span>'+esc(d.winner_login?'Победил @'+d.winner_login:d.status)+'</span><em>'+fmt(d.wager*2-d.fee)+' W</em><time>'+ruTime(d.resolved_at||d.created_at)+'</time></div>').join(''):'<p class="muted">Завершённых дуэлей пока нет.</p>';
- }catch(e){$('pending-duels').textContent=e.message;$('duel-history').textContent=e.message;}
+  await maybeAnimateDuel(recent);
+  $('duel-history').innerHTML=recent.length?recent.map(d=>'<div class="history-item"><strong>@'+esc(d.initiator_login)+' ↔ @'+esc(d.opponent_login)+'</strong><span>'+esc(d.winner_login?'Победил @'+d.winner_login:d.status)+'</span><em>'+fmt(d.wager*2-d.fee)+' W</em><time>'+ruTime(d.resolved_at||d.created_at)+'</time></div>').join(''):'<p class="muted">Завершённых дуэлей пока нет.</p>';hydrateAvatars();
+ }catch(e){$('pending-duels').textContent=e.message;$('duel-history').textContent=e.message;}finally{duelRefreshBusy=false;}
 }
 async function duelAction(answer){
  if(!state.me?.authenticated){location.href='/auth/twitch';return;}
  try{
   const result=await api('/api/duels/respond',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':state.me.csrf},body:JSON.stringify({answer,requestId:crypto.randomUUID()})});
-  notice(result.message||'Ответ отправлен');await Promise.all([refreshDuels(),refreshMe(),refreshPublic()]);
+  await refreshDuels();notice(result.message||'Ответ отправлен');await Promise.all([refreshMe(),refreshPublic()]);
  }catch(e){notice(e.message);}
 }
 async function challenge(event){
@@ -364,7 +367,7 @@ async function refreshAccountNotifications(){
  const {notifications}=await api('/api/notifications');if(!state.me?.authenticated||String(state.me.player.id)!==user)return;const latest=notifications[0]?.id||0;const newest=notifications.find(n=>n.unread&&n.id>notificationLastSeenId);
  if(newest&&notificationLastSeenId>0)notice(newest.title+': '+newest.body);
  notificationLastSeenId=Math.max(notificationLastSeenId,latest);try{localStorage.setItem('war1ouss-notification-last-'+user,String(notificationLastSeenId))}catch{}
- $('account-notification-list').innerHTML=notifications.length?notifications.map(n=>'<a class="account-notification '+(n.unread?'unread':'')+'" href="'+esc(/^\/(?:requests|profile|help|cases)\b/.test(n.url)?n.url:'/profile')+'" data-route="'+esc(n.url)+'"><strong>'+esc(n.title)+'</strong><p>'+esc(n.body)+'</p><time>'+ruTime(n.created_at)+'</time></a>').join(''):'<p class="muted">Пока нет уведомлений.</p>';
+ $('account-notification-list').innerHTML=notifications.length?notifications.map(n=>'<a class="account-notification '+(n.unread?'unread':'')+'" href="'+esc(/^\/(?:requests|profile|help|cases|duels)\b/.test(n.url)?n.url:'/profile')+'" data-route="'+esc(n.url)+'"><strong>'+esc(n.title)+'</strong><p>'+esc(n.body)+'</p><time>'+ruTime(n.created_at)+'</time></a>').join(''):'<p class="muted">Пока нет уведомлений.</p>';
  if(!$('account-notifications').hidden&&latest){await supportPost('/api/notifications/read',{maxId:latest});state.me.notification_unread=0;for(const badge of document.querySelectorAll('.account-unread-count'))badge.textContent='';renderNotificationBadges();}
  }catch{}finally{notificationLoading=false}
 }
@@ -396,3 +399,27 @@ document.addEventListener('submit',async e=>{
  try{const form=new FormData(e.target);await supportPost('/api/reviews',{orderId:Number(form.get('orderId')),rating:Number(form.get('rating')),body:form.get('body')});e.target.reset();$('shop-review-form').replaceChildren();notice('Спасибо! Твой отзыв опубликован.');await refreshReviews();}
  catch(err){notice(err.message);}finally{btn.disabled=false;}
 });
+const cosmeticDuelIds=['pipeline','pacific','khaotic','violet','badapple'];
+const normalDuelIds=['white','green','mango','pink','blue','black','watermelon','yellow','w-edition'];
+function duelCanImage(can){const allowed=can?.cosmetic?cosmeticDuelIds:normalDuelIds;const id=allowed.includes(can?.id)?can.id:'white';return '<img src="/assets/'+(can?.cosmetic?'duel-can-':'slot-')+id+'.webp?v=50" alt="'+esc(can?.label||'Monster')+'" width="80" height="160">';}
+let duelAnimationBusy=false;
+function duelFighterHtml(login,can){return '<div class="duel-fighter '+(can?.cosmetic?'duel-fighter--cosmetic':'')+'"><div class="duel-can-wrap">'+duelCanImage(can)+'<span class="duel-burst" aria-hidden="true"></span></div><span class="player-line">'+avatarHtml(login)+'<b>@'+esc(login)+'</b></span></div>';}
+async function animateDuel(d,demo=false){
+ if(duelAnimationBusy)return;duelAnimationBusy=true;const arena=$('duel-arena');
+ try{arena.className='duel-arena';arena.innerHTML='<p class="duel-arena-label">'+(demo?'Демонстрация оформления':'Дуэль №'+Number(d.id))+'</p><div class="duel-fighters">'+duelFighterHtml(d.initiator_login,d.leftCan)+'<span class="duel-versus">VS</span>'+duelFighterHtml(d.opponent_login,d.rightCan)+'</div><p class="duel-arena-result" aria-live="polite">Банки готовы к столкновению…</p>';hydrateAvatars();
+ const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ if(!reduced){arena.classList.add('duel-arena--charging');await new Promise(r=>setTimeout(r,2100));}
+ arena.classList.remove('duel-arena--charging');
+ const leftWon=d.winner_login===d.initiator_login;const fighters=arena.querySelectorAll('.duel-fighter');fighters[leftWon?0:1].classList.add('duel-fighter--winner');fighters[leftWon?1:0].classList.add('duel-fighter--lost');arena.classList.add('duel-arena--resolved');
+ arena.querySelector('.duel-arena-result').textContent=demo?'Пример эффекта взрыва косметической банки':'Победил @'+d.winner_login+' · '+fmt(d.wager*2-d.fee)+' W';
+ if(!reduced)await new Promise(r=>setTimeout(r,900));
+ }finally{duelAnimationBusy=false;}
+}
+async function maybeAnimateDuel(recent){
+ if(duelAnimationBusy||currentRoute()!=='/duels'||!state.me?.authenticated)return;
+ const login=state.me.player.login.toLowerCase();const d=recent.find(x=>(x.initiator_login===login||x.opponent_login===login)&&Date.now()-x.resolved_at<180000);
+ if(!d)return;const key='war1ouss-duel-seen-'+login+'-'+d.id;try{if(localStorage.getItem(key))return;localStorage.setItem(key,'1')}catch{}
+ await animateDuel(d);
+}
+$('duel-preview').addEventListener('click',()=>{const cosmetic=cosmeticDuelIds[Math.floor(Math.random()*cosmeticDuelIds.length)],normal=normalDuelIds[Math.floor(Math.random()*normalDuelIds.length)];animateDuel({id:0,initiator_login:'cosmetic',opponent_login:'monster',leftCan:{id:cosmetic,cosmetic:true},rightCan:{id:normal,cosmetic:false},winner_login:'monster',wager:0,fee:0},true);});
+setInterval(()=>{if(currentRoute()==='/duels'&&document.visibilityState==='visible')refreshDuels();},3000);

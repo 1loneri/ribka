@@ -1,4 +1,5 @@
 import {createReviews} from './reviews.js';
+import {createDuelVisuals} from './duel-visuals.js';
 import {createNotifications} from './notifications.js';
 import {createAvatars} from './avatars.js';
 import {createSupport} from './support.js';
@@ -8,6 +9,7 @@ import {createHash,randomBytes,createHmac,timingSafeEqual} from 'node:crypto';
 export function createSite({db,publicUrl,app,tokenRequest,validate,player,transaction,draw,cans,duelChallenge,duelRespond,say,channel,duelsEnabled,states,secret}){
  const support=createSupport(db,transaction);
  const reviews=createReviews(db,transaction);
+ const duelVisuals=createDuelVisuals(db);
  db.exec("CREATE TABLE IF NOT EXISTS cosmetic_profiles(player_id TEXT PRIMARY KEY,frame TEXT NOT NULL DEFAULT '',title TEXT NOT NULL DEFAULT '',name_color TEXT NOT NULL DEFAULT '');");
  const siteKey=createHash('sha256').update('war1ouss-web:'+secret).digest();
  const sitePages=new Set(['/','/casino','/cases','/duels','/top','/chat','/shop','/profile','/help','/requests']);
@@ -27,6 +29,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  for(const id of ['donation','twitch','chat','vip','coins','subscriber'])assetFiles['/assets/case-'+id+'.webp']={file:new URL('./site/case-'+id+'.webp',import.meta.url),type:'image/webp'};
  assetFiles['/assets/frost-edge.webp']={file:new URL('./site/frost-edge.webp',import.meta.url),type:'image/webp'};
  assetFiles['/assets/notification.mp3']={file:new URL('./site/notification.mp3',import.meta.url),type:'audio/mpeg'};
+ for(const id of Object.keys(duelVisuals.catalog))assetFiles['/assets/duel-can-'+id+'.webp']={file:new URL('./site/duel-can-'+id+'.webp',import.meta.url),type:'image/webp'};
  assetFiles['/assets/dela-gothic-one.ttf']={file:new URL('./site/dela-gothic-one.ttf',import.meta.url),type:'font/ttf'};
  const shell=readFileSync(new URL('./site/index.html',import.meta.url));
  const staticAssets={};
@@ -52,7 +55,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   'X-Frame-Options':'DENY',
   'Referrer-Policy':'strict-origin-when-cross-origin',
   'Permissions-Policy':'camera=(), microphone=(), geolocation=()',
-  'Content-Security-Policy':"default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://static-cdn.jtvnw.net; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
+  'Content-Security-Policy':"default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://static-cdn.jtvnw.net; connect-src 'self'; media-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
  };
  function send(res,status,body,type='application/json; charset=utf-8',headers={}){
   res.writeHead(status,{...securityHeaders,'Content-Type':type,'Cache-Control':'no-store',...headers});
@@ -208,9 +211,9 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
     }
     if(path==='/api/duels'){
      const now=Date.now();
-     const pending=db.prepare("SELECT id,initiator_login,opponent_login,wager,expires_at FROM duels WHERE status='pending' AND expires_at>? ORDER BY id DESC LIMIT 25").all(now);
-     const recent=db.prepare("SELECT d.id,d.initiator_login,d.opponent_login,d.wager,d.fee,d.status,d.resolved_at,d.created_at,p.login AS winner_login FROM duels d LEFT JOIN players p ON p.id=d.winner_id WHERE d.status='accepted' ORDER BY d.id DESC LIMIT 25").all();
-     json(res,200,{pending,recent});return true;
+     const pending=db.prepare("SELECT id,initiator_id,opponent_id,initiator_login,opponent_login,wager,expires_at FROM duels WHERE status='pending' AND expires_at>? ORDER BY id DESC LIMIT 25").all(now).map(duelVisuals.present);
+     const recent=db.prepare("SELECT d.id,d.initiator_id,d.opponent_id,d.initiator_login,d.opponent_login,d.wager,d.fee,d.status,d.resolved_at,d.created_at,p.login AS winner_login FROM duels d LEFT JOIN players p ON p.id=d.winner_id WHERE d.status='accepted' ORDER BY d.id DESC LIMIT 25").all().map(duelVisuals.present);
+     json(res,200,{pending,recent,enabled:duelsEnabled});return true;
     }
     json(res,404,{error:'Раздел не найден'});return true;
    }
@@ -278,5 +281,5 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   }
   return false;
  }
- return {handle,oauthCallback,recordSpin,trackChat,isAdminRequest,support,reviews,adminIdentity:req=>{const s=getSession(req);return s&&isAdminSession(s)?s:{player_id:'admin-panel',login:'Администратор'};}};
+ return {handle,oauthCallback,recordSpin,trackChat,isAdminRequest,support,reviews,duelVisuals,adminIdentity:req=>{const s=getSession(req);return s&&isAdminSession(s)?s:{player_id:'admin-panel',login:'Администратор'};}};
 }

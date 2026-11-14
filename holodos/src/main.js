@@ -322,6 +322,10 @@ const server=http.createServer(async(req,res)=>{
   res.writeHead(303,{Location:'/',"Cache-Control":"no-store",'Set-Cookie':cookieName+'=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0'});res.end();return;
  }
  if(req.method==='POST'){
+  if(url.pathname==='/duel-cosmetic'){
+   try{const f=await formData(req);if(!validCsrf(f,'duel-cosmetic')){html(403,'Форма устарела. Обнови страницу.');return;}site.duelVisuals.grant(f.get('login'),f.get('can'),site.adminIdentity(req).player_id);res.writeHead(303,{Location:'/admin#cosmetics','Cache-Control':'no-store'});res.end();}
+   catch(e){html(e.status||400,'<h2>Банка не выдана</h2><p>'+escape(e.message)+'</p><a href="/admin#cosmetics">Вернуться</a>');}return;
+  }
   if(url.pathname==='/review-add'){
    try{const f=await formData(req);if(!validCsrf(f,'reviews')){html(403,'Форма устарела. Обнови страницу.');return;}
     site.reviews.addByAdmin({author:f.get('author'),rating:f.get('rating'),body:f.get('body')});res.writeHead(303,{Location:'/admin#reviews','Cache-Control':'no-store'});res.end();
@@ -405,6 +409,7 @@ const server=http.createServer(async(req,res)=>{
  content+='<section class="admin-panel" id="reviews"><h2>Отзывы магазина</h2><p class="admin-note">Отзывы пользователей доступны после выдачи VP. Внесённые вручную отзывы помечаются как добавленные администрацией.</p><form method="post" action="/review-add"><input type="hidden" name="csrf" value="'+csrf('reviews')+'"><label>Имя автора<input name="author" minlength="2" maxlength="60" required></label><label>Оценка<select name="rating"><option value="5">5 из 5</option><option value="4">4 из 5</option><option value="3">3 из 5</option><option value="2">2 из 5</option><option value="1">1 из 5</option></select></label><label>Текст отзыва<textarea name="body" minlength="5" maxlength="1200" rows="4" required></textarea></label><button type="submit">Добавить отзыв</button></form>';
  for(const r of site.reviews.list())content+='<article class="admin-support-message"><b>'+escape(r.author_name)+'</b> · '+r.rating+'/5 <small>'+escape(r.source==='verified'?'VP получены на сайте':'Добавлено администрацией')+' · '+escape(new Date(r.created_at).toLocaleString('ru-RU',{timeZone:'Europe/Tallinn'}))+'</small><p>'+escape(r.body)+'</p></article>';
  content+='</section>';
+ content+='<section class="admin-panel" id="cosmetics"><h2>Банки для дуэлей</h2><p class="admin-note">Ручная выдача косметики существующему игроку. Не меняет баланс и шансы победы. Открытия кейса за подписку пока отключены.</p><form method="post" action="/duel-cosmetic"><input type="hidden" name="csrf" value="'+csrf('duel-cosmetic')+'"><label>Twitch-ник<input name="login" maxlength="26" required placeholder="@игрок"></label><label>Косметическая банка<select name="can">'+Object.entries(site.duelVisuals.catalog).map(([id,label])=>'<option value="'+id+'">'+escape(label)+'</option>').join('')+'</select></label><button type="submit">Выдать косметическую банку</button></form></section>';
  html(200,content);
 });
 server.listen(port,'0.0.0.0',()=>console.log('Holodos panel listening on '+port+' for #'+channel));

@@ -225,15 +225,25 @@
       "title",
       "nickname_style",
       "chess_skin",
-      "site_theme"
+      "site_theme",
+      "duel_can"
     ],
     "rarestReward": "site_theme",
     "chessSkinInDevelopment": true,
     "probabilities": {
-      "frame_effect": 0.45,
-      "title": 0.3,
+      "frame_effect": 0.4,
+      "title": 0.25,
       "nickname_style": 0.24,
+      "duel_can": 0.1,
       "site_theme": 0.01
-    }
+    },
+    "duelCanVariants": [
+      "pipeline",
+      "pacific",
+      "khaotic",
+      "violet",
+      "badapple"
+    ],
+    "duelCanConditionalProbability": 0.2
   }
 }
