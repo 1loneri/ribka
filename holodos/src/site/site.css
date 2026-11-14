@@ -1467,3 +1467,34 @@ body:not(.inner-page) .topbar{border-bottom:0;box-shadow:none}
 @media(prefers-reduced-motion:reduce){.duel-arena *{animation:none!important}.duel-fighter--lost .duel-can-wrap>img{opacity:.25}.duel-burst{display:none}}
 
 .duel-history-row>strong{display:flex;flex-direction:column;gap:7px;min-width:0}.duel-history-row .player-line{min-width:0;overflow-wrap:anywhere}
+/* Fast shake and pressurized soda spray from the opened lid. */
+.duel-arena--charging .duel-fighter:first-child .duel-can-wrap,.duel-arena--charging .duel-fighter:last-child .duel-can-wrap{animation:duelSodaShake .65s ease-in-out both}
+@keyframes duelSodaShake{0%,100%{transform:rotate(0)}20%,60%{transform:translateX(-3px) rotate(-7deg)}40%,80%{transform:translateX(3px) rotate(7deg)}}
+.duel-fighter--lost .duel-can-wrap>img{animation:sodaCanRelease .85s ease-out forwards}
+@keyframes sodaCanRelease{0%{transform:rotate(0)}20%{transform:rotate(-10deg) translateY(3px)}55%{transform:rotate(5deg)}100%{transform:rotate(-8deg);opacity:.75}}
+.duel-soda{position:absolute;z-index:3;left:50%;top:16px;width:1px;height:1px;pointer-events:none;visibility:hidden;color:#d8f3ff}
+.duel-fighter--lost .duel-soda{visibility:visible}
+.duel-soda::before{content:"";position:absolute;left:-12px;bottom:0;width:25px;height:120px;background:linear-gradient(0deg,#eefafff2,#c0eaffcc 45%,#d4f6ff22);clip-path:polygon(40% 100%,25% 86%,36% 71%,10% 55%,31% 38%,8% 17%,25% 0,75% 0,61% 20%,90% 39%,67% 57%,85% 76%,63% 91%,65% 100%);transform-origin:50% 100%;opacity:0}
+.duel-fighter--lost .duel-soda::before{animation:sodaJet .8s ease-out both}
+.duel-fighter--cosmetic .duel-soda::before{background:linear-gradient(0deg,#fff4c9,#f4a4cd 25%,#b4b9ff 50%,#9cf2df 75%,#a6dbff22);filter:drop-shadow(0 0 4px #c3b6ef77)}
+@keyframes sodaJet{0%{transform:scale(.25,.05) rotate(-10deg);opacity:0}12%{opacity:.9}35%{transform:scale(1,1) rotate(-14deg);opacity:.85}65%{transform:scale(.65,.7) rotate(-20deg);opacity:.6}100%{transform:scale(.25,.1) rotate(-25deg);opacity:0}}
+.soda-drop{position:absolute;left:-3px;top:-3px;width:5px;height:8px;border-radius:55% 55% 45% 45%;background:#d5f1ff;opacity:0}
+.duel-fighter--lost .soda-drop{animation:sodaDroplet .85s cubic-bezier(.12,.5,.4,1) both}
+@keyframes sodaDroplet{0%{opacity:0;transform:translate(0,0) scale(.3)}12%{opacity:.9}50%{opacity:.75;transform:translate(calc(var(--dx)*.55),var(--dy)) scale(.9) rotate(20deg)}100%{opacity:0;transform:translate(var(--dx),20px) scale(.4) rotate(75deg)}}
+.soda-foam{position:absolute;top:-5px;left:-14px;width:28px;height:11px;border-radius:50%;background:#edfbff;box-shadow:5px -6px 0 -2px #edfbff,-6px -4px 0 -2px #dcf5ff,1px -10px 0 -4px #fff;opacity:0}
+.duel-fighter--lost .soda-foam{animation:sodaFoam .85s ease-out both}
+@keyframes sodaFoam{0%{opacity:0;transform:scale(.4)}20%{opacity:.95;transform:scale(1.1)}70%{opacity:.6;transform:translateY(6px) scale(.9)}100%{opacity:0;transform:translateY(20px) scale(.6)}}
+.soda-drop--0{--dx:-65px;--dy:-100px;animation-delay:0s}.duel-fighter--cosmetic .soda-drop--0{background:hsl(0 85% 76%);box-shadow:0 0 5px hsl(0 80% 70% / .5)}
+.soda-drop--1{--dx:-42px;--dy:-130px;animation-delay:0.035s}.duel-fighter--cosmetic .soda-drop--1{background:hsl(30 85% 76%);box-shadow:0 0 5px hsl(30 80% 70% / .5)}
+.soda-drop--2{--dx:-22px;--dy:-110px;animation-delay:0.07s}.duel-fighter--cosmetic .soda-drop--2{background:hsl(60 85% 76%);box-shadow:0 0 5px hsl(60 80% 70% / .5)}
+.soda-drop--3{--dx:14px;--dy:-145px;animation-delay:0.10500000000000001s}.duel-fighter--cosmetic .soda-drop--3{background:hsl(90 85% 76%);box-shadow:0 0 5px hsl(90 80% 70% / .5)}
+.soda-drop--4{--dx:38px;--dy:-120px;animation-delay:0s}.duel-fighter--cosmetic .soda-drop--4{background:hsl(120 85% 76%);box-shadow:0 0 5px hsl(120 80% 70% / .5)}
+.soda-drop--5{--dx:63px;--dy:-90px;animation-delay:0.035s}.duel-fighter--cosmetic .soda-drop--5{background:hsl(150 85% 76%);box-shadow:0 0 5px hsl(150 80% 70% / .5)}
+.soda-drop--6{--dx:-54px;--dy:-75px;animation-delay:0.07s}.duel-fighter--cosmetic .soda-drop--6{background:hsl(180 85% 76%);box-shadow:0 0 5px hsl(180 80% 70% / .5)}
+.soda-drop--7{--dx:-30px;--dy:-105px;animation-delay:0.10500000000000001s}.duel-fighter--cosmetic .soda-drop--7{background:hsl(210 85% 76%);box-shadow:0 0 5px hsl(210 80% 70% / .5)}
+.soda-drop--8{--dx:22px;--dy:-115px;animation-delay:0s}.duel-fighter--cosmetic .soda-drop--8{background:hsl(240 85% 76%);box-shadow:0 0 5px hsl(240 80% 70% / .5)}
+.soda-drop--9{--dx:51px;--dy:-70px;animation-delay:0.035s}.duel-fighter--cosmetic .soda-drop--9{background:hsl(270 85% 76%);box-shadow:0 0 5px hsl(270 80% 70% / .5)}
+.soda-drop--10{--dx:-12px;--dy:-150px;animation-delay:0.07s}.duel-fighter--cosmetic .soda-drop--10{background:hsl(300 85% 76%);box-shadow:0 0 5px hsl(300 80% 70% / .5)}
+.soda-drop--11{--dx:35px;--dy:-100px;animation-delay:0.10500000000000001s}.duel-fighter--cosmetic .soda-drop--11{background:hsl(330 85% 76%);box-shadow:0 0 5px hsl(330 80% 70% / .5)}
+[data-notification-test]{padding:7px 11px;border:1px solid #ffffff26;border-radius:8px;background:#ffffff05;color:#c9d9e8;cursor:pointer;margin:0 8px 8px 0;font:inherit;font-size:12px}
+@media(prefers-reduced-motion:reduce){.duel-soda{display:none}.duel-fighter--lost .duel-can-wrap>img{animation:none;opacity:.75}}

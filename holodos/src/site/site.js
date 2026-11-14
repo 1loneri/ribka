@@ -344,8 +344,8 @@ for(const b of document.querySelectorAll('.notify-toggle'))b.addEventListener('c
 updateBellButtons();
 setInterval(()=>{
  renderNotificationBadges();const opened=Number(state.me?.player?.last_opened||0);
- if(!cooldownAlerts||!state.me?.authenticated||!opened||opened<=lastAlerted||Date.now()<opened+120000)return;
- lastAlerted=opened;try{localStorage.setItem('war1ouss-last-cooldown-alert',String(opened))}catch{}notice('Холодос снова готов к открытию!');
+ if(!cooldownAlerts||!state.me?.authenticated||!opened||opened<=Number(localStorageSafeRead('war1ouss-last-cooldown-alert-'+state.me.player.id))||Date.now()<opened+120000)return;
+ lastAlerted=opened;try{localStorage.setItem('war1ouss-last-cooldown-alert-'+state.me.player.id,String(opened))}catch{}notice('Холодос снова готов к открытию!');
  if('Notification'in window&&Notification.permission==='granted')try{new Notification('Холодос готов',{body:'Можно снова открыть Холодос на War1ouss.',tag:'war1ouss-cooldown'})}catch{}
 },1000);
 setInterval(()=>{if(document.visibilityState==='visible'&&currentRoute()==='/requests'&&state.me?.authenticated){refreshRequests();if(selectedSupportTicket)openSupportThread(selectedSupportTicket);}},15000);
@@ -354,18 +354,22 @@ for(const button of document.querySelectorAll('.page-back-button'))button.addEve
 
 let noticeSoundEnabled=true,lastNoticeTone=0;
 try{noticeSoundEnabled=localStorage.getItem('war1ouss-notification-sound')!=='off'}catch{}
-const noticeAudio=new Audio('/assets/notification.mp3?v=47');noticeAudio.preload='auto';noticeAudio.volume=.6;
-function unlockNoticeAudio(){/* Playback is requested by the notification after user interaction. */}
-function playNoticeTone(){
- if(!noticeSoundEnabled||Date.now()-lastNoticeTone<1000)return;
- lastNoticeTone=Date.now();noticeAudio.currentTime=0;noticeAudio.volume=.6;noticeAudio.play().catch(()=>{});
+const noticeAudio=new Audio('/assets/notification.mp3?v=47');noticeAudio.preload='auto';noticeAudio.volume=.58;
+let noticeAudioContext=null,noticeBuffer=null,noticeBufferLoading=null;
+function unlockNoticeAudio(){
+ try{const AC=window.AudioContext||window.webkitAudioContext;if(!noticeAudioContext&&AC)noticeAudioContext=new AC();if(noticeAudioContext?.state==='suspended')noticeAudioContext.resume().catch(()=>{});if(noticeAudioContext&&!noticeBufferLoading)noticeBufferLoading=fetch('/assets/notification.mp3?v=47').then(r=>{if(!r.ok)throw Error('audio');return r.arrayBuffer()}).then(b=>noticeAudioContext.decodeAudioData(b)).then(b=>noticeBuffer=b).catch(()=>{noticeBufferLoading=null;});}catch{}
+}
+window.addEventListener('pointerdown',unlockNoticeAudio,{passive:true});window.addEventListener('keydown',unlockNoticeAudio);
+async function playNoticeTone(){
+ if(!noticeSoundEnabled||Date.now()-lastNoticeTone<1000)return;lastNoticeTone=Date.now();unlockNoticeAudio();
+ try{if(noticeAudioContext){await noticeAudioContext.resume();if(noticeBufferLoading)await noticeBufferLoading;if(noticeBuffer&&noticeAudioContext.state==='running'){const source=noticeAudioContext.createBufferSource(),gain=noticeAudioContext.createGain();source.buffer=noticeBuffer;gain.gain.value=.58;source.connect(gain);gain.connect(noticeAudioContext.destination);source.start();return;}}noticeAudio.currentTime=0;noticeAudio.volume=.58;await noticeAudio.play();}catch{}
 }
 let notificationLastSeenId=0,notificationUser='',notificationLoading=false;
 async function refreshAccountNotifications(){
  if(notificationLoading||!state.me?.authenticated)return;notificationLoading=true;
  try{const user=String(state.me.player.id);if(notificationUser!==user){notificationUser=user;notificationLastSeenId=0;try{notificationLastSeenId=Number(localStorage.getItem('war1ouss-notification-last-'+user)||0)}catch{}}
  const {notifications}=await api('/api/notifications');if(!state.me?.authenticated||String(state.me.player.id)!==user)return;const latest=notifications[0]?.id||0;const newest=notifications.find(n=>n.unread&&n.id>notificationLastSeenId);
- if(newest&&notificationLastSeenId>0)notice(newest.title+': '+newest.body);
+ if(newest){notice(newest.title+': '+newest.body);if(document.visibilityState==='hidden'&&'Notification' in window&&Notification.permission==='granted')try{new Notification(newest.title,{body:newest.body,tag:'account-'+newest.id})}catch{}}
  notificationLastSeenId=Math.max(notificationLastSeenId,latest);try{localStorage.setItem('war1ouss-notification-last-'+user,String(notificationLastSeenId))}catch{}
  $('account-notification-list').innerHTML=notifications.length?notifications.map(n=>'<a class="account-notification '+(n.unread?'unread':'')+'" href="'+esc(/^\/(?:requests|profile|help|cases|duels)\b/.test(n.url)?n.url:'/profile')+'" data-route="'+esc(n.url)+'"><strong>'+esc(n.title)+'</strong><p>'+esc(n.body)+'</p><time>'+ruTime(n.created_at)+'</time></a>').join(''):'<p class="muted">Пока нет уведомлений.</p>';
  if(!$('account-notifications').hidden&&latest){await supportPost('/api/notifications/read',{maxId:latest});state.me.notification_unread=0;for(const badge of document.querySelectorAll('.account-unread-count'))badge.textContent='';renderNotificationBadges();}
@@ -403,16 +407,16 @@ const cosmeticDuelIds=['pipeline','pacific','khaotic','violet','badapple'];
 const normalDuelIds=['white','green','mango','pink','blue','black','watermelon','yellow','w-edition'];
 function duelCanImage(can){const allowed=can?.cosmetic?cosmeticDuelIds:normalDuelIds;const id=allowed.includes(can?.id)?can.id:'white';return '<img src="/assets/'+(can?.cosmetic?'duel-can-':'slot-')+id+'.webp?v=50" alt="'+esc(can?.label||'Monster')+'" width="80" height="160">';}
 let duelAnimationBusy=false;
-function duelFighterHtml(login,can){return '<div class="duel-fighter '+(can?.cosmetic?'duel-fighter--cosmetic':'')+'"><div class="duel-can-wrap">'+duelCanImage(can)+'<span class="duel-burst" aria-hidden="true"></span></div><span class="player-line">'+avatarHtml(login)+'<b>@'+esc(login)+'</b></span></div>';}
+function duelFighterHtml(login,can){return '<div class="duel-fighter '+(can?.cosmetic?'duel-fighter--cosmetic':'')+'"><div class="duel-can-wrap">'+duelCanImage(can)+'<span class="duel-soda" aria-hidden="true"><i class="soda-drop soda-drop--0"></i><i class="soda-drop soda-drop--1"></i><i class="soda-drop soda-drop--2"></i><i class="soda-drop soda-drop--3"></i><i class="soda-drop soda-drop--4"></i><i class="soda-drop soda-drop--5"></i><i class="soda-drop soda-drop--6"></i><i class="soda-drop soda-drop--7"></i><i class="soda-drop soda-drop--8"></i><i class="soda-drop soda-drop--9"></i><i class="soda-drop soda-drop--10"></i><i class="soda-drop soda-drop--11"></i><i class="soda-foam"></i></span></div><span class="player-line">'+avatarHtml(login)+'<b>@'+esc(login)+'</b></span></div>';}
 async function animateDuel(d,demo=false){
  if(duelAnimationBusy)return;duelAnimationBusy=true;const arena=$('duel-arena');
- try{arena.className='duel-arena';arena.innerHTML='<p class="duel-arena-label">'+(demo?'Демонстрация оформления':'Дуэль №'+Number(d.id))+'</p><div class="duel-fighters">'+duelFighterHtml(d.initiator_login,d.leftCan)+'<span class="duel-versus">VS</span>'+duelFighterHtml(d.opponent_login,d.rightCan)+'</div><p class="duel-arena-result" aria-live="polite">Банки готовы к столкновению…</p>';hydrateAvatars();
+ try{arena.className='duel-arena';arena.innerHTML='<p class="duel-arena-label">'+(demo?'Демонстрация оформления':'Дуэль №'+Number(d.id))+'</p><div class="duel-fighters">'+duelFighterHtml(d.initiator_login,d.leftCan)+'<span class="duel-versus">VS</span>'+duelFighterHtml(d.opponent_login,d.rightCan)+'</div><p class="duel-arena-result" aria-live="polite">Встряхиваем банки…</p>';hydrateAvatars();
  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
- if(!reduced){arena.classList.add('duel-arena--charging');await new Promise(r=>setTimeout(r,2100));}
+ if(!reduced){arena.classList.add('duel-arena--charging');await new Promise(r=>setTimeout(r,650));}
  arena.classList.remove('duel-arena--charging');
  const leftWon=d.winner_login===d.initiator_login;const fighters=arena.querySelectorAll('.duel-fighter');fighters[leftWon?0:1].classList.add('duel-fighter--winner');fighters[leftWon?1:0].classList.add('duel-fighter--lost');arena.classList.add('duel-arena--resolved');
- arena.querySelector('.duel-arena-result').textContent=demo?'Пример эффекта взрыва косметической банки':'Победил @'+d.winner_login+' · '+fmt(d.wager*2-d.fee)+' W';
- if(!reduced)await new Promise(r=>setTimeout(r,900));
+ arena.querySelector('.duel-arena-result').textContent=demo?'Пшш! Косметическая банка выпускает радужную газировку':'Победил @'+d.winner_login+' · '+fmt(d.wager*2-d.fee)+' W';
+ if(!reduced)await new Promise(r=>setTimeout(r,850));
  }finally{duelAnimationBusy=false;}
 }
 async function maybeAnimateDuel(recent){
@@ -423,3 +427,6 @@ async function maybeAnimateDuel(recent){
 }
 $('duel-preview').addEventListener('click',()=>{const cosmetic=cosmeticDuelIds[Math.floor(Math.random()*cosmeticDuelIds.length)],normal=normalDuelIds[Math.floor(Math.random()*normalDuelIds.length)];animateDuel({id:0,initiator_login:'cosmetic',opponent_login:'monster',leftCan:{id:cosmetic,cosmetic:true},rightCan:{id:normal,cosmetic:false},winner_login:'monster',wager:0,fee:0},true);});
 setInterval(()=>{if(currentRoute()==='/duels'&&document.visibilityState==='visible')refreshDuels();},3000);
+
+function localStorageSafeRead(key){try{return localStorage.getItem(key)||0}catch{return 0}}
+document.addEventListener('click',e=>{if(e.target.closest('[data-notification-test]')){unlockNoticeAudio();notice(noticeSoundEnabled?'Уведомления работают. Громкость звука — 58%.':'Уведомления работают. Звук сейчас отключён в настройках.');}});
