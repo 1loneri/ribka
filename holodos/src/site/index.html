@@ -9,8 +9,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preload" href="/assets/hero-main-2026.webp" as="image" type="image/webp" fetchpriority="high">
 <link rel="stylesheet" href="/assets/site.css?v=20261114-case1">
-<script src="/assets/site.js?v=20261114-launch2" defer></script>
+<script src="/assets/site.js?v=20261114-livecoin" defer></script>
 </head>
 <body>
 <div class="shell">
@@ -27,7 +28,7 @@
     <a href="/shop" data-route="/shop" class="nav-link">Магазин</a>
   </nav>
   <div class="user-actions">
-    <span class="wallet" id="wallet" title="Баланс W-монет"><span class="coin-icon">W</span> <span id="wallet-amount">—</span></span>
+    <span class="wallet" id="wallet" title="Баланс W-монет" aria-live="polite" aria-atomic="true"><span class="coin-icon">W</span> <span id="wallet-amount">—</span></span>
     <a class="login-btn" id="login-btn" href="/auth/twitch"><span class="login-label">Войти через Twitch</span></a>
     <a class="avatar-link" href="/profile" data-route="/profile" id="avatar-link" hidden aria-label="Мой профиль"><img id="top-avatar" src="" alt="Аватар"><span id="top-name"></span></a>
   </div>
