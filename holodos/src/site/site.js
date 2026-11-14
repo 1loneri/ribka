@@ -129,7 +129,7 @@ async function spin(){
  reels.forEach(e=>e.classList.add('spinning'));
  $('spin-button').disabled=true;$('spin-button').textContent='Открываем…';
  $('spin-result').classList.remove('win');$('spin-result').textContent='Холодос открывается…';
- let cycling=setInterval(()=>reels.forEach(e=>e.textContent=chars[Math.floor(Math.random()*chars.length)]),80);
+ let cycling=setInterval(()=>reels.forEach(e=>{if(e.classList.contains('spinning'))e.textContent=chars[Math.floor(Math.random()*chars.length)];}),80);
  const started=Date.now();
  try{
   const result=await api('/api/holodos',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':state.me.csrf},body:JSON.stringify({requestId:crypto.randomUUID()})});
