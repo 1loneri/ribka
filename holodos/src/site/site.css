@@ -1239,3 +1239,11 @@ body.inner-page .view.active{animation:slideIn .25s ease both}
 @keyframes caseQuietFloat{0%,100%{transform:translateY(2px) rotate(-.35deg)}50%{transform:translateY(-5px) rotate(.35deg)}}
 @keyframes donationCaseGlow{0%,100%{filter:drop-shadow(0 0 6px #c5adf138) brightness(1.02)}50%{filter:drop-shadow(0 0 14px #c5adf16b) brightness(1.1)}}
 @media(prefers-reduced-motion:reduce){.case-artwork img,.collection-case--donation .case-artwork img{animation:none;transform:none;will-change:auto}}
+
+@font-face{font-family:'Dela Gothic One';font-style:normal;font-weight:400;font-display:swap;src:url('/assets/dela-gothic-one.ttf') format('truetype')}
+#view-home .hero h1,#view-home .hero h1 em,#view-casino .page-header h1{font-family:'Dela Gothic One',sans-serif;font-style:normal;font-weight:400;font-synthesis:none;transform:none}
+#view-home .hero h1{font-size:clamp(40px,4.4vw,72px);letter-spacing:-.035em;line-height:1.15}
+#view-home .hero h1 em{display:inline;background:none;-webkit-text-fill-color:currentColor;color:inherit}
+.case-artwork img{mix-blend-mode:normal;opacity:1;mask-image:none;-webkit-mask-image:none}
+@media(max-width:780px){#view-home .hero h1{font-size:clamp(32px,7vw,56px)}}
+@media(max-width:540px){#view-home .hero h1{font-size:clamp(25px,7.2vw,38px)}}

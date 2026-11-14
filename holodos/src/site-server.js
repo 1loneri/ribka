@@ -18,6 +18,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   assetFiles['/assets/slot-'+id+'.webp']={file:new URL('./site/slot-'+id+'.webp',import.meta.url),type:'image/webp'};
  }
  for(const id of ['donation','twitch','chat','vip','coins'])assetFiles['/assets/case-'+id+'.webp']={file:new URL('./site/case-'+id+'.webp',import.meta.url),type:'image/webp'};
+ assetFiles['/assets/dela-gothic-one.ttf']={file:new URL('./site/dela-gothic-one.ttf',import.meta.url),type:'font/ttf'};
  const shell=readFileSync(new URL('./site/index.html',import.meta.url));
  const staticAssets={};
  for(const [name,info] of Object.entries(assetFiles)){
