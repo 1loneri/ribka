@@ -392,14 +392,21 @@ document.addEventListener('click',async e=>{if(e.target.closest('[data-account-n
 document.addEventListener('keydown',e=>{if(e.key==='Escape')$('account-notifications').hidden=true;});
 $('notification-sound-toggle').textContent=noticeSoundEnabled?'Выключить звук':'Включить звук';
 $('notification-sound-toggle').addEventListener('click',()=>{noticeSoundEnabled=!noticeSoundEnabled;try{localStorage.setItem('war1ouss-notification-sound',noticeSoundEnabled?'on':'off')}catch{}$('notification-sound-toggle').textContent=noticeSoundEnabled?'Выключить звук':'Включить звук';if(noticeSoundEnabled){unlockNoticeAudio();playNoticeTone();}});
-function avatarHtml(login){const name=String(login||'').toLowerCase();if(!/^[a-z0-9_]{1,25}$/.test(name))return '';return '<span class="player-avatar" data-player-avatar="'+esc(name)+'" aria-hidden="true">'+esc(name[0].toUpperCase())+'</span>';}
+function avatarHtml(login){const name=String(login||'').toLowerCase();if(!/^[a-z0-9_]{1,25}$/.test(name))return '';const own=state.me?.authenticated&&String(state.me.player.login).toLowerCase()===name;const src=own?safeAvatar(state.me.player.avatar):'';return '<span class="player-avatar" data-player-avatar="'+esc(name)+'" aria-hidden="true">'+(src?'<img src="'+esc(src)+'" alt="" decoding="async">':esc(name[0].toUpperCase()))+'</span>';}
 let avatarHydrationBusy=false,avatarHydrationAgain=false;const avatarClientCache=new Map();
 async function hydrateAvatars(){
  if(avatarHydrationBusy){avatarHydrationAgain=true;return;}avatarHydrationBusy=true;
- try{const nodes=[...document.querySelectorAll('[data-player-avatar]')],names=[...new Set(nodes.map(n=>n.dataset.playerAvatar))];const frameResponse=names.length?await api('/api/frames?logins='+encodeURIComponent(names.join(','))):{frames:{}};for(const node of nodes)applyAvatarFrame(node,frameResponse.frames?.[node.dataset.playerAvatar]);const missing=names.filter(n=>!avatarClientCache.has(n)).slice(0,50);
- if(missing.length){const r=await api('/api/avatars?logins='+encodeURIComponent(missing.join(',')));for(const n of missing)avatarClientCache.set(n,safeAvatar(r.avatars?.[n])||'');}
- for(const node of nodes){const src=avatarClientCache.get(node.dataset.playerAvatar);if(src&&!node.querySelector('img')){const img=document.createElement('img');img.src=src;img.alt='';img.loading='lazy';img.decoding='async';img.addEventListener('error',()=>node.replaceChildren(document.createTextNode(node.dataset.playerAvatar[0].toUpperCase())),{once:true});node.replaceChildren(img);}}
- }catch{}finally{avatarHydrationBusy=false;if(avatarHydrationAgain){avatarHydrationAgain=false;queueMicrotask(hydrateAvatars);}}
+ try{
+ const nodes=[...document.querySelectorAll('[data-player-avatar]')],names=[...new Set(nodes.map(n=>n.dataset.playerAvatar))];
+ const me=state.me;if(me?.authenticated){const src=safeAvatar(me.player.avatar);if(src)avatarClientCache.set(String(me.player.login).toLowerCase(),src);}
+ const paint=()=>{for(const node of nodes){const src=avatarClientCache.get(node.dataset.playerAvatar);if(src&&!node.querySelector('img')){const img=document.createElement('img');img.src=src;img.alt='';img.decoding='async';img.addEventListener('error',()=>{avatarClientCache.delete(node.dataset.playerAvatar);node.replaceChildren(document.createTextNode(node.dataset.playerAvatar[0].toUpperCase()));},{once:true});node.replaceChildren(img);}}};
+ paint();
+ const missing=names.filter(n=>!avatarClientCache.has(n));
+ await Promise.allSettled([
+ (async()=>{for(let i=0;i<missing.length;i+=50){const batch=missing.slice(i,i+50),r=await api('/api/avatars?logins='+encodeURIComponent(batch.join(',')));for(const n of batch){const src=safeAvatar(r.avatars?.[n]);if(src)avatarClientCache.set(n,src);}paint();}})(),
+ (async()=>{for(let i=0;i<names.length;i+=50){const batch=names.slice(i,i+50),r=await api('/api/frames?logins='+encodeURIComponent(batch.join(',')));for(const node of nodes)if(batch.includes(node.dataset.playerAvatar))applyAvatarFrame(node,r.frames?.[node.dataset.playerAvatar]);}})()
+ ]);
+ }finally{avatarHydrationBusy=false;if(avatarHydrationAgain){avatarHydrationAgain=false;queueMicrotask(hydrateAvatars);}}
 }
 
 async function refreshReviews(){
