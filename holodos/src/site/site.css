@@ -1294,3 +1294,9 @@ body.inner-page .view.active{animation:slideIn .25s ease both}
 .case-balance::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 100% 100%,#b9d9ed0b,transparent 70%)}
 .case-balance--twitch::before{background:radial-gradient(ellipse at 100% 100%,#baa6d60a,transparent 70%)}
 .case-balance-label{color:#a8b0ba;font-size:10px;letter-spacing:.015em}.case-balance-label svg{color:#b6b4c4}.case-balance strong{color:#f1f3f6;font-size:25px;letter-spacing:-.035em}.case-balance-hint{color:#7f8c99}
+
+/* Rare reward names keep a steady, readable glow. */
+#view-cases .reward-glow--vp{color:#ffd28a;text-shadow:0 0 7px #ffae5280,0 0 17px #ff7a304d}
+#view-cases .reward-glow--popmart{color:#ff9b9b;text-shadow:0 0 7px #ff4c4c99,0 0 18px #ff24244d}
+#view-cases .case-hover-rewards .reward-glow--vp{border-color:#ffb65366;background:#ff9b1610;box-shadow:0 0 13px #ff8e2424}
+#view-cases .case-hover-rewards .reward-glow--popmart{border-color:#ff555566;background:#ff303010;box-shadow:0 0 14px #ff303029}
