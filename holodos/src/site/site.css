@@ -1069,3 +1069,80 @@ body.inner-page .view.active{animation:slideIn .25s ease both}
   pointer-events:auto;
   transform:translate(-50%,0);
 }
+
+
+/* War1ouss Holodos: approved silver / icy-blue three-window slot artwork.
+   Keep the original frame as a static asset; only server-result symbols animate. */
+#view-casino .reels{
+  position:relative;
+  display:block;
+  width:min(100%,520px);
+  max-width:520px;
+  height:auto;
+  aspect-ratio:5 / 2;
+  margin:26px auto 18px;
+  padding:0;
+  gap:0;
+  background-color:transparent;
+  background-image:url('/assets/holodos-frame-2026.webp');
+  background-repeat:no-repeat;
+  background-size:100% 100%;
+  background-position:center;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+  isolation:isolate;
+  overflow:visible;
+}
+#view-casino .reels .reel{
+  position:absolute;
+  top:24%;
+  width:22.6%;
+  height:52%;
+  min-height:0;
+  padding:0;
+  margin:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  border:0;
+  border-radius:10px;
+  background:none;
+  box-shadow:none;
+  color:#f5f7fa;
+  font-size:clamp(28px,4.2vw,59px);
+  line-height:1;
+  text-shadow:0 2px 18px rgba(190,227,255,.22);
+  transform:none;
+  overflow:hidden;
+  will-change:auto;
+}
+#view-casino .reels .reel:nth-child(1){left:14.5%}
+#view-casino .reels .reel:nth-child(2){left:38.7%}
+#view-casino .reels .reel:nth-child(3){left:62.8%}
+#view-casino .reels .reel.spinning{
+  animation:warReelRoll .19s linear infinite alternate;
+}
+@keyframes warReelRoll{
+  from{transform:translateY(-5%);filter:blur(1.3px);opacity:.73}
+  to{transform:translateY(5%);filter:blur(.3px);opacity:1}
+}
+#view-casino .reels.win-flash{
+  filter:drop-shadow(0 0 10px rgba(166,219,244,.22));
+}
+#view-casino .reels.jackpot-flash{
+  filter:drop-shadow(0 0 18px rgba(222,236,247,.5));
+}
+@media(max-width:540px){
+  #view-casino .reels{
+    width:100%;
+    margin:18px auto 18px;
+  }
+  #view-casino .reels .reel{
+    font-size:clamp(27px,8.6vw,48px);
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  #view-casino .reels .reel.spinning{animation:none}
+  #view-casino .reels{transition:none}
+}

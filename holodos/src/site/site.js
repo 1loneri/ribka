@@ -124,6 +124,8 @@ async function spin(){
  state.busy=true;
  const reels=['reel-1','reel-2','reel-3'].map($);
  const chars=['⚪','🟢','🥭','🌸','🔵','⚫','🍉','🟡'];
+ const reelFrame=$('view-casino').querySelector('.reels');
+ reelFrame.classList.remove('win-flash','jackpot-flash');
  reels.forEach(e=>e.classList.add('spinning'));
  $('spin-button').disabled=true;$('spin-button').textContent='Открываем…';
  $('spin-result').classList.remove('win');$('spin-result').textContent='Холодос открывается…';
@@ -131,8 +133,18 @@ async function spin(){
  const started=Date.now();
  try{
   const result=await api('/api/holodos',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':state.me.csrf},body:JSON.stringify({requestId:crypto.randomUUID()})});
-  await new Promise(resolve=>setTimeout(resolve,Math.max(0,1200-(Date.now()-started))));
-  clearInterval(cycling);reels.forEach((e,i)=>{e.classList.remove('spinning');e.textContent=result.cans[i];});
+  const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  await new Promise(resolve=>setTimeout(resolve,Math.max(0,(reduceMotion?0:1150)-(Date.now()-started))));
+  // Settle one reel at a time; the result was already chosen and saved by the server.
+  for(let i=0;i<reels.length;i++){
+   reels[i].classList.remove('spinning');reels[i].textContent=result.cans[i];
+   if(!reduceMotion&&i<reels.length-1)await new Promise(resolve=>setTimeout(resolve,125));
+  }
+  clearInterval(cycling);
+  if(result.gain>0){
+   reelFrame.classList.add(result.gain===400?'jackpot-flash':'win-flash');
+   setTimeout(()=>reelFrame.classList.remove('win-flash','jackpot-flash'),1300);
+  }
   $('spin-result').textContent=result.description+' +'+fmt(result.gain)+' W';
   if(result.gain>0)$('spin-result').classList.add('win');
   state.me.player.balance=result.balance;state.me.player.last_opened=result.last_opened;state.me.player.opens++;state.me.player.wins+=result.gain>0?1:0;state.me.player.jackpots+=result.gain===400?1:0;
