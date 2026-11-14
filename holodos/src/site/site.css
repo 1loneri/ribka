@@ -1368,3 +1368,5 @@ textarea{display:block;width:100%;resize:vertical;padding:13px;background:#0b0e1
 #view-casino .slot-game .panel-header h3{display:flex;align-items:center;gap:12px}
 #profile-content .stats-grid+.stat{margin-top:16px}
 #profile-content .stat+p{margin-top:16px}
+
+.help-actions{display:flex;gap:12px;margin:0 0 22px}.support-requests-button{min-width:210px;justify-content:space-between}.page-back-button{min-width:230px;margin-top:24px;justify-content:center;gap:12px}.page-back-button+.page-header{padding-top:24px}@media(max-width:540px){.page-back-button{min-width:220px;max-width:100%}}

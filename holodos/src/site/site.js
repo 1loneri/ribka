@@ -49,7 +49,7 @@ function navigate(path,replace=false){
 }
 function renderRoute(path,replace=false){
  if(!routes.has(path))path='/';
- if(replace)history.replaceState({},'',path);else if(location.pathname!==path)history.pushState({},'',path);
+ if(replace)history.replaceState({warDepth:history.state?.warDepth||0},'',path);else if(location.pathname!==path)history.pushState({warDepth:(history.state?.warDepth||0)+1},'',path);
  document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.dataset.view===path));
  document.querySelectorAll('.nav-link').forEach(el=>{el.classList.toggle('active',el.getAttribute('href')===path);if(el.getAttribute('href')===path)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});
  $('main-nav').classList.remove('open');$('menu-btn').setAttribute('aria-expanded','false');
@@ -340,3 +340,5 @@ setInterval(()=>{
  if('Notification'in window&&Notification.permission==='granted')try{new Notification('Холодос готов',{body:'Можно снова открыть Холодос на War1ouss.',tag:'war1ouss-cooldown'})}catch{}
 },1000);
 setInterval(()=>{if(document.visibilityState==='visible'&&currentRoute()==='/requests'&&state.me?.authenticated){refreshRequests();if(selectedSupportTicket)openSupportThread(selectedSupportTicket);}},15000);
+
+for(const button of document.querySelectorAll('.page-back-button'))button.addEventListener('click',()=>{if(Number(history.state?.warDepth||0)>0)history.back();else navigate(currentRoute()==='/requests'?'/help':'/');});
