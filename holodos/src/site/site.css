@@ -1513,4 +1513,4 @@ body:not(.inner-page) .topbar{border-bottom:0;box-shadow:none}
 @keyframes recentWinsColdRim{0%,28%,100%{opacity:0}12%,18%{opacity:.7}23%{opacity:.2}}
 @media(prefers-reduced-motion:reduce){#view-home .recent-wins-panel,#view-home .recent-wins-panel::after{animation:none}#view-home .recent-wins-panel::after{display:none}}
 
-.frame-preview-card:first-child .frame-preview-center{inset:14px}
+
