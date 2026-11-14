@@ -1081,3 +1081,19 @@ body.inner-page .view.active{animation:slideIn .25s ease both}
 @media(max-width:820px){
   #view-home .hero::before{bottom:0;height:auto}
 }
+
+
+/* Hidden notification must not poke above the lower viewport edge.
+   The original translateY(130%) left a rounded blue tab visible. */
+.toast:not(.visible){
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transform:translate(-50%,calc(100% + 56px));
+}
+.toast.visible{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  transform:translate(-50%,0);
+}
