@@ -1017,3 +1017,39 @@ body.inner-page .view.active{animation:slideIn .25s ease both}
       rgba(20,22,25,.62) 43%,rgba(20,22,25,.14) 67%,transparent 82%);
   }
 }
+
+
+/* Desktop fine-tuning: let approved photo reach the right border and gently
+   stretch its dark negative space into the card, without cropping the object.
+   No image edit; keep the phone-specific composition unchanged. */
+@media(min-width:741px){
+  #view-home .mode-card--casino .mode-photo,
+  #view-home .mode-card--cases .mode-photo,
+  #view-home .mode-card--duels .mode-photo{
+    inset:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+  }
+  #view-home .mode-card--casino .mode-photo img,
+  #view-home .mode-card--cases .mode-photo img,
+  #view-home .mode-card--duels .mode-photo img{
+    inset:-4% -4% -4% auto;
+    width:108%;
+    height:108%;
+    object-fit:contain;
+    object-position:right center;
+    /* Fade well before the photo's intrinsic left edge, never a straight line. */
+    -webkit-mask-image:linear-gradient(to right,
+      transparent 0%,rgba(0,0,0,.12) 14%,rgba(0,0,0,.60) 31%,#000 52%,#000 100%);
+    mask-image:linear-gradient(to right,
+      transparent 0%,rgba(0,0,0,.12) 14%,rgba(0,0,0,.60) 31%,#000 52%,#000 100%);
+  }
+  #view-home .mode-card--casino::after,
+  #view-home .mode-card--cases::after,
+  #view-home .mode-card--duels::after{
+    background:linear-gradient(to right,
+      rgba(19,21,24,.99) 0%,rgba(19,21,24,.94) 20%,
+      rgba(19,21,24,.46) 42%,rgba(19,21,24,.08) 63%,transparent 82%);
+  }
+}
