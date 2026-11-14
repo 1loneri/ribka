@@ -921,3 +921,99 @@ body.inner-page .view.active{animation:slideIn .25s ease both}
   }
   #view-cases .case-stage{height:220px}
 }
+
+
+/* 2026-11-14 iPhone screenshot fix — NO rectangular layers around mode-text.
+   The older mode-text::before pseudo-element was sized to the text content,
+   creating a hard vertical seam and an equally hard bottom seam. Apply a
+   seamless card-wide vignette instead, on ALL 3 photo tiles. */
+#view-home .mode-card--casino .mode-text::before,
+#view-home .mode-card--duels .mode-text::before,
+#view-home .mode-card--cases .mode-text::before{
+  content:none !important;
+  display:none !important;
+  background:none !important;
+}
+#view-home .mode-card--casino,
+#view-home .mode-card--duels,
+#view-home .mode-card--cases{
+  position:relative;
+  isolation:isolate;
+  background:linear-gradient(115deg,#17191c 0%,#131518 41%,#0c0e11 100%);
+}
+#view-home .mode-card--casino::after,
+#view-home .mode-card--duels::after,
+#view-home .mode-card--cases::after{
+  content:"";
+  display:block;
+  position:absolute;
+  inset:0;
+  width:auto;
+  height:auto;
+  z-index:3;
+  border-radius:inherit;
+  pointer-events:none;
+  filter:none;
+  background:linear-gradient(to right,
+    rgba(19,21,24,.98) 0%,
+    rgba(19,21,24,.88) 21%,
+    rgba(19,21,24,.48) 43%,
+    rgba(19,21,24,.04) 65%,
+    transparent 78%);
+}
+#view-home .mode-card--casino .mode-text,
+#view-home .mode-card--duels .mode-text,
+#view-home .mode-card--cases .mode-text{
+  position:relative;
+  z-index:4;
+}
+#view-home .mode-card--casino .mode-photo,
+#view-home .mode-card--duels .mode-photo,
+#view-home .mode-card--cases .mode-photo{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  z-index:2;
+  overflow:hidden;
+  pointer-events:none;
+  background:transparent;
+  -webkit-mask-image:none;
+  mask-image:none;
+}
+#view-home .mode-card--casino .mode-photo img,
+#view-home .mode-card--duels .mode-photo img,
+#view-home .mode-card--cases .mode-photo img{
+  display:block;
+  position:absolute;
+  width:100%;
+  height:100%;
+  inset:0;
+  object-fit:contain;
+  object-position:right center;
+  transform:none;
+  filter:none;
+  /* Fade the actual <img>, not just its container, so contain letterboxing
+     and the supplied artwork's dark background cannot form a hard edge. */
+  -webkit-mask-image:radial-gradient(ellipse 86% 105% at 76% 42%,
+    #000 0%,#000 36%,rgba(0,0,0,.92) 54%,
+    rgba(0,0,0,.52) 72%,rgba(0,0,0,.10) 92%,transparent 100%);
+  mask-image:radial-gradient(ellipse 86% 105% at 76% 42%,
+    #000 0%,#000 36%,rgba(0,0,0,.92) 54%,
+    rgba(0,0,0,.52) 72%,rgba(0,0,0,.10) 92%,transparent 100%);
+}
+#view-home .mode-card--casino .mode-photo::after,
+#view-home .mode-card--duels .mode-photo::after,
+#view-home .mode-card--cases .mode-photo::after{
+  content:none;
+  display:none;
+}
+@media(max-width:740px){
+  #view-home .mode-card--casino::after,
+  #view-home .mode-card--duels::after,
+  #view-home .mode-card--cases::after{
+    background:linear-gradient(to right,
+      #141619 0%,rgba(20,22,25,.95) 22%,
+      rgba(20,22,25,.62) 43%,rgba(20,22,25,.14) 67%,transparent 82%);
+  }
+}
