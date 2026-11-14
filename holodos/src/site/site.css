@@ -790,3 +790,53 @@ body.inner-page .view.active{animation:slideIn .25s ease both}
     background:linear-gradient(to right,#15181c 0%,rgba(15,17,20,.96) 35%,rgba(15,17,20,.65) 66%,transparent 100%);
   }
 }
+
+
+/* 2026-11-14 — card photo quality / complete object fix.
+   Previous 'cover' and elliptical crop erased the bottom of the slot machine.
+   'contain' keeps the entire approved photograph visible, at natural proportions.
+   No dark overlay across the image and no image scaling on hover. */
+#view-home .mode-card--casino .mode-photo,
+#view-home .mode-card--duels .mode-photo{
+  inset:0 0 0 auto;
+  width:100%;
+  height:100%;
+  z-index:2;
+  background:transparent;
+  overflow:hidden;
+  -webkit-mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.45) 20%,#000 45%,#000 100%);
+  mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.45) 20%,#000 45%,#000 100%);
+}
+#view-home .mode-card--casino .mode-photo img,
+#view-home .mode-card--duels .mode-photo img,
+#view-home .mode-card--duels .mode-photo img{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:right center;
+  filter:none;
+  transform:none;
+  image-rendering:auto;
+}
+#view-home .mode-card--casino .mode-photo::after,
+#view-home .mode-card--duels .mode-photo::after{
+  content:"";
+  position:absolute;inset:0;pointer-events:none;
+  /* Only a very short, soft fade along the bottom; no solid bar. */
+  background:linear-gradient(to bottom,transparent 0%,transparent 87%,rgba(12,14,17,.13) 94%,rgba(12,14,17,.45) 100%);
+}
+#view-home .mode-card--casino .mode-text::before,
+#view-home .mode-card--duels .mode-text::before{
+  background:linear-gradient(to right,#15181cf8 0%,rgba(17,19,23,.94) 28%,rgba(15,17,20,.65) 48%,transparent 81%);
+}
+#view-home .mode-card--casino:hover .mode-photo img,
+#view-home .mode-card--duels:hover .mode-photo img{transform:none;filter:none}
+@media(max-width:540px){
+  #view-home .mode-card--casino .mode-photo,
+  #view-home .mode-card--duels .mode-photo{width:100%}
+  #view-home .mode-card--casino .mode-text::before,
+  #view-home .mode-card--duels .mode-text::before{
+    background:linear-gradient(to right,#15181cfc 0%,rgba(17,19,23,.97) 38%,rgba(15,17,20,.56) 67%,transparent 92%);
+  }
+}
