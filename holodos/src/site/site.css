@@ -1357,3 +1357,14 @@ textarea{display:block;width:100%;resize:vertical;padding:13px;background:#0b0e1
 .chat-frame-ice{box-shadow:inset 0 0 0 1px #a6d4ed66,0 0 8px #a6d4ed1c}.chat-frame-rose{box-shadow:inset 0 0 0 1px #e79ac466,0 0 8px #e79ac41c}.chat-frame-amber{box-shadow:inset 0 0 0 1px #e0b67966,0 0 8px #e0b6791c}.chat-frame-violet{box-shadow:inset 0 0 0 1px #b59ade66,0 0 8px #b59ade1c}.chat-title{display:inline-block;color:#c4d2e4;font-size:11px;margin:2px 4px}
 
 .profile-muted,.rank-name small,.microcopy,.case-balance-hint,.small-pill{font-size:12px}.footer{font-size:12px}.support-count{color:#f2b6d6}
+
+/* Restore the inner plaques; apply Holodos color to the outer wins panel. */
+#view-home .recent-wins-panel{background:#030810}
+#view-home .recent-wins-panel .win-item{background:#0c1824;border-color:#34383e}
+.collection-case--vip{--case-accent:#edb2d4;box-shadow:0 0 24px -7px #e9a6cc42,0 10px 30px #0005}
+.collection-case--vip .case-artwork{background:radial-gradient(ellipse at 50% 82%,#e9a6cc19,transparent 65%),linear-gradient(90deg,#0a0c10,#171a20 50%,#0b0d11)}
+.collection-case--vip :is(h2,.case-cost,.case-category){color:#edb2d4}
+.case-category{font-size:10px;padding:4px 8px}
+#view-casino .slot-game .panel-header h3{display:flex;align-items:center;gap:12px}
+#profile-content .stats-grid+.stat{margin-top:16px}
+#profile-content .stat+p{margin-top:16px}
