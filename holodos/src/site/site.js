@@ -126,9 +126,9 @@ function renderProfile(){
  }
  const p=me.player,orders=me.orders||[];
  const avatar=safeAvatar(p.avatar);
- $('profile-content').innerHTML='<div class="profile-bell-container"><button class="profile-notifications-button" type="button" data-account-notifications aria-label="Уведомления аккаунта">'+bellSvg+'<span class="account-unread-count">'+(me.notification_unread||'')+'</span></button></div><div class="profile-card">'+(avatar?'<img class="profile-avatar" src="'+esc(avatar)+'" alt="Аватар Twitch">':'<span class="coin-icon" style="width:75px;height:75px;font-size:27px">W</span>')+'<div><div class="profile-name">@'+esc(p.display_name||p.login)+'</div><span class="profile-muted">Аккаунт Twitch · W-монеты синхронизированы с чатом</span></div></div>'
+ $('profile-content').innerHTML='<div class="profile-bell-container"><a class="button button-ghost profile-requests-button" href="/requests" data-route="/requests">Запросы <span class="support-count"></span></a><button class="profile-notifications-button" type="button" data-account-notifications aria-label="Уведомления аккаунта">'+bellSvg+'<span class="account-unread-count">'+(me.notification_unread||'')+'</span></button></div><div class="profile-card">'+(avatar?'<img class="profile-avatar" src="'+esc(avatar)+'" alt="Аватар Twitch">':'<span class="coin-icon" style="width:75px;height:75px;font-size:27px">W</span>')+'<div><div class="profile-name">@'+esc(p.display_name||p.login)+'</div><span class="profile-muted">Аккаунт Twitch · W-монеты синхронизированы с чатом</span></div></div>'
   +'<div class="stats-grid"><div class="stat"><strong>'+fmt(p.balance)+'</strong><span>Баланс W</span></div><div class="stat"><strong>'+fmt(p.opens)+'</strong><span>Открытий</span></div><div class="stat"><strong>'+fmt(p.wins)+'</strong><span>Выигрышей</span></div><div class="stat"><strong>'+fmt(p.jackpots)+'</strong><span>Суперджекпотов</span></div></div>'
-  +'<div class="stat"><strong>'+fmt(p.message_count)+'</strong><span>Сообщений в чате с начала учёта</span></div><p><a class="button button-ghost" href="/requests" data-route="/requests">Запросы <span class="support-count"></span></a></p>'+ '<div class="profile-orders"><h3>Заявки магазина</h3>'+(orders.length?orders.map(o=>'<div class="history-item"><strong>№'+o.id+' · '+o.vp+' VP</strong><span>'+esc(o.status==='pending'?'Ожидает выдачи':o.status==='fulfilled'?'Выдано':'Отменено')+'</span><em>'+fmt(o.price)+' W</em><time>'+ruTime(o.created_at)+'</time></div>').join(''):'<p class="muted">Пока нет заявок. Оформить можно через команду !купить в чате.</p>')+'</div>'
+  +'<div class="stat"><strong>'+fmt(p.message_count)+'</strong><span>Сообщений в чате с начала учёта</span></div>'+ '<div class="profile-orders"><h3>Заявки магазина</h3>'+(orders.length?orders.map(o=>'<div class="history-item"><strong>№'+o.id+' · '+o.vp+' VP</strong><span>'+esc(o.status==='pending'?'Ожидает выдачи':o.status==='fulfilled'?'Выдано':'Отменено')+'</span><em>'+fmt(o.price)+' W</em><time>'+ruTime(o.created_at)+'</time></div>').join(''):'<p class="muted">Пока нет заявок. Оформить можно через команду !купить в чате.</p>')+'</div>'
   +'<button type="button" class="logout-btn" id="logout-btn">Выйти из профиля</button>';
  $('logout-btn').addEventListener('click',logout);
 }
@@ -347,13 +347,13 @@ setInterval(()=>{if(document.visibilityState==='visible'&&currentRoute()==='/req
 
 for(const button of document.querySelectorAll('.page-back-button'))button.addEventListener('click',()=>{if(Number(history.state?.warDepth||0)>0)history.back();else navigate(currentRoute()==='/requests'?'/help':'/');});
 
-let noticeAudioContext=null,noticeSoundEnabled=true,lastNoticeTone=0;
+let noticeSoundEnabled=true,lastNoticeTone=0;
 try{noticeSoundEnabled=localStorage.getItem('war1ouss-notification-sound')!=='off'}catch{}
-function unlockNoticeAudio(){try{if(!noticeAudioContext){const AC=window.AudioContext||window.webkitAudioContext;if(AC)noticeAudioContext=new AC()}if(noticeAudioContext?.state==='suspended')noticeAudioContext.resume().catch(()=>{});}catch{}}
-window.addEventListener('pointerdown',unlockNoticeAudio,{once:true,passive:true});window.addEventListener('keydown',unlockNoticeAudio,{once:true});
+const noticeAudio=new Audio('/assets/notification.mp3?v=47');noticeAudio.preload='auto';noticeAudio.volume=.6;
+function unlockNoticeAudio(){/* Playback is requested by the notification after user interaction. */}
 function playNoticeTone(){
- if(!noticeSoundEnabled||!noticeAudioContext||noticeAudioContext.state!=='running'||Date.now()-lastNoticeTone<1000)return;
- try{lastNoticeTone=Date.now();const ctx=noticeAudioContext,now=ctx.currentTime;for(const [freq,offset] of [[740,0],[988,.075]]){const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type='sine';osc.frequency.value=freq;gain.gain.setValueAtTime(0,now+offset);gain.gain.linearRampToValueAtTime(.035,now+offset+.015);gain.gain.exponentialRampToValueAtTime(.001,now+offset+.2);osc.connect(gain);gain.connect(ctx.destination);osc.start(now+offset);osc.stop(now+offset+.23);}}catch{}
+ if(!noticeSoundEnabled||Date.now()-lastNoticeTone<1000)return;
+ lastNoticeTone=Date.now();noticeAudio.currentTime=0;noticeAudio.volume=.6;noticeAudio.play().catch(()=>{});
 }
 let notificationLastSeenId=0,notificationUser='',notificationLoading=false;
 async function refreshAccountNotifications(){

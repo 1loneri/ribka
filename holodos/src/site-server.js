@@ -24,6 +24,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  }
  for(const id of ['donation','twitch','chat','vip','coins','subscriber'])assetFiles['/assets/case-'+id+'.webp']={file:new URL('./site/case-'+id+'.webp',import.meta.url),type:'image/webp'};
  assetFiles['/assets/frost-edge.webp']={file:new URL('./site/frost-edge.webp',import.meta.url),type:'image/webp'};
+ assetFiles['/assets/notification.mp3']={file:new URL('./site/notification.mp3',import.meta.url),type:'audio/mpeg'};
  assetFiles['/assets/dela-gothic-one.ttf']={file:new URL('./site/dela-gothic-one.ttf',import.meta.url),type:'font/ttf'};
  const shell=readFileSync(new URL('./site/index.html',import.meta.url));
  const staticAssets={};

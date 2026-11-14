@@ -1432,3 +1432,11 @@ body:not(.inner-page) .topbar{border-bottom:0;box-shadow:none}
 .idle-edge-frost.visible{opacity:1;transform:none;transition-duration:8s}
 @media(max-width:540px){.idle-edge-frost::after{background-size:85px 85px,70px 70px,65px 65px,80px 80px;opacity:.35}}
 @media(prefers-reduced-motion:reduce){.idle-edge-frost{display:none}}
+
+/* Profile requests stay with the account controls. */
+.profile-bell-container{display:flex;align-items:center;gap:12px}
+.profile-requests-button{min-height:40px;padding:9px 17px;border-radius:11px;font-size:12px}
+@media(max-width:540px){.profile-bell-container{top:18px;right:18px;gap:8px}.profile-requests-button{padding:8px 12px;min-height:36px;font-size:11px}#profile-content .profile-card{padding-top:44px}}
+/* Six distinct short fissures, attached to screen edges. */
+.idle-edge-frost::after{background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201000%201000%22%20preserveAspectRatio%3D%22none%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23dbf4ff%22%20stroke-width%3D%22.65%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20opacity%3D%22.7%22%3E%3Cpath%20d%3D%22M0%20142l12-6%208%203%208-11%2011-3m-19%2014%203%2013%208%207%22%20vector-effect%3D%22non-scaling-stroke%22%2F%3E%3Cpath%20d%3D%22M259%200l-4%2012%206%209-3%2011m-3-20-9%204-4%209%22%20vector-effect%3D%22non-scaling-stroke%22%2F%3E%3Cpath%20d%3D%22M1000%20252l-13%204-8-6-13%205m13-5-3-11%22%20vector-effect%3D%22non-scaling-stroke%22%2F%3E%3Cpath%20d%3D%22M1000%20831l-9-8-12%202-7-8-11-2m18%2010-3%2010%22%20vector-effect%3D%22non-scaling-stroke%22%2F%3E%3Cpath%20d%3D%22M768%201000l4-12-6-9%202-10m4%2019%2010-3%22%20vector-effect%3D%22non-scaling-stroke%22%2F%3E%3Cpath%20d%3D%22M0%20774l12%204%208-7%2010%202m-10-2%202-10%22%20vector-effect%3D%22non-scaling-stroke%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");background-position:center;background-size:100% 100%;background-repeat:no-repeat;opacity:.5}
+@media(max-width:540px){.idle-edge-frost::after{background-size:100% 100%;opacity:.42}}
