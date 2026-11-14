@@ -14,6 +14,9 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   '/assets/cases-main-2026.webp':{file:new URL('./site/cases-main-2026.webp',import.meta.url),type:'image/webp'},
   '/assets/duels-main-2026.webp':{file:new URL('./site/duels-main-2026.webp',import.meta.url),type:'image/webp'}
  };
+ for(const id of ['white','green','mango','pink','blue','black','watermelon','yellow','w-edition']){
+  assetFiles['/assets/slot-'+id+'.webp']={file:new URL('./site/slot-'+id+'.webp',import.meta.url),type:'image/webp'};
+ }
  const shell=readFileSync(new URL('./site/index.html',import.meta.url));
  const staticAssets={};
  for(const [name,info] of Object.entries(assetFiles)){

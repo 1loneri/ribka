@@ -1187,3 +1187,20 @@ body.inner-page .view.active{animation:slideIn .25s ease both}
   mask-image:linear-gradient(to right,transparent,#000 8%,#000 92%,transparent),linear-gradient(to bottom,transparent,#000 8%,#000 92%,transparent);
   mask-composite:intersect;
 }
+
+/* Individual can sprites and frost around the outer Holodos outline. */
+#view-casino .reel .slot-symbol{display:block;width:85%;height:94%;object-fit:contain;filter:drop-shadow(0 3px 5px #0009);user-select:none}
+#view-casino .slot-game{position:relative;isolation:isolate}
+#view-casino .slot-game::after{
+ content:"";position:absolute;inset:-1px;z-index:2;pointer-events:none;
+ border:2px solid #d8f5ff;border-radius:inherit;opacity:0;
+ background:radial-gradient(ellipse at 0 0,#e6faffb3,transparent 27%),radial-gradient(ellipse at 100% 100%,#b5e9ff99,transparent 27%);
+ padding:5px;background-clip:border-box;
+ -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+ -webkit-mask-composite:xor;mask-composite:exclude;
+}
+#view-casino .slot-game.container-freeze{animation:containerFrostGlow 2.1s ease-out both}
+#view-casino .slot-game.container-freeze::after{animation:containerFrostRim 2.1s ease-out both}
+@keyframes containerFrostGlow{0%,100%{box-shadow:0 0 0 transparent}22%{border-color:#d7f4ff;box-shadow:0 0 20px #b7e9ff66,inset 0 0 20px #b7e9ff33}65%{border-color:#8dbbcc;box-shadow:0 0 12px #b7e9ff33}}
+@keyframes containerFrostRim{0%{opacity:0}22%{opacity:1}65%{opacity:.6}100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){#view-casino .slot-game.container-freeze,#view-casino .slot-game.container-freeze::after{animation:none}}

@@ -118,6 +118,24 @@ function updateCooldown(){
   button.textContent='Следующее открытие через '+m+':'+s;
  }else button.textContent='Открыть холодос ↗';
 }
+
+const slotSprites={
+ '⚪':['white','Monster Zero Ultra'], '🟢':['green','Monster Ultra Paradise'],
+ '🥭':['mango','Monster Mango Loco'], '🌸':['pink','Monster Ultra Rosa'],
+ '🔵':['blue','Monster Ultra Blue'], '⚫':['black','Monster Original'],
+ '🍉':['watermelon','Monster Watermelon'], '🟡':['yellow','Monster Ultra Gold'],
+ '👑':['w-edition','W Edition']
+};
+function setReelSymbol(el,symbol){
+ const sprite=slotSprites[symbol];
+ if(!sprite){el.textContent=symbol;return;}
+ let img=el.querySelector('img');
+ if(!img){img=document.createElement('img');img.className='slot-symbol';img.draggable=false;el.replaceChildren(img);}
+ img.src='/assets/slot-'+sprite[0]+'.webp';img.alt=sprite[1];
+}
+Object.values(slotSprites).forEach(([id])=>{const image=new Image();image.src='/assets/slot-'+id+'.webp';});
+['reel-1','reel-2','reel-3'].forEach(id=>setReelSymbol($(id),$(id).textContent.trim()));
+
 async function spin(){
  if(state.busy)return;
  if(!state.me?.authenticated){location.href='/auth/twitch';return;}
@@ -126,10 +144,12 @@ async function spin(){
  const chars=['⚪','🟢','🥭','🌸','🔵','⚫','🍉','🟡'];
  const reelFrame=$('view-casino').querySelector('.reels');
  reelFrame.classList.remove('win-flash','jackpot-flash','freeze-flash');
+ const container=reelFrame.closest('.slot-game');
+ container.classList.remove('container-freeze');
  reels.forEach(e=>e.classList.add('spinning'));
  $('spin-button').disabled=true;$('spin-button').textContent='Открываем…';
  $('spin-result').classList.remove('win');$('spin-result').textContent='Холодос открывается…';
- let cycling=setInterval(()=>reels.forEach(e=>{if(e.classList.contains('spinning'))e.textContent=chars[Math.floor(Math.random()*chars.length)];}),80);
+ let cycling=setInterval(()=>reels.forEach(e=>{if(e.classList.contains('spinning'))setReelSymbol(e,chars[Math.floor(Math.random()*chars.length)]);}),80);
  const started=Date.now();
  try{
   const result=await api('/api/holodos',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':state.me.csrf},body:JSON.stringify({requestId:crypto.randomUUID()})});
@@ -137,7 +157,7 @@ async function spin(){
   await new Promise(resolve=>setTimeout(resolve,Math.max(0,(reduceMotion?0:1150)-(Date.now()-started))));
   // Settle one reel at a time; the result was already chosen and saved by the server.
   for(let i=0;i<reels.length;i++){
-   reels[i].classList.remove('spinning');reels[i].textContent=result.cans[i];
+   reels[i].classList.remove('spinning');setReelSymbol(reels[i],result.cans[i]);
    if(!reduceMotion&&i<reels.length-1)await new Promise(resolve=>setTimeout(resolve,125));
   }
   clearInterval(cycling);
@@ -148,6 +168,8 @@ async function spin(){
    // Visual-only frost on a real server-confirmed zero result.
    // Never changes the prize, cooldown, balances or request handling.
    reelFrame.classList.add('freeze-flash');
+   container.classList.add('container-freeze');
+   setTimeout(()=>container.classList.remove('container-freeze'),2100);
    setTimeout(()=>reelFrame.classList.remove('freeze-flash'),1450);
   }
   $('spin-result').textContent=result.description+' +'+fmt(result.gain)+' W';
