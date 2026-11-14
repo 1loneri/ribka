@@ -1513,3 +1513,13 @@ body:not(.inner-page) .topbar{border-bottom:0;box-shadow:none}
 @keyframes recentWinsColdRim{0%,28%,100%{opacity:0}12%,18%{opacity:.7}23%{opacity:.2}}
 @media(prefers-reduced-motion:reduce){#view-home .recent-wins-panel,#view-home .recent-wins-panel::after{animation:none}#view-home .recent-wins-panel::after{display:none}}
 .frame-preview-card .frame-preview-center{inset:15px}
+
+/* Owned avatar frames overlay the avatar without cropping the artwork. */
+.equipped-avatar[data-equipped-frame]:not([data-equipped-frame=""]){position:relative;isolation:isolate;overflow:visible;border-color:transparent}
+.equipped-avatar>img{border-radius:50%}
+.equipped-avatar[data-equipped-frame]:not([data-equipped-frame=""])::after{content:"";position:absolute;inset:-12%;z-index:2;pointer-events:none;background:center/100% 100% no-repeat}
+.equipped-avatar[data-equipped-frame="ultra"]::after{background-image:url('/assets/frame-ultra.gif?v=55')}
+.equipped-avatar[data-equipped-frame="original"]::after{background-image:url('/assets/frame-original.gif?v=53')}
+.equipped-avatar[data-equipped-frame="mango"]::after{background-image:url('/assets/frame-mango.gif?v=53')}
+.top-equipped-avatar{display:inline-flex;position:relative;flex:none}.profile-equipped-avatar{display:block;flex:none;margin:9px}.profile-equipped-avatar .player-avatar{width:80px;height:80px;font-size:28px}.profile-frames{margin:25px 0;padding-top:22px;border-top:1px solid #b4d9ef30}.owned-frame-list{display:flex;flex-wrap:wrap;gap:14px;align-items:center}.owned-frame{display:inline-flex;gap:12px;align-items:center}.owned-frame img{object-fit:contain}.owned-frame-list [aria-pressed="true"]{border-color:#c9e8ff;box-shadow:0 0 12px #b4d9ef22}
+@media(prefers-reduced-motion:reduce){.equipped-avatar[data-equipped-frame="ultra"]::after{background-image:url('/assets/frame-ultra.png?v=55')}.equipped-avatar[data-equipped-frame="original"]::after{background-image:url('/assets/frame-original.png?v=53')}.equipped-avatar[data-equipped-frame="mango"]::after{background-image:url('/assets/frame-mango.png?v=53')}}

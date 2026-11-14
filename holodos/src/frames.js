@@ -1,0 +1,12 @@
+export const frameCatalog={ultra:'Ultra Frost',original:'Original Splash',mango:'Mango Loco'};
+export function createFrames(db,transaction){
+ db.exec("CREATE TABLE IF NOT EXISTS frame_inventory(player_id TEXT NOT NULL,frame_id TEXT NOT NULL,granted_by TEXT NOT NULL,created_at INTEGER NOT NULL,PRIMARY KEY(player_id,frame_id));");
+ const valid=id=>Object.hasOwn(frameCatalog,id);
+ const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
+ function owned(id){return db.prepare('SELECT frame_id FROM frame_inventory WHERE player_id=? ORDER BY created_at,frame_id').all(id).map(r=>r.frame_id).filter(valid);}
+ function active(id){const f=db.prepare('SELECT frame FROM cosmetic_profiles WHERE player_id=?').get(id)?.frame;return valid(f)&&owned(id).includes(f)?f:'';}
+ function grant(login,id,actor){login=String(login||'').replace(/^@/,'').toLowerCase();if(!/^[a-z0-9_]{1,25}$/.test(login)||!valid(id))fail('Укажи Twitch-ник и рамку из каталога.');const player=db.prepare('SELECT id FROM players WHERE lower(login)=?').get(login);if(!player)fail('Игрок ещё не найден на сайте.',404);return transaction(()=>{const r=db.prepare('INSERT OR IGNORE INTO frame_inventory VALUES(?,?,?,?)').run(player.id,id,String(actor),Date.now());if(r.changes){db.prepare("INSERT INTO cosmetic_profiles(player_id,frame) VALUES(?,?) ON CONFLICT(player_id) DO UPDATE SET frame=CASE WHEN cosmetic_profiles.frame='' THEN excluded.frame ELSE cosmetic_profiles.frame END").run(player.id,id);db.prepare("INSERT OR IGNORE INTO account_notifications(event_key,owner_id,kind,title,body,url,created_at) VALUES(?,?,'prize','Новая рамка',?,'/profile',?)").run('frame:'+player.id+':'+id,player.id,'Ты получил рамку '+frameCatalog[id]+'. Выбрать её можно в профиле.',Date.now());}return {ok:true,alreadyOwned:!r.changes};});}
+ function equip(id,frame){if(frame!==''&&(!valid(frame)||!owned(id).includes(frame)))fail('Эта рамка ещё не получена.',403);db.prepare('INSERT INTO cosmetic_profiles(player_id,frame) VALUES(?,?) ON CONFLICT(player_id) DO UPDATE SET frame=excluded.frame').run(id,frame);return {ok:true};}
+ function publicFrames(logins){const out={};for(const login of [...new Set(logins)].slice(0,50)){if(!/^[a-z0-9_]{1,25}$/.test(login))continue;const p=db.prepare('SELECT id FROM players WHERE lower(login)=?').get(login);if(p)out[login]=active(p.id);}return out;}
+ return {catalog:frameCatalog,owned,active,grant,equip,publicFrames};
+}

@@ -115,6 +115,8 @@ function renderMe(){
  for(const center of document.querySelectorAll('.frame-preview-center')){const url=logged?safeAvatar(me.player.avatar):'';if(url){const img=document.createElement('img');img.src=url;img.alt='';center.replaceChildren(img);}else center.textContent='W';}
  updateCooldown();
  renderProfile();
+ applyAvatarFrame($('top-avatar-frame'),logged?me.frames?.active:'');
+ hydrateAvatars();
  renderNotificationBadges();
  if(currentRoute()==='/shop')refreshReviews();
  if(logged)refreshAccountNotifications();else{notificationUser='';notificationLastSeenId=0;$('account-notifications').hidden=true;$('account-notification-list').replaceChildren();}
@@ -130,10 +132,10 @@ function renderProfile(){
  }
  const p=me.player,orders=me.orders||[];
  const avatar=safeAvatar(p.avatar);
- $('profile-content').innerHTML='<div class="profile-bell-container"><a class="button button-ghost profile-requests-button" href="/requests" data-route="/requests">Запросы <span class="support-count"></span></a><button class="profile-notifications-button" type="button" data-account-notifications aria-label="Уведомления аккаунта">'+bellSvg+'<span class="account-unread-count">'+(me.notification_unread||'')+'</span></button></div><div class="profile-card">'+(avatar?'<img class="profile-avatar" src="'+esc(avatar)+'" alt="Аватар Twitch">':'<span class="coin-icon" style="width:75px;height:75px;font-size:27px">W</span>')+'<div><div class="profile-name">@'+esc(p.display_name||p.login)+'</div><span class="profile-muted">Аккаунт Twitch · W-монеты синхронизированы с чатом</span></div></div>'
+ $('profile-content').innerHTML='<div class="profile-bell-container"><a class="button button-ghost profile-requests-button" href="/requests" data-route="/requests">Запросы <span class="support-count"></span></a><button class="profile-notifications-button" type="button" data-account-notifications aria-label="Уведомления аккаунта">'+bellSvg+'<span class="account-unread-count">'+(me.notification_unread||'')+'</span></button></div><div class="profile-card">'+'<span class="profile-equipped-avatar">'+avatarHtml(p.login)+'</span>'+'<div><div class="profile-name">@'+esc(p.display_name||p.login)+'</div><span class="profile-muted">Аккаунт Twitch · W-монеты синхронизированы с чатом</span></div></div>'
   +'<div class="stats-grid"><div class="stat"><strong>'+fmt(p.balance)+'</strong><span>Баланс W</span></div><div class="stat"><strong>'+fmt(p.opens)+'</strong><span>Открытий</span></div><div class="stat"><strong>'+fmt(p.wins)+'</strong><span>Выигрышей</span></div><div class="stat"><strong>'+fmt(p.jackpots)+'</strong><span>Суперджекпотов</span></div></div>'
   +'<div class="stat"><strong>'+fmt(p.message_count)+'</strong><span>Сообщений в чате с начала учёта</span></div>'+ '<div class="profile-orders"><h3>Заявки магазина</h3>'+(orders.length?orders.map(o=>'<div class="history-item"><strong>№'+o.id+' · '+o.vp+' VP</strong><span>'+esc(o.status==='pending'?'Ожидает выдачи':o.status==='fulfilled'?'Выдано':'Отменено')+'</span><em>'+fmt(o.price)+' W</em><time>'+ruTime(o.created_at)+'</time></div>').join(''):'<p class="muted">Пока нет заявок. Оформить можно через команду !купить в чате.</p>')+'</div>'
-  +'<button type="button" class="logout-btn" id="logout-btn">Выйти из профиля</button>';
+  +frameInventoryHtml(me.frames)+'<button type="button" class="logout-btn" id="logout-btn">Выйти из профиля</button>';
  $('logout-btn').addEventListener('click',logout);
 }
 async function logout(){
@@ -394,7 +396,7 @@ function avatarHtml(login){const name=String(login||'').toLowerCase();if(!/^[a-z
 let avatarHydrationBusy=false,avatarHydrationAgain=false;const avatarClientCache=new Map();
 async function hydrateAvatars(){
  if(avatarHydrationBusy){avatarHydrationAgain=true;return;}avatarHydrationBusy=true;
- try{const nodes=[...document.querySelectorAll('[data-player-avatar]')],names=[...new Set(nodes.map(n=>n.dataset.playerAvatar))];const missing=names.filter(n=>!avatarClientCache.has(n)).slice(0,50);
+ try{const nodes=[...document.querySelectorAll('[data-player-avatar]')],names=[...new Set(nodes.map(n=>n.dataset.playerAvatar))];const frameResponse=names.length?await api('/api/frames?logins='+encodeURIComponent(names.join(','))):{frames:{}};for(const node of nodes)applyAvatarFrame(node,frameResponse.frames?.[node.dataset.playerAvatar]);const missing=names.filter(n=>!avatarClientCache.has(n)).slice(0,50);
  if(missing.length){const r=await api('/api/avatars?logins='+encodeURIComponent(missing.join(',')));for(const n of missing)avatarClientCache.set(n,safeAvatar(r.avatars?.[n])||'');}
  for(const node of nodes){const src=avatarClientCache.get(node.dataset.playerAvatar);if(src&&!node.querySelector('img')){const img=document.createElement('img');img.src=src;img.alt='';img.loading='lazy';img.decoding='async';img.addEventListener('error',()=>node.replaceChildren(document.createTextNode(node.dataset.playerAvatar[0].toUpperCase())),{once:true});node.replaceChildren(img);}}
  }catch{}finally{avatarHydrationBusy=false;if(avatarHydrationAgain){avatarHydrationAgain=false;queueMicrotask(hydrateAvatars);}}
@@ -443,3 +445,7 @@ function localStorageSafeRead(key){try{return localStorage.getItem(key)||0}catch
 document.addEventListener('click',e=>{if(e.target.closest('[data-notification-test]')){unlockNoticeAudio();notice(noticeSoundEnabled?'Уведомления работают. Громкость звука — 58%.':'Уведомления работают. Звук сейчас отключён в настройках.');}});
 
 for(const event of ['contextmenu','dragstart'])document.addEventListener(event,e=>{if(e.target.closest('.frame-preview'))e.preventDefault();});
+
+function applyAvatarFrame(node,id){if(!node)return;node.classList.add('equipped-avatar');node.dataset.equippedFrame=['ultra','original','mango'].includes(id)?id:'';}
+function frameInventoryHtml(data){const owned=data?.owned||[];return '<section class="profile-frames"><h3>Моя косметика</h3><h4>Рамки</h4>'+(owned.length?'<div class="owned-frame-list"><button class="button button-ghost" data-equip-frame="" aria-pressed="'+(!data.active)+'">Без рамки</button>'+owned.map(id=>'<button class="button button-ghost owned-frame" data-equip-frame="'+esc(id)+'" aria-pressed="'+(data.active===id)+'"><img src="/assets/frame-'+esc(id)+'.png?v=55" alt="" width="48" height="48">'+esc(data.catalog[id])+(data.active===id?' · Надета':'')+'</button>').join('')+'</div>':'<p class="muted">Здесь появятся полученные рамки.</p>')+'</section>';}
+document.addEventListener('click',async e=>{const button=e.target.closest('[data-equip-frame]');if(!button||button.disabled)return;button.disabled=true;try{await api('/api/frames/equip',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':state.me?.csrf||''},body:JSON.stringify({frame:button.dataset.equipFrame})});await refreshMe();await hydrateAvatars();notice('Рамка обновлена');}catch(error){notice(error.message);}finally{button.disabled=false;}});
