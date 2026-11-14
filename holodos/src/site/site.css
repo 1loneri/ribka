@@ -1386,3 +1386,7 @@ textarea{display:block;width:100%;resize:vertical;padding:13px;background:#0b0e1
 .collection-case--subscriber .case-artwork{background:radial-gradient(ellipse at 50% 82%,#eba45f19,transparent 65%),linear-gradient(90deg,#0a0c10,#1c1916 50%,#0b0d11)}
 .collection-case--subscriber .case-category{color:#efbc88;border-color:#efa95e4d;background:#efa95e09}
 .collection-case--subscriber:hover{border-color:#efbc88;box-shadow:0 0 30px -5px #efa95e55,0 12px 30px #0006}
+
+/* Wider, softer navigation frost and homepage divider. */
+.topbar :is(.nav-link,.login-btn,.mobile-menu)::before{inset:1px -11px;background:radial-gradient(ellipse at 0 0,#e3f7ff19,transparent 55%),radial-gradient(ellipse at 100% 100%,#c5eaff14,transparent 55%);box-shadow:inset 0 0 12px #d6f2ff14;border-radius:11px}
+body:not(.inner-page) .topbar{border-bottom:0;box-shadow:none}
