@@ -32,6 +32,7 @@ function toggleSidebar(){
  const open=!side.classList.contains('expanded');
  side.classList.toggle('expanded',open);backdrop.hidden=!open;
  toggle.setAttribute('aria-expanded',String(open));
+ if(open)side.querySelector('.side-link[data-route]')?.focus({preventScroll:true});
  toggle.setAttribute('aria-label',open?'Закрыть боковое меню':'Открыть боковое меню');
 }
 function navigate(path,replace=false){
@@ -199,4 +200,10 @@ $('refresh-duels').addEventListener('click',refreshDuels);
 navigate(currentRoute(),true);
 Promise.all([refreshPublic(),refreshMe(),refreshSpins()]).then(()=>{if(currentRoute()==='/duels')refreshDuels();});
 setInterval(updateCooldown,1000);
-setInterval(()=>{if(document.visibilityState==='visible'){refreshPublic();if(currentRoute()==='/duels')refreshDuels();}},30000);
+// Keep W coins, cooldown and chat ranks in sync with the same live SQLite-backed API.
+// Poll only while the tab is visible; never invent a client-side balance.
+setInterval(()=>{if(document.visibilityState==='visible'&&!state.busy)refreshMe();},12000);
+setInterval(()=>{if(document.visibilityState==='visible'){refreshPublic();if(currentRoute()==='/duels')refreshDuels();}},20000);
+document.addEventListener('visibilitychange',()=>{
+ if(document.visibilityState==='visible'&&!state.busy){refreshMe();refreshPublic();if(currentRoute()==='/duels')refreshDuels();}
+});
