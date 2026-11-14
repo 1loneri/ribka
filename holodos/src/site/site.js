@@ -441,3 +441,5 @@ setInterval(()=>{if(currentRoute()==='/duels'&&document.visibilityState==='visib
 
 function localStorageSafeRead(key){try{return localStorage.getItem(key)||0}catch{return 0}}
 document.addEventListener('click',e=>{if(e.target.closest('[data-notification-test]')){unlockNoticeAudio();notice(noticeSoundEnabled?'Уведомления работают. Громкость звука — 58%.':'Уведомления работают. Звук сейчас отключён в настройках.');}});
+
+for(const event of ['contextmenu','dragstart'])document.addEventListener(event,e=>{if(e.target.closest('.frame-preview'))e.preventDefault();});
