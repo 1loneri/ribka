@@ -1146,3 +1146,33 @@ body.inner-page .view.active{animation:slideIn .25s ease both}
   #view-casino .reels .reel.spinning{animation:none}
   #view-casino .reels{transition:none}
 }
+
+
+/* Holodos: very brief frosted-glass pass only after a server-confirmed 0 W.
+   Existing approved artwork stays fixed; symbols stay readable and interactive
+   controls are not covered by animation layers. */
+#view-casino .reels.freeze-flash .reel::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+  border-radius:inherit;
+  background:
+    radial-gradient(ellipse 44% 46% at 0 0,rgba(232,248,255,.42),transparent 94%),
+    radial-gradient(ellipse 38% 43% at 100% 100%,rgba(222,243,255,.39),transparent 96%),
+    linear-gradient(110deg,transparent 14%,rgba(220,244,255,.17) 47%,transparent 78%);
+  box-shadow:inset 0 0 11px 2px rgba(219,240,250,.42);
+  animation:warFreezeOnZero 1.25s ease-out both;
+}
+#view-casino .reels.freeze-flash .reel:nth-child(2)::after{animation-delay:.09s}
+#view-casino .reels.freeze-flash .reel:nth-child(3)::after{animation-delay:.18s}
+@keyframes warFreezeOnZero{
+  0%{opacity:0;transform:scale(.96);filter:blur(2px)}
+  24%{opacity:.78;transform:scale(1);filter:blur(0)}
+  65%{opacity:.42}
+  100%{opacity:0;transform:scale(1)}
+}
+@media(prefers-reduced-motion:reduce){
+  #view-casino .reels.freeze-flash .reel::after{animation:none;display:none}
+}
