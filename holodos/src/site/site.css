@@ -1276,3 +1276,14 @@ body.inner-page .view.active{animation:slideIn .25s ease both}
 @media(hover:hover){.collection-case:hover .case-hover-rewards{opacity:1;visibility:visible;transform:translateY(0)}}
 .collection-case:focus-within .case-hover-rewards{opacity:1;visibility:visible;transform:translateY(0)}
 @media(prefers-reduced-motion:reduce){.case-hover-rewards{transition:none;transform:none}}
+
+.cases-topline{display:flex;align-items:center;justify-content:space-between;gap:30px}.cases-topline .cases-heading{min-width:0;flex:1}.cases-topline .cases-heading h1{font-size:clamp(34px,3.8vw,58px)}
+.cases-balances{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:350px;flex:none;gap:10px}.case-balance{padding:17px 15px;background:linear-gradient(140deg,#1d2229,#101318);border:1px solid #414a574d;border-radius:13px;min-width:0}.case-balance--twitch{background:linear-gradient(140deg,#221d2d,#131116);border-color:#aa8bcf3d}.case-balance-label{display:flex;align-items:center;gap:7px;font-size:10px;color:#adb6c4;font-weight:700;white-space:nowrap}.case-balance-label svg{width:14px;height:14px;color:#bba0e3;flex:none}.balance-w{color:#d4e8f6;font-size:13px;font-weight:800}.case-balance strong{display:block;margin:14px 0 9px;font-size:24px;line-height:1.15;color:#eef2f8;overflow-wrap:anywhere}.case-balance-hint{font-size:9px;line-height:1.6;display:block;color:#7e8b9e}
+@media(max-width:1100px){.cases-topline{align-items:flex-start;flex-direction:column;gap:0}.cases-balances{width:min(100%,390px);margin:0 0 20px}.cases-topline .cases-heading{max-width:100%}}
+@media(max-width:540px){.cases-balances{width:100%}.case-balance{padding:15px}.case-balance strong{font-size:22px}}
+
+/* Remove the decorative back-wall rectangle; keep the continuous room floor. */
+.case-artwork::after{display:none}
+.case-category{display:inline-block;padding:5px 9px;border:1px solid color-mix(in srgb,var(--case-accent) 25%,transparent);border-radius:20px;background:color-mix(in srgb,var(--case-accent) 5%,transparent);font-size:9px;letter-spacing:0;text-transform:none;margin:2px 0 12px;color:var(--case-accent)}
+
+.side-wallets{border-top:1px solid #33373b;margin-top:12px;padding:15px 12px;display:grid;gap:15px}.side-wallet-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:5px 10px}.side-wallet-row>span{font-size:10px;color:#9da6b3}.side-wallet-row>strong{font-size:12px;font-weight:800;color:#e1e8f1}.side-wallet-row--twitch>strong{color:#c3a9e9}.side-wallet-row>small{grid-column:1/-1;font-size:9px;color:#747f8d}

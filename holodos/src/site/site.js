@@ -82,6 +82,8 @@ function renderMe(){
  $('login-btn').hidden=logged;
  $('avatar-link').hidden=!logged;
  $('wallet-amount').textContent=logged?fmt(me.player.balance)+' W':'—';
+ if($('case-site-balance'))$('case-site-balance').textContent=logged?fmt(me.player.balance)+' W':'—';
+ if($('case-site-balance-hint'))$('case-site-balance-hint').textContent=logged?'Общий баланс сайта и бота':'Войди через Twitch';
  if($('side-balance'))$('side-balance').textContent=logged?fmt(me.player.balance)+' W':'W —';
  if($('side-login'))$('side-login').hidden=logged;
  if(logged){
