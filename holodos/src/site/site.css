@@ -696,7 +696,7 @@ body.inner-page .view.active{animation:slideIn .25s ease both}
   background-image:
    linear-gradient(to right,rgba(9,10,12,.78),rgba(9,10,12,.34) 33%,transparent 63%),
    linear-gradient(to bottom,#090a0c 0%,rgba(9,10,12,.14) 15%,transparent 48%,rgba(9,10,12,.48) 78%,#090a0c 100%),
-   url('/assets/hero-main-2026.webp');
+   url('/assets/hero-main-2026.webp?v=20261114hq2');
   filter:none;
 }
 #view-home .hero::after{animation:warHeroGlimmer 16s ease-in-out infinite}
@@ -704,7 +704,7 @@ body.inner-page .view.active{animation:slideIn .25s ease both}
   #view-home .hero::before{
     background-image:
       linear-gradient(to bottom,#090a0c 0%,rgba(9,10,12,.92) 25%,rgba(9,10,12,.25) 57%,#090a0c 100%),
-      url('/assets/hero-main-2026.webp');
+      url('/assets/hero-main-2026.webp?v=20261114hq2');
     background-size:100% 100%,auto 70%;
     background-position:center,70% bottom;
   }
