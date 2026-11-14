@@ -9,8 +9,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/site.css?v=20261114-metal-glow">
-<script src="/assets/site.js?v=20261113f" defer></script>
+<link rel="stylesheet" href="/assets/site.css?v=20261114-launch2">
+<script src="/assets/site.js?v=20261114-launch2" defer></script>
 </head>
 <body>
 <div class="shell">
@@ -33,11 +33,31 @@
   </div>
 </header>
 
+<aside class="side-navigation" id="side-navigation" aria-label="Навигация по разделам">
+  <a href="/" data-route="/" class="side-brand" title="На главную" aria-label="На главную">W<span>.</span></a>
+  <button class="side-toggle" id="side-toggle" type="button" aria-label="Открыть боковое меню" aria-expanded="false" aria-controls="side-links">
+    <span></span><span></span><span></span>
+  </button>
+  <nav id="side-links" class="side-links" aria-label="Разделы сайта">
+    <a href="/" data-route="/" class="side-link">Главная</a>
+    <a href="/casino" data-route="/casino" class="side-link">Казино</a>
+    <a href="/cases" data-route="/cases" class="side-link">Кейсы</a>
+    <a href="/duels" data-route="/duels" class="side-link">Дуэли</a>
+    <a href="/top" data-route="/top" class="side-link">Топ игроков</a>
+    <a href="/chat" data-route="/chat" class="side-link">Топ чата</a>
+    <a href="/shop" data-route="/shop" class="side-link">Магазин</a>
+    <a href="/profile" data-route="/profile" class="side-link">Профиль</a>
+    <a href="/auth/twitch" class="side-link side-auth-link" id="side-login">Войти через Twitch</a>
+    <span class="side-balance" id="side-balance" aria-live="polite">W —</span>
+  </nav>
+</aside>
+<button type="button" class="side-backdrop" id="side-backdrop" hidden aria-label="Закрыть меню"></button>
+
 <main>
 <section class="view active" id="view-home" data-view="/">
   <div class="hero" aria-label="Белая Monster Energy Ultra среди льда на тёмном фоне">
     <div class="hero-copy">
-      <p class="eyebrow"><i></i> ИГРОВАЯ ПЛАТФОРМА WAR1OUSS</p>
+      <p class="eyebrow">ПЛАТФОРМА WAR1OUSS</p>
       <h1>ТВОЙ<br><em>ХОЛОДОС.</em></h1>
       <p class="hero-description">Ищи банки, выигрывай W-монеты,<br>открывай кейсы и участвуй в дуэлях.</p>
       <div class="hero-actions">
@@ -50,9 +70,9 @@
   </div>
   <div class="section-heading"><div><p class="eyebrow">ВЫБЕРИ РЕЖИМ</p><h2>Игры платформы<span class="period">.</span></h2></div><a href="/casino" data-route="/casino" class="text-link">Все режимы ↗</a></div>
   <div class="mode-grid">
-    <a class="mode-card" href="/casino" data-route="/casino"><div class="mode-text"><div class="mode-index">01 / ИГРА</div><h3>Казино</h3><p>Открывай холодос и<br>собирай W-монеты.</p><span class="mode-arrow">↗</span></div><div class="mode-illustration slots-art"><div class="slot-head"></div><div class="slot-screen"><span>⚪</span><span>🔵</span><span>🌸</span></div><div class="slot-base"></div></div></a>
+    <a class="mode-card mode-card--casino" href="/casino" data-route="/casino"><div class="mode-text"><div class="mode-index">01 / ИГРА</div><h3>Казино</h3><p>Открывай холодос и<br>собирай W-монеты.</p><span class="mode-arrow">↗</span></div><div class="mode-photo" aria-hidden="true"><img src="/assets/casino-main-2026.webp" alt="" loading="lazy"></div></a>
     <a class="mode-card" href="/cases" data-route="/cases"><div class="mode-text"><div class="mode-index">02 / КОЛЛЕКЦИЯ</div><h3>Кейсы</h3><p>Холодные кейсы,<br>новые открытия.</p><span class="mode-arrow">↗</span></div><div class="mode-illustration case-art"><div class="case-lid"></div><div class="case-body"><div class="case-glyph">W</div></div><div class="case-foot"></div></div></a>
-    <a class="mode-card" href="/duels" data-route="/duels"><div class="mode-text"><div class="mode-index">03 / PVP</div><h3>Дуэли</h3><p>Брось вызов другу<br>и забери его W.</p><span class="mode-arrow">↗</span></div><div class="mode-illustration duels-art"><div class="can can-light"><span aria-hidden="true"></span></div><div class="can can-dark"><span aria-hidden="true"></span></div></div></a>
+    <a class="mode-card mode-card--duels" href="/duels" data-route="/duels"><div class="mode-text"><div class="mode-index">03 / PVP</div><h3>Дуэли</h3><p>Брось вызов другу<br>и забери его W.</p><span class="mode-arrow">↗</span></div><div class="mode-photo" aria-hidden="true"><img src="/assets/duels-main-2026.webp" alt="" loading="lazy"></div></a>
   </div>
   <div class="bottom-grid">
     <section class="panel"><div class="panel-header"><h3>↗ Последние выигрыши</h3><a href="/casino" data-route="/casino" class="text-link">Холодос ↗</a></div><div class="wins-list" id="home-wins"><p class="muted">Загружаем реальные результаты…</p></div></section>
