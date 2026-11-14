@@ -131,10 +131,25 @@ function setReelSymbol(el,symbol){
  if(!sprite){el.textContent=symbol;return;}
  let img=el.querySelector('img');
  if(!img){img=document.createElement('img');img.className='slot-symbol';img.draggable=false;el.replaceChildren(img);}
- img.src='/assets/slot-'+sprite[0]+'.webp';img.alt=sprite[1];
+ img.src='/assets/slot-'+sprite[0]+'.webp?v=14';img.alt=sprite[1];
 }
-Object.values(slotSprites).forEach(([id])=>{const image=new Image();image.src='/assets/slot-'+id+'.webp';});
+Object.values(slotSprites).forEach(([id])=>{const image=new Image();image.src='/assets/slot-'+id+'.webp?v=14';});
 ['reel-1','reel-2','reel-3'].forEach(id=>setReelSymbol($(id),$(id).textContent.trim()));
+// Presentation only: emoji identifiers remain in markup and API/game data.
+const symbolPattern=/⚪|🟢|🥭|🌸|🔵|⚫|🍉|🟡|👑/gu;
+const oddsPanel=document.querySelector('#view-casino .odds-panel');
+const textWalker=document.createTreeWalker(oddsPanel,NodeFilter.SHOW_TEXT);
+const symbolNodes=[];
+while(textWalker.nextNode())if(textWalker.currentNode.textContent.match(symbolPattern))symbolNodes.push(textWalker.currentNode);
+for(const textNode of symbolNodes){
+ const fragment=document.createDocumentFragment();
+ for(const part of textNode.textContent.split(/(⚪|🟢|🥭|🌸|🔵|⚫|🍉|🟡|👑)/u)){
+  if(slotSprites[part]){const span=document.createElement('span');span.className='odds-symbol';span.dataset.symbol=part;setReelSymbol(span,part);fragment.append(span);}
+  else fragment.append(document.createTextNode(part));
+ }
+ textNode.replaceWith(fragment);
+}
+
 
 async function spin(){
  if(state.busy)return;
