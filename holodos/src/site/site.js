@@ -125,7 +125,7 @@ async function spin(){
  const reels=['reel-1','reel-2','reel-3'].map($);
  const chars=['⚪','🟢','🥭','🌸','🔵','⚫','🍉','🟡'];
  const reelFrame=$('view-casino').querySelector('.reels');
- reelFrame.classList.remove('win-flash','jackpot-flash');
+ reelFrame.classList.remove('win-flash','jackpot-flash','freeze-flash');
  reels.forEach(e=>e.classList.add('spinning'));
  $('spin-button').disabled=true;$('spin-button').textContent='Открываем…';
  $('spin-result').classList.remove('win');$('spin-result').textContent='Холодос открывается…';
@@ -144,6 +144,11 @@ async function spin(){
   if(result.gain>0){
    reelFrame.classList.add(result.gain===400?'jackpot-flash':'win-flash');
    setTimeout(()=>reelFrame.classList.remove('win-flash','jackpot-flash'),1300);
+  }else if(!reduceMotion){
+   // Visual-only frost on a real server-confirmed zero result.
+   // Never changes the prize, cooldown, balances or request handling.
+   reelFrame.classList.add('freeze-flash');
+   setTimeout(()=>reelFrame.classList.remove('freeze-flash'),1450);
   }
   $('spin-result').textContent=result.description+' +'+fmt(result.gain)+' W';
   if(result.gain>0)$('spin-result').classList.add('win');
