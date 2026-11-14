@@ -1176,3 +1176,14 @@ body.inner-page .view.active{animation:slideIn .25s ease both}
 @media(prefers-reduced-motion:reduce){
   #view-casino .reels.freeze-flash .reel::after{animation:none;display:none}
 }
+
+/* Match the Holodos container to the dark slot artwork. */
+#view-casino .slot-game{
+  background:#030810;
+}
+#view-casino .reels{
+  -webkit-mask-image:linear-gradient(to right,transparent,#000 8%,#000 92%,transparent),linear-gradient(to bottom,transparent,#000 8%,#000 92%,transparent);
+  -webkit-mask-composite:source-in;
+  mask-image:linear-gradient(to right,transparent,#000 8%,#000 92%,transparent),linear-gradient(to bottom,transparent,#000 8%,#000 92%,transparent);
+  mask-composite:intersect;
+}
