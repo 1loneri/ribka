@@ -296,10 +296,10 @@ const server=http.createServer(async(req,res)=>{
  };
  let basicPassword='';
  try{const hdr=req.headers.authorization||'';if(hdr.startsWith('Basic '))basicPassword=Buffer.from(hdr.slice(6),'base64').toString('utf8').split(':').slice(1).join(':');}catch{}
- const isAdmin=authenticated()||(basicPassword.length>0&&equal(basicPassword,pass));
+ const isAdmin=site.isAdminRequest(req)||authenticated()||(basicPassword.length>0&&equal(basicPassword,pass));
  // Signed, form-specific CSRF tokens work even when a browser or proxy omits Origin.
  const csrf=(purpose)=>{
-  const session=(req.headers.cookie||'').split(';').map(s=>s.trim()).find(s=>s.startsWith(cookieName+'='))?.slice(cookieName.length+1)||'';
+  const session=(req.headers.cookie||'').split(';').map(s=>s.trim()).find(s=>s.startsWith(cookieName+'='))?.slice(cookieName.length+1)||(req.headers.cookie||'').split(';').map(s=>s.trim()).find(s=>s.startsWith('war_session='))?.slice('war_session='.length)||'';
   return createHmac('sha256',key).update('csrf:v3:'+purpose+':'+(purpose==='login'?'guest':session)).digest('base64url');
  };
  const validCsrf=(form,purpose)=>equal(String(form.get('csrf')||''),csrf(purpose));
@@ -315,7 +315,7 @@ const server=http.createServer(async(req,res)=>{
    }catch{html(400,loginPage('Не получилось обработать форму.'));}
    return;
   }
-  html(req.method==='GET'&&url.pathname==='/admin'?200:401,loginPage());return;
+  html(req.method==='GET'&&url.pathname==='/admin'?200:401,loginPage()+'<p><a href="/auth/twitch">Войти через Twitch</a></p>');return;
  }
  if(req.method==='POST'&&url.pathname==='/logout'){
   const form=await formData(req);

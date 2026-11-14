@@ -1317,3 +1317,12 @@ body.inner-page .side-navigation.fully-hidden{width:0;padding:0;border:0;backgro
 body.inner-page[data-sidebar="hidden"] .shell{padding-left:0}
 @media(max-width:780px){body.inner-page[data-sidebar="expanded"] .shell{padding-left:72px}}
 @media(prefers-reduced-motion:reduce){body.inner-page .side-navigation,body.inner-page .shell{transition:none}}
+
+.side-link[hidden]{display:none!important}
+
+.side-toggle-hint{position:fixed;left:78px;top:76px;z-index:120;width:215px;padding:11px 13px;border:1px solid #5b6371;border-radius:10px;background:#1b1f27f5;color:#dce3ed;font-size:11px;line-height:1.6;font-weight:500;box-shadow:0 8px 24px #0007;opacity:0;visibility:hidden;transform:translateX(-5px);transition:opacity .2s ease,transform .2s ease,visibility .2s;pointer-events:none}
+.side-toggle-hint::before{content:"";position:absolute;left:-5px;top:17px;width:8px;height:8px;background:#1b1f27;border-left:1px solid #5b6371;border-bottom:1px solid #5b6371;transform:rotate(45deg)}
+.side-toggle:hover+.side-toggle-hint,.side-toggle:focus-visible+.side-toggle-hint{opacity:1;visibility:visible;transform:none}
+.side-navigation.expanded .side-toggle-hint{left:155px}
+.side-navigation.fully-hidden .side-toggle-hint{top:16px;left:72px}
+@media(prefers-reduced-motion:reduce){.side-toggle-hint{transition:none;transform:none}}

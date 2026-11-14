@@ -40,7 +40,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   'X-Frame-Options':'DENY',
   'Referrer-Policy':'strict-origin-when-cross-origin',
   'Permissions-Policy':'camera=(), microphone=(), geolocation=()',
-  'Content-Security-Policy':"default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://static-cdn.jtvnw.net; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
+  'Content-Security-Policy':"default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://static-cdn.jtvnw.net; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
  };
  function send(res,status,body,type='application/json; charset=utf-8',headers={}){
   res.writeHead(status,{...securityHeaders,'Content-Type':type,'Cache-Control':'no-store',...headers});
@@ -89,11 +89,23 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   if(!/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(value))throw Error('Неверный идентификатор запроса');
   return value.toLowerCase();
  }
+ const adminLogins=new Set(['lick0ver','war1ouss','bot_lehaai']);
+ db.exec("CREATE TABLE IF NOT EXISTS twitch_admin_accounts(login TEXT PRIMARY KEY,player_id TEXT NOT NULL UNIQUE,bound_at INTEGER NOT NULL);");
+ function isAdminSession(session){
+  if(!session)return false;
+  if(db.prepare('SELECT 1 FROM twitch_admin_accounts WHERE player_id=?').get(session.player_id))return true;
+  const login=String(session.login||'').toLowerCase();
+  if(!adminLogins.has(login))return false;
+  // Bind once to the Twitch-verified immutable user ID. Reused logins cannot take over.
+  db.prepare('INSERT OR IGNORE INTO twitch_admin_accounts(login,player_id,bound_at) VALUES(?,?,?)').run(login,session.player_id,Date.now());
+  return !!db.prepare('SELECT 1 FROM twitch_admin_accounts WHERE player_id=?').get(session.player_id);
+ }
+ function isAdminRequest(req){return isAdminSession(getSession(req));}
  function userMe(session){
   if(!session)return {authenticated:false};
   const p=player(session.player_id,session.login);
   const orders=db.prepare('SELECT id,vp,price,status,created_at FROM shop_orders WHERE player_id=? ORDER BY id DESC LIMIT 10').all(session.player_id);
-  return {authenticated:true,csrf:csrf(session),player:{id:p.id,login:p.login,display_name:session.display_name,avatar:session.avatar,balance:p.balance,opens:p.opens,wins:p.wins,jackpots:p.jackpots,last_opened:p.last_opened},orders};
+  return {authenticated:true,is_admin:isAdminSession(session),csrf:csrf(session),player:{id:p.id,login:p.login,display_name:session.display_name,avatar:session.avatar,balance:p.balance,opens:p.opens,wins:p.wins,jackpots:p.jackpots,last_opened:p.last_opened},orders};
  }
  function spinsQuery(sql,...params){
   return db.prepare(sql).all(...params).map(x=>({login:x.login,cans:JSON.parse(x.cans_json),gain:x.gain,description:x.description,source:x.source,created_at:x.created_at}));
@@ -240,5 +252,5 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   }
   return false;
  }
- return {handle,oauthCallback,recordSpin,trackChat};
+ return {handle,oauthCallback,recordSpin,trackChat,isAdminRequest};
 }

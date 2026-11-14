@@ -1,5 +1,5 @@
 {
-  "version": "1.1",
+  "version": "1.1.1",
   "source": "war1ouss_hub_economy_v1_1.xlsx",
   "shopPricesW": {
     "240": 25000,
@@ -10,7 +10,7 @@
     "donation": [
       {
         "label": "3000 W",
-        "probability": 0.15,
+        "probability": 0.1498,
         "w": 3000,
         "vpCostRub": 0
       },
@@ -49,12 +49,20 @@
         "probability": 0.01,
         "w": 0,
         "vpCostRub": 949
+      },
+      {
+        "label": "Фигурка POP MART",
+        "probability": 0.0002,
+        "w": 0,
+        "vpCostRub": 0,
+        "kind": "physical",
+        "costRub": null
       }
     ],
     "chat": [
       {
         "label": "100 W",
-        "probability": 0.35,
+        "probability": 0.335,
         "w": 100,
         "vpCostRub": 0
       },
@@ -87,6 +95,18 @@
         "probability": 0.005,
         "w": 0,
         "vpCostRub": 209
+      },
+      {
+        "label": "VIP на месяц",
+        "probability": 0.015,
+        "w": 0,
+        "vpCostRub": 0,
+        "kind": "vip",
+        "durationDays": 30,
+        "alreadyVipReward": {
+          "kind": "w",
+          "w": 3000
+        }
       }
     ],
     "vip": [
@@ -148,11 +168,48 @@
   "twitch": {
     "pricePoints": 10000,
     "cosmeticOnly": true,
-    "enabled": false
+    "enabled": false,
+    "theoreticalRewards": [
+      {
+        "label": "500 W",
+        "probability": 0.35,
+        "w": 500,
+        "vpCostRub": 0
+      },
+      {
+        "label": "1000 W",
+        "probability": 0.3,
+        "w": 1000,
+        "vpCostRub": 0
+      },
+      {
+        "label": "2000 W",
+        "probability": 0.2,
+        "w": 2000,
+        "vpCostRub": 0
+      },
+      {
+        "label": "5000 W",
+        "probability": 0.14,
+        "w": 5000,
+        "vpCostRub": 0
+      },
+      {
+        "label": "240 VP",
+        "probability": 0.01,
+        "w": 0,
+        "vpCostRub": 209
+      }
+    ]
   },
   "budget": {
     "monthlyRub": 25000,
     "eventsRub": 3000,
     "targetReserveRub": 5000
+  },
+  "overrides": {
+    "donationPopmartProbability": 0.0002,
+    "chatVipProbability": 0.015,
+    "existingVipReplacementW": 3000
   }
 }

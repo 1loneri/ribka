@@ -90,6 +90,7 @@ function renderMe(){
  if($('case-site-balance-hint'))$('case-site-balance-hint').textContent=logged?'Общий баланс сайта и бота':'Войди через Twitch';
  if($('side-balance'))$('side-balance').textContent=logged?fmt(me.player.balance)+' W':'W —';
  if($('side-login'))$('side-login').hidden=logged;
+ if($('side-admin'))$('side-admin').hidden=!(logged&&me.is_admin);
  if(logged){
   $('top-name').textContent=me.player.display_name||me.player.login;
   const avatar=safeAvatar(me.player.avatar);
