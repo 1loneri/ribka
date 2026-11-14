@@ -1,9 +1,12 @@
+import {createSupport} from './support.js';
 import {readFileSync,existsSync} from 'node:fs';
 import {createHash,randomBytes,createHmac,timingSafeEqual} from 'node:crypto';
 
 export function createSite({db,publicUrl,app,tokenRequest,validate,player,transaction,draw,cans,duelChallenge,duelRespond,say,channel,duelsEnabled,states,secret}){
+ const support=createSupport(db,transaction);
+ db.exec("CREATE TABLE IF NOT EXISTS cosmetic_profiles(player_id TEXT PRIMARY KEY,frame TEXT NOT NULL DEFAULT '',title TEXT NOT NULL DEFAULT '',name_color TEXT NOT NULL DEFAULT '');");
  const siteKey=createHash('sha256').update('war1ouss-web:'+secret).digest();
- const sitePages=new Set(['/','/casino','/cases','/duels','/top','/chat','/shop','/profile']);
+ const sitePages=new Set(['/','/casino','/cases','/duels','/top','/chat','/shop','/profile','/help','/requests']);
  const assetFiles={
   '/assets/site.css':{file:new URL('./site/site.css',import.meta.url),type:'text/css; charset=utf-8'},
   '/assets/site.js':{file:new URL('./site/site.js',import.meta.url),type:'text/javascript; charset=utf-8'},
@@ -31,6 +34,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  db.exec("CREATE INDEX IF NOT EXISTS idx_fridge_spins_recent ON fridge_spins(id DESC);");
  db.exec("CREATE INDEX IF NOT EXISTS idx_fridge_spins_player ON fridge_spins(player_id,id DESC);");
  db.exec("CREATE TABLE IF NOT EXISTS chat_stats(player_id TEXT PRIMARY KEY,login TEXT NOT NULL,message_count INTEGER NOT NULL DEFAULT 0,last_seen INTEGER NOT NULL DEFAULT 0);");
+ if(!db.prepare('PRAGMA table_info(chat_stats)').all().some(c=>c.name==='badges_json'))db.exec("ALTER TABLE chat_stats ADD COLUMN badges_json TEXT NOT NULL DEFAULT '{}'");
  db.prepare("DELETE FROM web_sessions WHERE expires_at<?").run(Date.now());
 
  const secure=publicUrl.startsWith('https:')?'; Secure':'';
@@ -105,7 +109,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   if(!session)return {authenticated:false};
   const p=player(session.player_id,session.login);
   const orders=db.prepare('SELECT id,vp,price,status,created_at FROM shop_orders WHERE player_id=? ORDER BY id DESC LIMIT 10').all(session.player_id);
-  return {authenticated:true,is_admin:isAdminSession(session),csrf:csrf(session),player:{id:p.id,login:p.login,display_name:session.display_name,avatar:session.avatar,balance:p.balance,opens:p.opens,wins:p.wins,jackpots:p.jackpots,last_opened:p.last_opened},orders};
+  return {authenticated:true,is_admin:isAdminSession(session),support_unread:support.unread(session),csrf:csrf(session),player:{id:p.id,login:p.login,display_name:session.display_name,avatar:session.avatar,balance:p.balance,opens:p.opens,wins:p.wins,jackpots:p.jackpots,last_opened:p.last_opened,message_count:db.prepare('SELECT message_count FROM chat_stats WHERE player_id=?').get(session.player_id)?.message_count||0},orders};
  }
  function spinsQuery(sql,...params){
   return db.prepare(sql).all(...params).map(x=>({login:x.login,cans:JSON.parse(x.cans_json),gain:x.gain,description:x.description,source:x.source,created_at:x.created_at}));
@@ -114,8 +118,10 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   const display=d.cans.map(i=>cans[i]);
   db.prepare('INSERT OR IGNORE INTO fridge_spins(request_id,player_id,login,cans_json,gain,description,source,created_at) VALUES(?,?,?,?,?,?,?,?)').run(requestId,id,login,JSON.stringify(display),d.gain,d.description,source,now);
  }
- function trackChat(id,login,now){
+ function trackChat(id,login,now,tags={}){
   db.prepare('INSERT INTO chat_stats(player_id,login,message_count,last_seen) VALUES(?,?,1,?) ON CONFLICT(player_id) DO UPDATE SET login=excluded.login,message_count=message_count+1,last_seen=excluded.last_seen').run(id,login,now);
+  const badges=tags.badges||{};const safe={};for(const k of ['broadcaster','moderator','vip','subscriber','founder','premium'])if(badges[k])safe[k]=String(badges[k]).slice(0,12);
+  db.prepare('UPDATE chat_stats SET badges_json=? WHERE player_id=?').run(JSON.stringify(safe),id);
  }
  async function oauthCallback(req,res,url,stateKey,meta){
   if(!meta||meta.type!=='site'||meta.until<Date.now())return send(res,403,'Авторизация истекла.','text/plain; charset=utf-8');
@@ -174,10 +180,14 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   }
   if(path.startsWith('/api/')){
    if(method==='GET'){
+    if(path==='/api/support'||path.startsWith('/api/support/')){
+     const session=getSession(req);if(!session){json(res,401,{error:'Сначала войди через Twitch'});return true;}
+     try{json(res,200,path==='/api/support'?{tickets:support.list(session)}:support.thread(path.split('/').pop(),session));}catch(e){json(res,e.status||400,{error:e.message})}return true;
+    }
     if(path==='/api/me'){json(res,200,userMe(getSession(req)));return true;}
     if(path==='/api/public'){
      const top=db.prepare('SELECT login,balance,opens FROM players ORDER BY balance DESC,login ASC LIMIT 15').all();
-     const chat=db.prepare('SELECT login,message_count FROM chat_stats ORDER BY message_count DESC,login ASC LIMIT 15').all();
+     const chat=db.prepare("SELECT c.login,c.message_count,c.badges_json,COALESCE(p.frame,'') AS frame,COALESCE(p.title,'') AS title,COALESCE(p.name_color,'') AS name_color FROM chat_stats c LEFT JOIN cosmetic_profiles p ON p.player_id=c.player_id ORDER BY c.message_count DESC,c.login ASC LIMIT 15").all();
      const recent=spinsQuery('SELECT login,cans_json,gain,description,source,created_at FROM fridge_spins WHERE gain>0 ORDER BY id DESC LIMIT 8');
      json(res,200,{top,chat,recent});return true;
     }
@@ -200,6 +210,9 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
    if(!constantTime(String(req.headers['x-csrf-token']||''),csrf(session))){json(res,403,{error:'Сессия устарела. Обнови страницу.'});return true;}
    try{
     const data=await readJson(req);
+    if(path==='/api/support'){json(res,200,support.create(session,data.body));return true;}
+    if(path==='/api/support/reply'){json(res,200,support.reply(session,data.id,data.body));return true;}
+    if(path==='/api/support/read'){json(res,200,support.read(session,data.id,data.maxId));return true;}
     if(path==='/api/logout'){
      db.prepare('DELETE FROM web_sessions WHERE token_hash=?').run(session.token_hash);
      json(res,200,{ok:true},{'Set-Cookie':'war_session=;'+baseCookies.slice(1)+'; Max-Age=0'});return true;
@@ -242,7 +255,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
     json(res,404,{error:'Команда не найдена'});return true;
    }catch(error){
     console.error('War1ouss API:',error.message);
-    json(res,400,{error:'Не получилось выполнить операцию. Проверь данные и попробуй снова.'});
+    json(res,error.status||400,{error:error.status?error.message:'Не получилось выполнить операцию. Проверь данные и попробуй снова.'});
     return true;
    }
   }
@@ -252,5 +265,5 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   }
   return false;
  }
- return {handle,oauthCallback,recordSpin,trackChat,isAdminRequest};
+ return {handle,oauthCallback,recordSpin,trackChat,isAdminRequest,support,adminIdentity:req=>{const s=getSession(req);return s&&isAdminSession(s)?s:{player_id:'admin-panel',login:'Администратор'};}};
 }

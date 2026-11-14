@@ -211,5 +211,24 @@
     "donationPopmartProbability": 0.0002,
     "chatVipProbability": 0.015,
     "existingVipReplacementW": 3000
+  },
+  "subscriber": {
+    "enabled": false,
+    "monthlyCasesByTier": {
+      "1000": 1,
+      "2000": 2,
+      "3000": 3
+    },
+    "requiresVerifiedSubscription": true,
+    "rewards": [
+      "frame_effect",
+      "title",
+      "nickname_style",
+      "chess_skin",
+      "site_theme"
+    ],
+    "rarestReward": "site_theme",
+    "chessSkinInDevelopment": true,
+    "probabilities": null
   }
 }

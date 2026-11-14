@@ -1,6 +1,6 @@
 'use strict';
 const $=id=>document.getElementById(id);
-const routes=new Set(['/','/casino','/cases','/duels','/top','/chat','/profile','/shop']);
+const routes=new Set(['/','/casino','/cases','/duels','/top','/chat','/profile','/shop','/help','/requests']);
 const state={me:null,public:null,history:null,duels:null,busy:false,timer:null};
 const fmt=n=>Number(n||0).toLocaleString('ru-RU');
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
@@ -34,12 +34,20 @@ function applySidebarMode(mode){
  try{localStorage.setItem('war1ouss-sidebar',mode);}catch{}
 }
 function closeSidebar(){applySidebarMode('icons');}
-function toggleSidebar(){applySidebarMode(sidebarMode==='expanded'?'icons':'expanded');}
+function toggleSidebar(){applySidebarMode(sidebarMode==='hidden'?'icons':sidebarMode==='icons'?'expanded':'hidden');}
 applySidebarMode(sidebarMode);
 let sidebarClickTimer;
 function sidebarClick(event){clearTimeout(sidebarClickTimer);if(event.detail>1)return;sidebarClickTimer=setTimeout(toggleSidebar,230);}
 function sidebarDoubleClick(){clearTimeout(sidebarClickTimer);applySidebarMode('hidden');}
+let routeTransition;
 function navigate(path,replace=false){
+ if(!routes.has(path))path='/';
+ const update=()=>renderRoute(path,replace);
+ if(!replace&&location.pathname!==path&&document.startViewTransition&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+  routeTransition?.skipTransition();routeTransition=document.startViewTransition(update);
+ }else update();
+}
+function renderRoute(path,replace=false){
  if(!routes.has(path))path='/';
  if(replace)history.replaceState({},'',path);else if(location.pathname!==path)history.pushState({},'',path);
  document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.dataset.view===path));
@@ -48,16 +56,22 @@ function navigate(path,replace=false){
  document.body.classList.toggle('inner-page',path!=='/');
  document.querySelectorAll('.side-link[data-route]').forEach(el=>{el.classList.toggle('active',el.getAttribute('href')===path);if(el.getAttribute('href')===path)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});
  applySidebarMode(sidebarMode);
- const titles={'/':'Главная','/casino':'Холодос','/cases':'Кейсы','/duels':'Дуэли','/top':'Топ игроков','/chat':'Топ чата','/profile':'Профиль','/shop':'Магазин'};
+ const titles={'/':'Главная','/casino':'Холодос','/cases':'Кейсы','/duels':'Дуэли','/top':'Топ игроков','/chat':'Топ чата','/profile':'Профиль','/shop':'Магазин','/help':'Помощь','/requests':'Запросы'};
  document.title=(titles[path]||'Главная')+' — War1ouss';
  window.scrollTo({top:0,behavior:'instant'});
  if(path==='/duels')refreshDuels();
  if(path==='/casino')refreshSpins();
  if(path==='/profile')renderProfile();
+ if(path==='/requests')refreshRequests();
+}
+function chatBadgesHtml(row){
+ let badges={};try{badges=JSON.parse(row.badges_json||'{}')}catch{}
+ const labels={broadcaster:'Стример',moderator:'Модератор',vip:'VIP',subscriber:'Подписчик',founder:'Основатель',premium:'Prime'};
+ return Object.entries(labels).filter(([k])=>badges[k]).map(([k,label])=>'<span class="chat-badge chat-badge--'+k+'" title="'+esc(label)+'">'+esc(label)+'</span>').join('');
 }
 function rankHtml(list,kind='balance'){
  if(!list||!list.length)return '<p class="muted">Пока нет данных. Рейтинг обновляется по мере активности игроков.</p>';
- return list.map((r,i)=>'<div class="rank-item"><span class="rank-position">'+(i+1)+'</span><div class="rank-name"><b>@'+esc(r.login)+'</b>'+(kind==='balance'?'<small>Открытий: '+fmt(r.opens)+'</small>':'<small>Сообщений с начала учёта</small>')+'</div><div class="rank-score">'+fmt(kind==='balance'?r.balance:r.message_count)+' '+(kind==='balance'?'W':'сообщ.')+'</div></div>').join('');
+ return list.map((r,i)=>'<div class="rank-item '+(kind==='chat'&&['ice','rose','amber','violet'].includes(r.frame)?'chat-frame-'+r.frame:'')+'"><span class="rank-position">'+(i+1)+'</span><div class="rank-name"><b>@'+esc(r.login)+'</b>'+(kind==='balance'?'<small>Открытий: '+fmt(r.opens)+'</small>':'<small>'+chatBadgesHtml(r)+(r.title?'<span class="chat-title">'+esc(r.title)+'</span>':'')+'</small><small>Сообщений с начала учёта</small>')+'</div><div class="rank-score">'+fmt(kind==='balance'?r.balance:r.message_count)+' '+(kind==='balance'?'W':'сообщ.')+'</div></div>').join('');
 }
 function winsHtml(list){
  if(!list||!list.length)return '<p class="muted">Реальные выигрыши появятся здесь после следующих открытий. Прошлые игры бота ещё не записывались в историю.</p>';
@@ -98,7 +112,10 @@ function renderMe(){
  }
  updateCooldown();
  renderProfile();
+ renderNotificationBadges();
+ if(currentRoute()==='/requests'&&!selectedSupportTicket)refreshRequests();
 }
+
 function renderProfile(){
  const me=state.me;if(!me)return;
  if(!me.authenticated){
@@ -109,7 +126,7 @@ function renderProfile(){
  const avatar=safeAvatar(p.avatar);
  $('profile-content').innerHTML='<div class="profile-card">'+(avatar?'<img class="profile-avatar" src="'+esc(avatar)+'" alt="Аватар Twitch">':'<span class="coin-icon" style="width:75px;height:75px;font-size:27px">W</span>')+'<div><div class="profile-name">@'+esc(p.display_name||p.login)+'</div><span class="profile-muted">Аккаунт Twitch · W-монеты синхронизированы с чатом</span></div></div>'
   +'<div class="stats-grid"><div class="stat"><strong>'+fmt(p.balance)+'</strong><span>Баланс W</span></div><div class="stat"><strong>'+fmt(p.opens)+'</strong><span>Открытий</span></div><div class="stat"><strong>'+fmt(p.wins)+'</strong><span>Выигрышей</span></div><div class="stat"><strong>'+fmt(p.jackpots)+'</strong><span>Суперджекпотов</span></div></div>'
-  +'<div class="profile-orders"><h3>Заявки магазина</h3>'+(orders.length?orders.map(o=>'<div class="history-item"><strong>№'+o.id+' · '+o.vp+' VP</strong><span>'+esc(o.status==='pending'?'Ожидает выдачи':o.status==='fulfilled'?'Выдано':'Отменено')+'</span><em>'+fmt(o.price)+' W</em><time>'+ruTime(o.created_at)+'</time></div>').join(''):'<p class="muted">Пока нет заявок. Оформить можно через команду !купить в чате.</p>')+'</div>'
+  +'<div class="stat"><strong>'+fmt(p.message_count)+'</strong><span>Сообщений в чате с начала учёта</span></div><p><a class="button button-ghost" href="/requests" data-route="/requests">Запросы <span class="support-count"></span></a></p>'+ '<div class="profile-orders"><h3>Заявки магазина</h3>'+(orders.length?orders.map(o=>'<div class="history-item"><strong>№'+o.id+' · '+o.vp+' VP</strong><span>'+esc(o.status==='pending'?'Ожидает выдачи':o.status==='fulfilled'?'Выдано':'Отменено')+'</span><em>'+fmt(o.price)+' W</em><time>'+ruTime(o.created_at)+'</time></div>').join(''):'<p class="muted">Пока нет заявок. Оформить можно через команду !купить в чате.</p>')+'</div>'
   +'<button type="button" class="logout-btn" id="logout-btn">Выйти из профиля</button>';
  $('logout-btn').addEventListener('click',logout);
 }
@@ -275,3 +292,51 @@ setInterval(()=>{if(document.visibilityState==='visible'){refreshPublic();if(cur
 document.addEventListener('visibilitychange',()=>{
  if(document.visibilityState==='visible'&&!state.busy){refreshMe();refreshPublic();if(currentRoute()==='/duels')refreshDuels();}
 });
+
+// Decorative idle frost never captures input and clears on any activity.
+(()=>{
+ const frost=$('idle-edge-frost');if(!frost)return;
+ const motion=window.matchMedia('(prefers-reduced-motion: reduce)');let idleTimer;
+ const active=()=>{
+  clearTimeout(idleTimer);frost.classList.remove('visible');
+  if(!motion.matches&&document.visibilityState==='visible')idleTimer=setTimeout(()=>frost.classList.add('visible'),15000);
+ };
+ for(const event of ['pointermove','pointerdown','wheel','touchstart','scroll'])window.addEventListener(event,active,{passive:true});
+ window.addEventListener('keydown',active);document.addEventListener('visibilitychange',active);motion.addEventListener('change',active);active();
+})();
+
+let selectedSupportTicket=null;
+async function supportPost(path,data){return api(path,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':state.me?.csrf||''},body:JSON.stringify(data)});}
+function renderNotificationBadges(){
+ const unread=Number(state.me?.support_unread||0),ready=!!state.me?.authenticated&&Date.now()>=Number(state.me.player.last_opened||0)+120000;
+ const text=[unread?unread+' ответов поддержки':'',ready?'Холодос готов':''].filter(Boolean).join('. ');
+ for(const el of document.querySelectorAll('#avatar-link,.side-link[href="/profile"]')){el.classList.toggle('has-notice',!!text);el.dataset.notice=text?'•':'';if(text)el.title=text;else el.removeAttribute('title');}
+ for(const el of document.querySelectorAll('.side-link[href="/casino"]')){el.classList.toggle('has-notice',ready);el.dataset.notice=ready?'•':'';el.title=ready?'Холодос готов':'Казино';}
+ for(const el of document.querySelectorAll('.support-count'))el.textContent=unread?'('+unread+')':'';
+}
+async function refreshRequests(){
+ if(!state.me?.authenticated){$('support-list').innerHTML='<p>Войди через Twitch, чтобы посмотреть свои обращения.</p><a class="text-link" href="/auth/twitch">Войти ↗</a>';return;}
+ try{const data=await api('/api/support');$('support-list').innerHTML=data.tickets.length?data.tickets.map(t=>'<button type="button" class="support-ticket" data-ticket="'+t.id+'"><strong>№'+t.id+(t.unread?' · Новый ответ':'')+'</strong><span>'+esc(t.subject)+'</span><small>'+ruTime(t.updated_at)+'</small></button>').join(''):'<p class="muted">Пока нет обращений.</p><a class="text-link" href="/help" data-route="/help">Задать вопрос ↗</a>';
+ for(const btn of $('support-list').querySelectorAll('[data-ticket]'))btn.addEventListener('click',()=>openSupportThread(Number(btn.dataset.ticket)));
+ }catch(e){$('support-list').textContent=e.message;}
+}
+async function openSupportThread(id){
+ try{const data=await api('/api/support/'+id);selectedSupportTicket=id;$('support-thread').innerHTML='<h2>Обращение №'+id+'</h2>'+data.messages.map(m=>'<article class="support-message support-message--'+esc(m.role)+'"><div><b>'+esc(m.role==='system'?'Автоматическое сообщение':m.role==='admin'?'Администратор · '+m.author:m.author)+'</b><time>'+ruTime(m.created_at)+'</time></div><p>'+esc(m.body)+'</p></article>').join('');$('support-reply-form').hidden=false;
+ const maxId=data.messages.at(-1)?.id||0;await supportPost('/api/support/read',{id,maxId});await refreshMe();
+ }catch(e){notice(e.message);}
+}
+$('support-form').addEventListener('submit',async e=>{e.preventDefault();if(!state.me?.authenticated){notice('Сначала войди через Twitch');return;}const button=e.submitter;button.disabled=true;try{const r=await supportPost('/api/support',{body:$('support-body').value});$('support-body').value='';navigate('/requests');await refreshRequests();await openSupportThread(r.id);}catch(err){notice(err.message)}finally{button.disabled=false}});
+$('support-reply-form').addEventListener('submit',async e=>{e.preventDefault();if(!selectedSupportTicket)return;const button=e.submitter;button.disabled=true;try{await supportPost('/api/support/reply',{id:selectedSupportTicket,body:$('support-reply').value});$('support-reply').value='';await openSupportThread(selectedSupportTicket);await refreshRequests();}catch(err){notice(err.message)}finally{button.disabled=false}});
+let cooldownAlerts=false,lastAlerted=0;
+try{cooldownAlerts=localStorage.getItem('war1ouss-cooldown-alerts')==='on';lastAlerted=Number(localStorage.getItem('war1ouss-last-cooldown-alert')||0)}catch{}
+const bellSvg='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M5 17h14l-2-3V9a5 5 0 0 0-10 0v5l-2 3zM10 20h4"/></svg>';
+function updateBellButtons(){for(const b of document.querySelectorAll('.notify-toggle')){b.innerHTML=bellSvg;b.setAttribute('aria-pressed',String(cooldownAlerts));b.title=cooldownAlerts?'Уведомления о Холодосе включены':'Уведомить, когда Холодос готов';}}
+for(const b of document.querySelectorAll('.notify-toggle'))b.addEventListener('click',async()=>{cooldownAlerts=!cooldownAlerts;try{localStorage.setItem('war1ouss-cooldown-alerts',cooldownAlerts?'on':'off')}catch{}updateBellButtons();notice(cooldownAlerts?'Уведомления включены. Они работают, пока сайт открыт.':'Уведомления выключены.');if(cooldownAlerts&&'Notification'in window&&Notification.permission==='default')try{await Notification.requestPermission()}catch{}});
+updateBellButtons();
+setInterval(()=>{
+ renderNotificationBadges();const opened=Number(state.me?.player?.last_opened||0);
+ if(!cooldownAlerts||!state.me?.authenticated||!opened||opened<=lastAlerted||Date.now()<opened+120000)return;
+ lastAlerted=opened;try{localStorage.setItem('war1ouss-last-cooldown-alert',String(opened))}catch{}notice('Холодос снова готов к открытию!');
+ if('Notification'in window&&Notification.permission==='granted')try{new Notification('Холодос готов',{body:'Можно снова открыть Холодос на War1ouss.',tag:'war1ouss-cooldown'})}catch{}
+},1000);
+setInterval(()=>{if(document.visibilityState==='visible'&&currentRoute()==='/requests'&&state.me?.authenticated){refreshRequests();if(selectedSupportTicket)openSupportThread(selectedSupportTicket);}},15000);

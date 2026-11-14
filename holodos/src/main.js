@@ -2,6 +2,7 @@ import http from 'node:http';
 import {DatabaseSync} from 'node:sqlite';
 import {mkdirSync,existsSync,readFileSync} from 'node:fs';
 import {createSite} from './site-server.js';
+import {renderAdminPage} from './admin-page.js';
 import {dirname} from 'node:path';
 import {randomInt,randomBytes,scryptSync,createCipheriv,createDecipheriv,createHmac,timingSafeEqual} from 'node:crypto';
 import tmi from 'tmi.js';
@@ -239,7 +240,7 @@ async function start(){
    if(self||!msg.trim())return;
    const login=String(tags.username||'').toLowerCase(),id=String(tags['user-id']||''),mid=String(tags.id||'');
    if(login===botLogin||!/^[a-z0-9_]{1,25}$/.test(login)||!/^\d+$/.test(id)||!mid||mid.length>200)return;
-   try{const now=Date.now();site.trackChat(id,login,now);if(msg.trim().startsWith('!'))handle(login,id,msg,mid,now);}catch(e){console.error('chat message:',e.message);}
+   try{const now=Date.now();site.trackChat(id,login,now,tags);if(msg.trim().startsWith('!'))handle(login,id,msg,mid,now);}catch(e){console.error('chat message:',e.message);}
   });
   await conn.connect();
  }catch(e){connected=false;console.error('Could not connect to Twitch:',e.message);}finally{starting=false;}
@@ -254,10 +255,8 @@ if(!existsSync(siteBackupPath)){
 const site=createSite({db,publicUrl,app,tokenRequest,validate,player,transaction,draw,cans,duelChallenge,duelRespond,say,channel,duelsEnabled,states,secret});
 function equal(a,b){const x=Buffer.from(a),y=Buffer.from(b);return x.length===y.length&&timingSafeEqual(x,y);}
 function escape(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function page(body){
- return '<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Лёха · Холодос</title><style>body{background:#0e100e;color:#eee;font:16px system-ui;margin:0;padding:9vh 18px}main{max-width:690px;margin:auto}h1{font-size:44px}h1 b{color:#9aea42}section{background:#1b201a;border:1px solid #3b4b35;padding:25px;border-radius:16px}p{line-height:1.6}a,button{background:#9aea42;border:0;color:#14240e;padding:13px 19px;border-radius:9px;font-weight:bold;text-decoration:none;cursor:pointer;display:inline-block}a.link{background:transparent;color:#9aea42;padding:0;text-decoration:underline}label{display:block;margin:13px 0 5px}input{box-sizing:border-box;padding:12px;background:#111;color:white;border:1px solid #666;border-radius:8px;display:block;width:100%;margin-top:5px}code{color:#9aea42;overflow-wrap:anywhere}small{color:#bbb}summary{cursor:pointer}</style><main><h1>ЛЁХА<b>.</b></h1><section>'+body+'</section><p><small>Отдельный бот команд, не связанный со старым сайтом. W-монеты сохраняются на сервере.</small></p></main></html>';
-}
-async function formData(req){let text='';for await(const chunk of req){text+=chunk;if(text.length>4096)throw Error('Слишком большая форма');}return new URLSearchParams(text);}
+function page(body){return renderAdminPage(body);}
+async function formData(req){let text='';for await(const chunk of req){text+=chunk;if(text.length>16384)throw Error('Слишком большая форма');}return new URLSearchParams(text);}
 function setupForm(token){
  const a=app();
  return '<form method="post" action="/configure"><input type="hidden" name="csrf" value="'+token+'"><label>Client ID<input name="client_id" required maxlength="100" autocomplete="off" value="'+escape(a?.id||'')+'"></label><label>Client Secret<input type="password" name="client_secret" required maxlength="200" autocomplete="off" placeholder="Secret из Twitch Developer Console"></label><p><button type="submit">Сохранить настройки Twitch</button></p></form>';
@@ -323,6 +322,11 @@ const server=http.createServer(async(req,res)=>{
   res.writeHead(303,{Location:'/',"Cache-Control":"no-store",'Set-Cookie':cookieName+'=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0'});res.end();return;
  }
  if(req.method==='POST'){
+  if(url.pathname==='/support-reply'){
+   try{const f=await formData(req);if(!validCsrf(f,'support')){html(403,'Форма устарела. Обнови страницу.');return;}
+    const actor=site.adminIdentity(req);site.support.reply(actor,f.get('ticket_id'),f.get('body'),true);res.writeHead(303,{Location:'/admin#support','Cache-Control':'no-store'});res.end();
+   }catch(e){html(e.status||400,'Не удалось отправить ответ: '+escape(e.message));}return;
+  }
   if(url.pathname==='/order'){
    try{
     const f=await formData(req);
@@ -361,20 +365,38 @@ const server=http.createServer(async(req,res)=>{
  }
  if(url.pathname!=='/admin'){html(404,'Не найдено');return;}
  const a=app(),linked=current();
- let content='<h2>'+ (linked?'@'+escape(linked.login)+' авторизован':a?'Twitch-приложение настроено':'Подключение Twitch')+'</h2><p>Канал: <code>#'+escape(channel)+'</code> · '+(connected?'Бот в чате':'Бот не в чате')+'</p><p>Команды: <code>!холодос</code>, <code>!баланс</code>, <code>!топмонет</code>, <code>!статмонет</code>, <code>!магазин</code>, <code>!купить 240</code>, <code>!заказ</code>.'+(duelsEnabled?' Дуэли: <code>!дуэль @ник 500</code>, <code>!принять</code>, <code>!отказ</code>.':' Дуэли пока выключены.')+'</p>';
- if(!a)content+='<h3>Шаг 1. Создай Twitch-приложение</h3><p>Открой <a class="link" href="https://dev.twitch.tv/console/apps" target="_blank" rel="noopener">Twitch Developer Console</a> и зарегистрируй приложение типа Confidential. В OAuth Redirect URLs добавь:</p><p><code>'+escape(publicUrl)+'/oauth/callback</code></p><p>Нажми Manage → New Secret и введи ID и Secret ниже (не отправляй секрет в чат ChatGPT).</p>'+setupForm(csrf('configure'));
- else{
-  content+=linked?'<form method="post" action="/disconnect"><input type="hidden" name="csrf" value="'+csrf('disconnect')+'"><button type="submit">Отключить Twitch</button></form>':'<h3>Шаг 2. Войди как @'+escape(botLogin)+'</h3><p>Авторизуй именно аккаунт бота, чтобы он писал команды в чате.</p><a href="/connect">Подключить Twitch</a>';
-  content+='<details style="margin-top:30px"><summary>Изменить Twitch Client ID / Secret</summary><p>Адрес OAuth Redirect: <code>'+escape(publicUrl)+'/oauth/callback</code></p>'+setupForm(csrf('configure'))+'</details>';
- }
+ const stats=db.prepare('SELECT COUNT(*) AS users,COALESCE(SUM(balance),0) AS balance,COALESCE(SUM(opens),0) AS opens FROM players').get();
  const orders=db.prepare("SELECT id,login,vp,price,created_at FROM shop_orders WHERE status='pending' ORDER BY id ASC LIMIT 40").all();
- content+='<h3 style="margin-top:32px">Магазин VP — заявки на ручную выдачу</h3><p>240 VP = 25 000 W · 475 VP = 55 000 W · 1000 VP = 115 000 W. Новые заявки списывают W автоматически. VP нужно выдать игроку вручную. Отмена возвращает W.</p>';
- if(orders.length===0)content+='<p>Пока нет заявок.</p>';
- else for(const o of orders){
-  content+='<div style="padding:14px 0;border-top:1px solid #3b4b35"><b>Заказ №'+o.id+'</b> · @'+escape(o.login)+' · '+o.vp+' VP · '+o.price.toLocaleString('ru-RU')+' W<p><small>'+escape(new Date(o.created_at).toLocaleString('ru-RU',{timeZone:'Europe/Tallinn'}))+'</small></p>'+
-   '<form method="post" action="/order" style="display:inline-block;margin-right:10px"><input type="hidden" name="csrf" value="'+csrf('shop-order')+'"><input type="hidden" name="order_id" value="'+o.id+'"><input type="hidden" name="action" value="fulfilled"><button type="submit">Выдано вручную</button></form>'+
-   '<form method="post" action="/order" style="display:inline-block"><input type="hidden" name="csrf" value="'+csrf('shop-order')+'"><input type="hidden" name="order_id" value="'+o.id+'"><input type="hidden" name="action" value="cancelled"><button type="submit">Отмена + возврат W</button></form></div>';
+ const pendingCount=db.prepare("SELECT COUNT(*) AS n FROM shop_orders WHERE status='pending'").get().n;
+ const number=n=>Number(n||0).toLocaleString('ru-RU');
+ let content='<header class="admin-heading" id="overview"><div><div class="admin-eyebrow">WAR1OUSS / ПАНЕЛЬ УПРАВЛЕНИЯ</div><h1>Всё под контролем.</h1><p>Баланс сообщества, заявки и подключение Twitch.</p></div><span class="admin-badge '+(connected?'online':'')+'">'+(connected?'● Бот в сети':'○ Бот не подключён')+'</span></header>';
+ content+='<div class="admin-kpis"><div class="admin-stat"><span>ИГРОКИ</span><strong>'+number(stats.users)+'</strong><small>В общей базе</small></div><div class="admin-stat"><span>W В ОБРАЩЕНИИ</span><strong>'+number(stats.balance)+'</strong><small>Сумма текущих балансов</small></div><div class="admin-stat"><span>ОТКРЫТИЯ ХОЛОДОСА</span><strong>'+number(stats.opens)+'</strong><small>Сайт и Twitch</small></div><div class="admin-stat"><span>ОЖИДАЮТ ВЫДАЧИ</span><strong>'+number(pendingCount)+'</strong><small>Заявки магазина VP</small></div></div>';
+ content+='<section class="admin-panel" id="orders"><h2>Заявки на VP</h2><p class="admin-note">W уже списаны при заказе. Отмечай выдачу только после передачи кода игроку. Отмена возвращает W.</p>';
+ if(!orders.length)content+='<div class="admin-empty">Все заявки обработаны. Новые заказы появятся здесь.</div>';
+ for(const o of orders){
+  content+='<article class="admin-order"><div class="admin-order-head"><b>№'+o.id+' · @'+escape(o.login)+'</b><strong>'+o.vp+' VP</strong></div><small>'+number(o.price)+' W · '+escape(new Date(o.created_at).toLocaleString('ru-RU',{timeZone:'Europe/Tallinn'}))+'</small><div class="admin-actions">'+
+   '<form method="post" action="/order"><input type="hidden" name="csrf" value="'+csrf('shop-order')+'"><input type="hidden" name="order_id" value="'+o.id+'"><input type="hidden" name="action" value="fulfilled"><button type="submit">Код выдан</button></form>'+
+   '<form method="post" action="/order"><input type="hidden" name="csrf" value="'+csrf('shop-order')+'"><input type="hidden" name="order_id" value="'+o.id+'"><input type="hidden" name="action" value="cancelled"><button class="danger" type="submit">Отменить и вернуть W</button></form></div></article>';
  }
+ content+='</section><div class="admin-grid"><section class="admin-panel" id="economy"><h2>Экономика</h2><p class="admin-note">Текущие цены магазина. Уже созданные заявки сохраняют свою стоимость.</p>';
+ for(const [vp,price] of Object.entries(SHOP_PRICES))content+='<div class="admin-row"><span>'+vp+' VP</span><b>'+number(price)+' W</b></div>';
+ content+='<div class="admin-row"><span>Версия настроек</span><b>'+escape(ECONOMY.version)+'</b></div><div class="admin-row"><span>Кейсы</span><b>Открытия отключены</b></div><p><a class="link" href="/cases">Посмотреть коллекцию ↗</a></p></section>';
+ content+='<section class="admin-panel"><h2>Twitch-канал</h2><div class="admin-row"><span>Канал</span><b>#'+escape(channel)+'</b></div><div class="admin-row"><span>Аккаунт бота</span><b>@'+escape(linked?.login||botLogin)+'</b></div><div class="admin-row"><span>Подключение</span><b>'+(linked?'Авторизован':'Требуется вход')+'</b></div><p class="admin-note">Команды: !холодос · !баланс · !магазин · !заказ</p></section></div>';
+ content+='<section class="admin-panel" id="settings"><h2>Настройки Twitch</h2>';
+ if(!a)content+='<p>Создай приложение в <a class="link" href="https://dev.twitch.tv/console/apps" target="_blank" rel="noopener">Twitch Developer Console</a>. OAuth Redirect URL:</p><p><code>'+escape(publicUrl)+'/oauth/callback</code></p>'+setupForm(csrf('configure'));
+ else{
+  content+=linked?'<p>Бот авторизован. Отключение остановит его работу в чате.</p><form method="post" action="/disconnect"><input type="hidden" name="csrf" value="'+csrf('disconnect')+'"><button type="submit">Отключить бота</button></form>':'<p>Авторизуй аккаунт @'+escape(botLogin)+', чтобы бот мог работать в чате.</p><a class="admin-button" href="/connect">Подключить Twitch</a>';
+  content+='<details style="margin-top:20px"><summary>Изменить Client ID и Client Secret</summary><p class="admin-note">OAuth Redirect: <code>'+escape(publicUrl)+'/oauth/callback</code></p>'+setupForm(csrf('configure'))+'</details>';
+ }
+ content+='</section>';
+ content+='<section class="admin-panel" id="support"><h2>Обращения пользователей</h2><p class="admin-note">Последние 30 обращений. Время указано по Таллину.</p>';
+ const tickets=db.prepare('SELECT * FROM support_tickets ORDER BY updated_at DESC LIMIT 30').all();
+ if(!tickets.length)content+='<p>Новых обращений пока нет.</p>';
+ for(const t of tickets){content+='<details class="admin-order"><summary>№'+t.id+' · @'+escape(t.login)+' · '+escape(new Date(t.updated_at).toLocaleString('ru-RU',{timeZone:'Europe/Tallinn'}))+'</summary>';
+ const messages=db.prepare('SELECT * FROM (SELECT * FROM support_messages WHERE ticket_id=? ORDER BY id DESC LIMIT 100) ORDER BY id').all(t.id);
+ for(const m of messages)content+='<article class="admin-support-message"><b>'+escape(m.role==='system'?'Автоматическое сообщение':m.role==='admin'?'Администратор · '+m.author:m.author)+'</b> <small>'+escape(new Date(m.created_at).toLocaleString('ru-RU',{timeZone:'Europe/Tallinn'}))+'</small><p>'+escape(m.body)+'</p></article>';
+ content+='<form method="post" action="/support-reply"><input type="hidden" name="csrf" value="'+csrf('support')+'"><input type="hidden" name="ticket_id" value="'+t.id+'"><label>Ответ пользователю<textarea name="body" rows="4" minlength="2" maxlength="2000" required></textarea></label><button type="submit">Отправить ответ</button></form></details>';
+ }content+='</section>';
  html(200,content);
 });
 server.listen(port,'0.0.0.0',()=>console.log('Holodos panel listening on '+port+' for #'+channel));
