@@ -7,7 +7,8 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const ruTime=t=>new Date(Number(t)).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
 function notice(message){
  const el=$('toast');el.textContent=message;el.classList.add('visible');
- clearTimeout(notice.timer);notice.timer=setTimeout(()=>el.classList.remove('visible'),4000);
+ playNoticeTone();
+ clearTimeout(notice.timer);notice.timer=setTimeout(()=>el.classList.remove('visible'),3500);
 }
 async function api(path,options={}){
  let response;
@@ -71,11 +72,11 @@ function chatBadgesHtml(row){
 }
 function rankHtml(list,kind='balance'){
  if(!list||!list.length)return '<p class="muted">Пока нет данных. Рейтинг обновляется по мере активности игроков.</p>';
- return list.map((r,i)=>'<div class="rank-item '+(kind==='chat'&&['ice','rose','amber','violet'].includes(r.frame)?'chat-frame-'+r.frame:'')+'"><span class="rank-position">'+(i+1)+'</span><div class="rank-name"><b>@'+esc(r.login)+'</b>'+(kind==='balance'?'<small>Открытий: '+fmt(r.opens)+'</small>':'<small>'+chatBadgesHtml(r)+(r.title?'<span class="chat-title">'+esc(r.title)+'</span>':'')+'</small><small>Сообщений с начала учёта</small>')+'</div><div class="rank-score">'+fmt(kind==='balance'?r.balance:r.message_count)+' '+(kind==='balance'?'W':'сообщ.')+'</div></div>').join('');
+ return list.map((r,i)=>'<div class="rank-item '+(kind==='chat'&&['ice','rose','amber','violet'].includes(r.frame)?'chat-frame-'+r.frame:'')+'"><span class="rank-position">'+(i+1)+'</span><div class="rank-name"><span class="player-line">'+avatarHtml(r.login)+'<b>@'+esc(r.login)+'</b></span>'+(kind==='balance'?'<small>Открытий: '+fmt(r.opens)+'</small>':'<small>'+chatBadgesHtml(r)+(r.title?'<span class="chat-title">'+esc(r.title)+'</span>':'')+'</small><small>Сообщений с начала учёта</small>')+'</div><div class="rank-score">'+fmt(kind==='balance'?r.balance:r.message_count)+' '+(kind==='balance'?'W':'сообщ.')+'</div></div>').join('');
 }
 function winsHtml(list){
  if(!list||!list.length)return '<p class="muted">Реальные выигрыши появятся здесь после следующих открытий. Прошлые игры бота ещё не записывались в историю.</p>';
- return list.map(r=>'<div class="win-item"><span class="win-cans">'+historySymbolsHtml(r.cans)+'</span><div><b>@'+esc(r.login)+'</b><small>'+esc(r.source==='chat'?'Twitch':'Сайт')+' · '+ruTime(r.created_at)+'</small></div><strong class="win-gain">+'+fmt(r.gain)+' W</strong></div>').join('');
+ return list.map(r=>'<div class="win-item"><span class="win-cans">'+historySymbolsHtml(r.cans)+'</span><div><span class="player-line">'+avatarHtml(r.login)+'<b>@'+esc(r.login)+'</b></span><small>'+esc(r.source==='chat'?'Twitch':'Сайт')+' · '+ruTime(r.created_at)+'</small></div><strong class="win-gain">+'+fmt(r.gain)+' W</strong></div>').join('');
 }
 function historySymbolsHtml(symbols){
  return '<span class="history-cans">'+(symbols||[]).map(symbol=>{
@@ -85,14 +86,14 @@ function historySymbolsHtml(symbols){
 }
 function historyHtml(list){
  if(!list||!list.length)return '<p class="muted">Открытий пока нет. История сохраняется с запуска сайта.</p>';
- return list.map(r=>'<div class="history-item"><strong>@'+esc(r.login)+'</strong>'+historySymbolsHtml(r.cans)+'<em>+'+fmt(r.gain)+' W</em><time>'+ruTime(r.created_at)+'</time></div>').join('');
+ return list.map(r=>'<div class="history-item"><strong class="player-line">'+avatarHtml(r.login)+'@'+esc(r.login)+'</strong>'+historySymbolsHtml(r.cans)+'<em>+'+fmt(r.gain)+' W</em><time>'+ruTime(r.created_at)+'</time></div>').join('');
 }
 function renderPublic(){
  const p=state.public;if(!p)return;
  $('home-top').innerHTML=rankHtml((p.top||[]).slice(0,5));
  $('home-wins').innerHTML=winsHtml(p.recent);
  $('top-list').innerHTML=rankHtml(p.top);
- $('chat-list').innerHTML=rankHtml(p.chat,'chat');
+ $('chat-list').innerHTML=rankHtml(p.chat,'chat');hydrateAvatars();
 }
 function renderMe(){
  const me=state.me;
@@ -113,6 +114,7 @@ function renderMe(){
  updateCooldown();
  renderProfile();
  renderNotificationBadges();
+ if(logged)refreshAccountNotifications();else{notificationUser='';notificationLastSeenId=0;$('account-notifications').hidden=true;$('account-notification-list').replaceChildren();}
  if(currentRoute()==='/requests'&&!selectedSupportTicket)refreshRequests();
 }
 
@@ -124,7 +126,7 @@ function renderProfile(){
  }
  const p=me.player,orders=me.orders||[];
  const avatar=safeAvatar(p.avatar);
- $('profile-content').innerHTML='<div class="profile-card">'+(avatar?'<img class="profile-avatar" src="'+esc(avatar)+'" alt="Аватар Twitch">':'<span class="coin-icon" style="width:75px;height:75px;font-size:27px">W</span>')+'<div><div class="profile-name">@'+esc(p.display_name||p.login)+'</div><span class="profile-muted">Аккаунт Twitch · W-монеты синхронизированы с чатом</span></div></div>'
+ $('profile-content').innerHTML='<div class="profile-bell-container"><button class="profile-notifications-button" type="button" data-account-notifications aria-label="Уведомления аккаунта">'+bellSvg+'<span class="account-unread-count">'+(me.notification_unread||'')+'</span></button></div><div class="profile-card">'+(avatar?'<img class="profile-avatar" src="'+esc(avatar)+'" alt="Аватар Twitch">':'<span class="coin-icon" style="width:75px;height:75px;font-size:27px">W</span>')+'<div><div class="profile-name">@'+esc(p.display_name||p.login)+'</div><span class="profile-muted">Аккаунт Twitch · W-монеты синхронизированы с чатом</span></div></div>'
   +'<div class="stats-grid"><div class="stat"><strong>'+fmt(p.balance)+'</strong><span>Баланс W</span></div><div class="stat"><strong>'+fmt(p.opens)+'</strong><span>Открытий</span></div><div class="stat"><strong>'+fmt(p.wins)+'</strong><span>Выигрышей</span></div><div class="stat"><strong>'+fmt(p.jackpots)+'</strong><span>Суперджекпотов</span></div></div>'
   +'<div class="stat"><strong>'+fmt(p.message_count)+'</strong><span>Сообщений в чате с начала учёта</span></div><p><a class="button button-ghost" href="/requests" data-route="/requests">Запросы <span class="support-count"></span></a></p>'+ '<div class="profile-orders"><h3>Заявки магазина</h3>'+(orders.length?orders.map(o=>'<div class="history-item"><strong>№'+o.id+' · '+o.vp+' VP</strong><span>'+esc(o.status==='pending'?'Ожидает выдачи':o.status==='fulfilled'?'Выдано':'Отменено')+'</span><em>'+fmt(o.price)+' W</em><time>'+ruTime(o.created_at)+'</time></div>').join(''):'<p class="muted">Пока нет заявок. Оформить можно через команду !купить в чате.</p>')+'</div>'
   +'<button type="button" class="logout-btn" id="logout-btn">Выйти из профиля</button>';
@@ -236,7 +238,7 @@ async function refreshMe(){
  catch(e){state.me={authenticated:false};renderMe();notice(e.message);}
 }
 async function refreshSpins(){
- try{const v=await api('/api/spins');state.history=v.spins;$('casino-history').innerHTML=historyHtml(v.spins);}
+ try{const v=await api('/api/spins');state.history=v.spins;$('casino-history').innerHTML=historyHtml(v.spins);hydrateAvatars();}
  catch(e){$('casino-history').textContent=e.message;}
 }
 async function refreshDuels(){
@@ -309,7 +311,8 @@ let selectedSupportTicket=null;
 async function supportPost(path,data){return api(path,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':state.me?.csrf||''},body:JSON.stringify(data)});}
 function renderNotificationBadges(){
  const unread=Number(state.me?.support_unread||0),ready=!!state.me?.authenticated&&Date.now()>=Number(state.me.player.last_opened||0)+120000;
- const text=[unread?unread+' ответов поддержки':'',ready?'Холодос готов':''].filter(Boolean).join('. ');
+ const accountUnread=Number(state.me?.notification_unread||0);
+ const text=[unread?unread+' ответов поддержки':'',accountUnread?accountUnread+' уведомлений аккаунта':''].filter(Boolean).join('. ');
  for(const el of document.querySelectorAll('#avatar-link,.side-link[href="/profile"]')){el.classList.toggle('has-notice',!!text);el.dataset.notice=text?'•':'';if(text)el.title=text;else el.removeAttribute('title');}
  for(const el of document.querySelectorAll('.side-link[href="/casino"]')){el.classList.toggle('has-notice',ready);el.dataset.notice=ready?'•':'';el.title=ready?'Холодос готов':'Казино';}
  for(const el of document.querySelectorAll('.support-count'))el.textContent=unread?'('+unread+')':'';
@@ -317,11 +320,12 @@ function renderNotificationBadges(){
 async function refreshRequests(){
  if(!state.me?.authenticated){$('support-list').innerHTML='<p>Войди через Twitch, чтобы посмотреть свои обращения.</p><a class="text-link" href="/auth/twitch">Войти ↗</a>';return;}
  try{const data=await api('/api/support');$('support-list').innerHTML=data.tickets.length?data.tickets.map(t=>'<button type="button" class="support-ticket" data-ticket="'+t.id+'"><strong>№'+t.id+(t.unread?' · Новый ответ':'')+'</strong><span>'+esc(t.subject)+'</span><small>'+ruTime(t.updated_at)+'</small></button>').join(''):'<p class="muted">Пока нет обращений.</p><a class="text-link" href="/help" data-route="/help">Задать вопрос ↗</a>';
+ hydrateAvatars();
  for(const btn of $('support-list').querySelectorAll('[data-ticket]'))btn.addEventListener('click',()=>openSupportThread(Number(btn.dataset.ticket)));
  }catch(e){$('support-list').textContent=e.message;}
 }
 async function openSupportThread(id){
- try{const data=await api('/api/support/'+id);selectedSupportTicket=id;$('support-thread').innerHTML='<h2>Обращение №'+id+'</h2>'+data.messages.map(m=>'<article class="support-message support-message--'+esc(m.role)+'"><div><b>'+esc(m.role==='system'?'Автоматическое сообщение':m.role==='admin'?'Администратор · '+m.author:m.author)+'</b><time>'+ruTime(m.created_at)+'</time></div><p>'+esc(m.body)+'</p></article>').join('');$('support-reply-form').hidden=false;
+ try{const data=await api('/api/support/'+id);selectedSupportTicket=id;$('support-thread').innerHTML='<h2>Обращение №'+id+'</h2>'+data.messages.map(m=>'<article class="support-message support-message--'+esc(m.role)+'"><div><b class="player-line">'+(m.role!=='system'?avatarHtml(m.author):'')+esc(m.role==='system'?'Автоматическое сообщение':m.role==='admin'?'Администратор · '+m.author:m.author)+'</b><time>'+ruTime(m.created_at)+'</time></div><p>'+esc(m.body)+'</p></article>').join('');$('support-reply-form').hidden=false;hydrateAvatars();
  const maxId=data.messages.at(-1)?.id||0;await supportPost('/api/support/read',{id,maxId});await refreshMe();
  }catch(e){notice(e.message);}
 }
@@ -342,3 +346,36 @@ setInterval(()=>{
 setInterval(()=>{if(document.visibilityState==='visible'&&currentRoute()==='/requests'&&state.me?.authenticated){refreshRequests();if(selectedSupportTicket)openSupportThread(selectedSupportTicket);}},15000);
 
 for(const button of document.querySelectorAll('.page-back-button'))button.addEventListener('click',()=>{if(Number(history.state?.warDepth||0)>0)history.back();else navigate(currentRoute()==='/requests'?'/help':'/');});
+
+let noticeAudioContext=null,noticeSoundEnabled=true,lastNoticeTone=0;
+try{noticeSoundEnabled=localStorage.getItem('war1ouss-notification-sound')!=='off'}catch{}
+function unlockNoticeAudio(){try{if(!noticeAudioContext){const AC=window.AudioContext||window.webkitAudioContext;if(AC)noticeAudioContext=new AC()}if(noticeAudioContext?.state==='suspended')noticeAudioContext.resume().catch(()=>{});}catch{}}
+window.addEventListener('pointerdown',unlockNoticeAudio,{once:true,passive:true});window.addEventListener('keydown',unlockNoticeAudio,{once:true});
+function playNoticeTone(){
+ if(!noticeSoundEnabled||!noticeAudioContext||noticeAudioContext.state!=='running'||Date.now()-lastNoticeTone<1000)return;
+ try{lastNoticeTone=Date.now();const ctx=noticeAudioContext,now=ctx.currentTime;for(const [freq,offset] of [[740,0],[988,.075]]){const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type='sine';osc.frequency.value=freq;gain.gain.setValueAtTime(0,now+offset);gain.gain.linearRampToValueAtTime(.035,now+offset+.015);gain.gain.exponentialRampToValueAtTime(.001,now+offset+.2);osc.connect(gain);gain.connect(ctx.destination);osc.start(now+offset);osc.stop(now+offset+.23);}}catch{}
+}
+let notificationLastSeenId=0,notificationUser='',notificationLoading=false;
+async function refreshAccountNotifications(){
+ if(notificationLoading||!state.me?.authenticated)return;notificationLoading=true;
+ try{const user=String(state.me.player.id);if(notificationUser!==user){notificationUser=user;notificationLastSeenId=0;try{notificationLastSeenId=Number(localStorage.getItem('war1ouss-notification-last-'+user)||0)}catch{}}
+ const {notifications}=await api('/api/notifications');if(!state.me?.authenticated||String(state.me.player.id)!==user)return;const latest=notifications[0]?.id||0;const newest=notifications.find(n=>n.unread&&n.id>notificationLastSeenId);
+ if(newest&&notificationLastSeenId>0)notice(newest.title+': '+newest.body);
+ notificationLastSeenId=Math.max(notificationLastSeenId,latest);try{localStorage.setItem('war1ouss-notification-last-'+user,String(notificationLastSeenId))}catch{}
+ $('account-notification-list').innerHTML=notifications.length?notifications.map(n=>'<a class="account-notification '+(n.unread?'unread':'')+'" href="'+esc(/^\/(?:requests|profile|help|cases)\b/.test(n.url)?n.url:'/profile')+'" data-route="'+esc(n.url)+'"><strong>'+esc(n.title)+'</strong><p>'+esc(n.body)+'</p><time>'+ruTime(n.created_at)+'</time></a>').join(''):'<p class="muted">Пока нет уведомлений.</p>';
+ if(!$('account-notifications').hidden&&latest){await supportPost('/api/notifications/read',{maxId:latest});state.me.notification_unread=0;for(const badge of document.querySelectorAll('.account-unread-count'))badge.textContent='';renderNotificationBadges();}
+ }catch{}finally{notificationLoading=false}
+}
+document.addEventListener('click',async e=>{if(e.target.closest('[data-account-notifications]')){const panel=$('account-notifications');panel.hidden=!panel.hidden;if(!panel.hidden){await refreshAccountNotifications();$('notifications-close').focus();}}else if(e.target.closest('#notifications-close'))$('account-notifications').hidden=true;else if(e.target.closest('.account-notification'))$('account-notifications').hidden=true;});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('account-notifications').hidden=true;});
+$('notification-sound-toggle').textContent=noticeSoundEnabled?'Выключить звук':'Включить звук';
+$('notification-sound-toggle').addEventListener('click',()=>{noticeSoundEnabled=!noticeSoundEnabled;try{localStorage.setItem('war1ouss-notification-sound',noticeSoundEnabled?'on':'off')}catch{}$('notification-sound-toggle').textContent=noticeSoundEnabled?'Выключить звук':'Включить звук';if(noticeSoundEnabled){unlockNoticeAudio();playNoticeTone();}});
+function avatarHtml(login){const name=String(login||'').toLowerCase();if(!/^[a-z0-9_]{1,25}$/.test(name))return '';return '<span class="player-avatar" data-player-avatar="'+esc(name)+'" aria-hidden="true">'+esc(name[0].toUpperCase())+'</span>';}
+let avatarHydrationBusy=false,avatarHydrationAgain=false;const avatarClientCache=new Map();
+async function hydrateAvatars(){
+ if(avatarHydrationBusy){avatarHydrationAgain=true;return;}avatarHydrationBusy=true;
+ try{const nodes=[...document.querySelectorAll('[data-player-avatar]')],names=[...new Set(nodes.map(n=>n.dataset.playerAvatar))];const missing=names.filter(n=>!avatarClientCache.has(n)).slice(0,50);
+ if(missing.length){const r=await api('/api/avatars?logins='+encodeURIComponent(missing.join(',')));for(const n of missing)avatarClientCache.set(n,safeAvatar(r.avatars?.[n])||'');}
+ for(const node of nodes){const src=avatarClientCache.get(node.dataset.playerAvatar);if(src&&!node.querySelector('img')){const img=document.createElement('img');img.src=src;img.alt='';img.loading='lazy';img.decoding='async';img.addEventListener('error',()=>node.replaceChildren(document.createTextNode(node.dataset.playerAvatar[0].toUpperCase())),{once:true});node.replaceChildren(img);}}
+ }catch{}finally{avatarHydrationBusy=false;if(avatarHydrationAgain){avatarHydrationAgain=false;queueMicrotask(hydrateAvatars);}}
+}

@@ -1,3 +1,5 @@
+import {createNotifications} from './notifications.js';
+import {createAvatars} from './avatars.js';
 import {createSupport} from './support.js';
 import {readFileSync,existsSync} from 'node:fs';
 import {createHash,randomBytes,createHmac,timingSafeEqual} from 'node:crypto';
@@ -36,6 +38,8 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  db.exec("CREATE INDEX IF NOT EXISTS idx_fridge_spins_player ON fridge_spins(player_id,id DESC);");
  db.exec("CREATE TABLE IF NOT EXISTS chat_stats(player_id TEXT PRIMARY KEY,login TEXT NOT NULL,message_count INTEGER NOT NULL DEFAULT 0,last_seen INTEGER NOT NULL DEFAULT 0);");
  if(!db.prepare('PRAGMA table_info(chat_stats)').all().some(c=>c.name==='badges_json'))db.exec("ALTER TABLE chat_stats ADD COLUMN badges_json TEXT NOT NULL DEFAULT '{}'");
+ const notifications=createNotifications(db);
+ const avatars=createAvatars(db,app,tokenRequest);
  db.prepare("DELETE FROM web_sessions WHERE expires_at<?").run(Date.now());
 
  const secure=publicUrl.startsWith('https:')?'; Secure':'';
@@ -110,7 +114,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   if(!session)return {authenticated:false};
   const p=player(session.player_id,session.login);
   const orders=db.prepare('SELECT id,vp,price,status,created_at FROM shop_orders WHERE player_id=? ORDER BY id DESC LIMIT 10').all(session.player_id);
-  return {authenticated:true,is_admin:isAdminSession(session),support_unread:support.unread(session),csrf:csrf(session),player:{id:p.id,login:p.login,display_name:session.display_name,avatar:session.avatar,balance:p.balance,opens:p.opens,wins:p.wins,jackpots:p.jackpots,last_opened:p.last_opened,message_count:db.prepare('SELECT message_count FROM chat_stats WHERE player_id=?').get(session.player_id)?.message_count||0},orders};
+  return {authenticated:true,is_admin:isAdminSession(session),support_unread:support.unread(session),notification_unread:notifications.unread(session),csrf:csrf(session),player:{id:p.id,login:p.login,display_name:session.display_name,avatar:session.avatar,balance:p.balance,opens:p.opens,wins:p.wins,jackpots:p.jackpots,last_opened:p.last_opened,message_count:db.prepare('SELECT message_count FROM chat_stats WHERE player_id=?').get(session.player_id)?.message_count||0},orders};
  }
  function spinsQuery(sql,...params){
   return db.prepare(sql).all(...params).map(x=>({login:x.login,cans:JSON.parse(x.cans_json),gain:x.gain,description:x.description,source:x.source,created_at:x.created_at}));
@@ -181,6 +185,8 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   }
   if(path.startsWith('/api/')){
    if(method==='GET'){
+    if(path==='/api/avatars'){const names=(url.searchParams.get('logins')||'').split(',').slice(0,50);json(res,200,{avatars:await avatars.get(names)});return true;}
+    if(path==='/api/notifications'){const session=getSession(req);if(!session){json(res,401,{error:'Сначала войди через Twitch'});return true;}json(res,200,{notifications:notifications.list(session)});return true;}
     if(path==='/api/support'||path.startsWith('/api/support/')){
      const session=getSession(req);if(!session){json(res,401,{error:'Сначала войди через Twitch'});return true;}
      try{json(res,200,path==='/api/support'?{tickets:support.list(session)}:support.thread(path.split('/').pop(),session));}catch(e){json(res,e.status||400,{error:e.message})}return true;
@@ -211,6 +217,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
    if(!constantTime(String(req.headers['x-csrf-token']||''),csrf(session))){json(res,403,{error:'Сессия устарела. Обнови страницу.'});return true;}
    try{
     const data=await readJson(req);
+    if(path==='/api/notifications/read'){json(res,200,notifications.read(session,data.maxId));return true;}
     if(path==='/api/support'){json(res,200,support.create(session,data.body));return true;}
     if(path==='/api/support/reply'){json(res,200,support.reply(session,data.id,data.body));return true;}
     if(path==='/api/support/read'){json(res,200,support.read(session,data.id,data.maxId));return true;}
