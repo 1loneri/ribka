@@ -840,3 +840,84 @@ body.inner-page .view.active{animation:slideIn .25s ease both}
     background:linear-gradient(to right,#15181cfc 0%,rgba(17,19,23,.97) 38%,rgba(15,17,20,.56) 67%,transparent 92%);
   }
 }
+
+
+/* 2026-11-14 — three unified uncropped premium artwork tiles.
+   The entire images stay visible; only the dark empty edge is blended. */
+#view-home .mode-card--cases{
+  background:linear-gradient(125deg,#171a1e,#101317 48%,#0b0d10);
+  isolation:isolate;
+}
+#view-home .mode-card--casino .mode-photo,
+#view-home .mode-card--duels .mode-photo,
+#view-home .mode-card--cases .mode-photo{
+  inset:0 0 0 auto;
+  width:100%;height:100%;
+  pointer-events:none;
+  overflow:hidden;
+  background:transparent;
+  z-index:2;
+  -webkit-mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.65) 23%,#000 44%,#000 100%);
+  mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.65) 23%,#000 44%,#000 100%);
+}
+#view-home .mode-card--casino .mode-photo img,
+#view-home .mode-card--duels .mode-photo img,
+#view-home .mode-card--cases .mode-photo img{
+  display:block;width:100%;height:100%;
+  object-fit:contain;object-position:right center;
+  max-width:none;
+  filter:none;transform:none;
+  image-rendering:auto;
+}
+#view-home .mode-card--casino .mode-photo::after,
+#view-home .mode-card--duels .mode-photo::after,
+#view-home .mode-card--cases .mode-photo::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(to bottom,transparent 0%,transparent 95%,rgba(11,13,16,.16) 100%);
+}
+#view-home .mode-card--cases .mode-text{
+  position:relative;z-index:4;
+}
+#view-home .mode-card--cases .mode-text::before{
+  content:"";position:absolute;z-index:-1;pointer-events:none;
+  inset:0;
+  background:linear-gradient(to right,#15181cf8 0%,rgba(17,19,23,.94) 28%,rgba(15,17,20,.65) 48%,transparent 81%);
+}
+#view-home .mode-card--casino::after,
+#view-home .mode-card--duels::after,
+#view-home .mode-card--cases::after{display:none}
+#view-home .mode-card--casino:hover .mode-photo img,
+#view-home .mode-card--duels:hover .mode-photo img,
+#view-home .mode-card--cases:hover .mode-photo img{
+  transform:none;filter:none;
+}
+#view-home .mode-card--cases::before{
+  z-index:3;pointer-events:none;
+  background:radial-gradient(ellipse 50% 60% at 76% 65%,rgba(139,203,227,.075),transparent 85%);
+  animation-duration:20s;
+}
+/* The same image, large and fully visible on the cases page; no fake loot or prices. */
+#view-cases .case-stage{
+  width:min(100%,520px);
+  height:clamp(205px,24vw,292px);
+  margin:0 auto 24px;
+  overflow:hidden;
+  background:transparent;
+}
+#view-cases .case-stage img{
+  display:block;width:100%;height:100%;
+  object-fit:contain;object-position:center;
+  -webkit-mask-image:linear-gradient(to right,transparent,#000 15%,#000 85%,transparent);
+  mask-image:linear-gradient(to right,transparent,#000 15%,#000 85%,transparent);
+}
+@media(max-width:740px){
+  #view-home .mode-card--cases .mode-photo,
+  #view-home .mode-card--casino .mode-photo,
+  #view-home .mode-card--duels .mode-photo{width:100%}
+}
+@media(max-width:540px){
+  #view-home .mode-card--cases .mode-text::before{
+    background:linear-gradient(to right,#15181cfc 0%,rgba(17,19,23,.97) 38%,rgba(15,17,20,.56) 67%,transparent 92%);
+  }
+  #view-cases .case-stage{height:220px}
+}
