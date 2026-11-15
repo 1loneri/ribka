@@ -1634,3 +1634,14 @@ img[src*="/frame-thorn."]{filter:invert(1)}.equipped-avatar[data-equipped-frame=
 .casino-header-tools :is(.notify-toggle,.game-sound-toggle){display:inline-grid;place-items:center;width:34px;height:34px;padding:7px;border:1px solid #ffffff23;border-radius:9px;background:#ffffff06;color:#a4b6c8;flex:none}
 .casino-header-tools :is(.notify-toggle,.game-sound-toggle) svg{width:19px;height:19px}
 .casino-header-tools :is(.notify-toggle,.game-sound-toggle)[aria-pressed="true"]{color:#d5edff;border-color:#b3d9f178;box-shadow:0 0 10px #b3d9f11a}
+/* Assault Tribal uses its measured clear opening, with the same avatar size. */
+.frame-preview:has(img[src*="/frame-assault."]) .frame-preview-center{inset:15px;z-index:0}
+.frame-preview:has(img[src*="/frame-assault."]) picture{position:absolute;left:-4px;top:-6px;width:172px;height:172px;z-index:3}
+.frame-preview:has(img[src*="/frame-assault."]) picture img{width:172px;height:172px}
+.equipped-avatar[data-equipped-frame="assault"]>img{position:relative;z-index:0}
+.equipped-avatar[data-equipped-frame="assault"]:not([data-equipped-frame=""])::after{inset:auto;left:-14.6154%;top:-16.1538%;width:132.3077%;height:132.3077%;background-image:url('/assets/frame-assault.png?v=81');background-size:contain;z-index:3}
+.frame-rarity{display:block;font-size:10px;font-weight:600;color:#92a8b8;margin-top:7px}.frame-preview-card:has(img[src*="frame-thorn"]) .frame-rarity{color:#dcefff}.owned-frame .frame-rarity{margin:0 0 0 3px}
+.monster-frame-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media(max-width:1200px){.monster-frame-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:1050px){.monster-frame-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.monster-frame-grid{grid-template-columns:1fr}}

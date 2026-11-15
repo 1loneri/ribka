@@ -262,5 +262,15 @@
       "site_theme": 0.005
     },
     "status": "awaiting_opening_backend"
+  },
+  "frameRarity": {
+    "conditionalOnFrameReward": true,
+    "weights": {
+      "original": 50,
+      "mango": 25,
+      "assault": 15,
+      "ultra": 9,
+      "thorn": 1
+    }
   }
 }

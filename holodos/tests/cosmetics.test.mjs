@@ -9,3 +9,13 @@ const token='a'.repeat(43),hash=createHash('sha256').update(token).digest('hex')
 async function call(path,{auth=true,csrf='',origin='https://example.test',method='GET',body={}}={}){let status,text;const req=Readable.from(method==='POST'?[JSON.stringify(body)]:[]);Object.assign(req,{url:path,method,headers:{host:'example.test',origin,'content-type':'application/json',...(auth?{cookie:'war_session='+token}:{}),'x-csrf-token':csrf}});await site.handle(req,{writeHead(s){status=s},end(t){text=t}},new URL(path,'https://example.test'));return {status,data:JSON.parse(text)};}
 const me=await call('/api/me');assert.equal(me.status,200);assert.equal(me.data.cosmetics.active.theme,'arctic');assert.equal((await call('/api/cosmetics/equip',{auth:false,method:'POST'})).status,401);assert.equal((await call('/api/cosmetics/equip',{method:'POST'})).status,403);assert.equal((await call('/api/cosmetics/equip',{method:'POST',csrf:me.data.csrf,origin:'https://evil.test'})).status,403);assert.equal((await call('/api/cosmetics/equip',{method:'POST',csrf:me.data.csrf,body:{kind:'theme',item:''}})).status,200);assert.equal(site.cosmetics.summary('1').active.theme,'');assert.equal((await call('/api/frames?logins=alice',{auth:false})).data.cosmetics.alice.title,'Ледяной');
 console.log('PASS: catalog validation, missing player, owned-only equip, duplicate grants, notifications, saved selection, clear selection, public appearance, session, CSRF, origin');
+
+site.frames.grant('alice','assault','admin');assert.equal(site.frames.active('1'),'assault');
+assert.equal(site.frames.grant('alice','assault','admin').alreadyOwned,true);
+assert.throws(()=>site.frames.equip('2','assault'),{status:403});
+site.frames.equip('1','assault');assert.equal((await call('/api/frames?logins=alice',{auth:false})).data.frames.alice,'assault');
+assert.equal((await call('/api/me')).data.frames.rarity.thorn.weight,1);
+assert.ok(site.frames.rarity.original.weight>site.frames.rarity.assault.weight);
+const asset=await new Promise(async resolve=>{let status;await site.handle({method:'GET',headers:{}},{writeHead(s){status=s},end(body){resolve({status,body})}},new URL('https://example.test/assets/frame-assault.png'));});
+assert.equal(asset.status,200);assert.ok(asset.body.length>1000);
+console.log('PASS: Assault grant, ownership, equipped frame, rarity metadata and PNG delivery');
