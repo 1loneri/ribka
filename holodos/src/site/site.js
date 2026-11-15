@@ -441,11 +441,11 @@ async function animateDuel(d,demo=false){
  if(duelAnimationBusy)return;duelAnimationBusy=true;const arena=$('duel-arena');
  try{arena.className='duel-arena';arena.innerHTML='<p class="duel-arena-label">'+(demo?'Демонстрация оформления':'Дуэль №'+Number(d.id))+'</p><div class="duel-fighters">'+duelFighterHtml(d.initiator_login,d.leftCan)+'<span class="duel-versus">VS</span>'+duelFighterHtml(d.opponent_login,d.rightCan)+'</div><p class="duel-arena-result" aria-live="polite">Встряхиваем банки…</p>';hydrateAvatars();
  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
- if(!reduced){arena.classList.add('duel-arena--charging');await new Promise(r=>setTimeout(r,650));}
+ if(!reduced){if(currentRoute()==='/duels')playDuelShake();arena.classList.add('duel-arena--charging');await new Promise(r=>setTimeout(r,650));}
  arena.classList.remove('duel-arena--charging');
- const leftWon=d.winner_login===d.initiator_login;const fighters=arena.querySelectorAll('.duel-fighter');fighters[leftWon?0:1].classList.add('duel-fighter--winner');fighters[leftWon?1:0].classList.add('duel-fighter--lost');arena.classList.add('duel-arena--resolved');
+ const leftWon=d.winner_login===d.initiator_login;const fighters=arena.querySelectorAll('.duel-fighter');fighters[leftWon?0:1].classList.add('duel-fighter--winner');fighters[leftWon?1:0].classList.add('duel-fighter--lost');arena.classList.add('duel-arena--resolved');if(currentRoute()==='/duels')playDuelFizz();
  arena.querySelector('.duel-arena-result').textContent=demo?'Пшш! Косметическая банка выпускает радужную газировку':'Победил @'+d.winner_login+' · '+fmt(d.wager*2-d.fee)+' W';
- if(!reduced)await new Promise(r=>setTimeout(r,850));
+ if(!reduced)await new Promise(r=>setTimeout(r,850));if(currentRoute()==='/duels')playIceStop(1);
  }finally{duelAnimationBusy=false;}
 }
 async function maybeAnimateDuel(recent){
@@ -504,3 +504,17 @@ function renderGameSound(){for(const b of document.querySelectorAll('[data-game-
 renderGameSound();
 document.addEventListener('click',e=>{const toggle=e.target.closest('[data-game-sound-toggle]');if(toggle){gameSoundEnabled=!gameSoundEnabled;try{localStorage.setItem('war1ouss-game-sound',gameSoundEnabled?'on':'off')}catch{}if(!gameSoundEnabled)stopAllGameSound();else gameAudioReady();renderGameSound();}const preview=e.target.closest('[data-game-sound-preview]');if(preview){stopAllGameSound();if(!gameSoundEnabled){notice('Включи звук, чтобы послушать пример.');return;}gameAudioReady();const times=preview.dataset.gameSoundPreview==='case'?[0,70,160,290,480,780,1250]:[0,90,180,270,360,450,540,650,780,920];for(const ms of times){const timer=setTimeout(()=>{gameSoundTimers.delete(timer);iceTick(.8);},ms);gameSoundTimers.add(timer);}const end=setTimeout(()=>{gameSoundTimers.delete(end);playIceStop(1);},preview.dataset.gameSoundPreview==='case'?1600:1100);gameSoundTimers.add(end);}});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')stopAllGameSound();});caseDemo.addEventListener('close',stopAllGameSound);
+
+function playDuelShake(){
+ iceTick(.35);
+ for(const ms of [110,230,360,490]){const timer=setTimeout(()=>{gameSoundTimers.delete(timer);if(currentRoute()==='/duels')iceTick(.3);},ms);gameSoundTimers.add(timer);}
+}
+function playDuelFizz(){
+ const ctx=gameAudioReady();if(!ctx)return;
+ try{const t=ctx.currentTime,source=ctx.createBufferSource(),high=ctx.createBiquadFilter(),low=ctx.createBiquadFilter(),gain=ctx.createGain();
+ const noise=ctx.createBuffer(1,Math.floor(ctx.sampleRate*.4),ctx.sampleRate),data=noise.getChannelData(0);for(let i=0;i<data.length;i++)data[i]=Math.random()*2-1;
+ source.buffer=noise;high.type='highpass';high.frequency.value=700;low.type='lowpass';low.frequency.setValueAtTime(4200,t);low.frequency.exponentialRampToValueAtTime(1300,t+.38);
+ gain.gain.setValueAtTime(0,t);gain.gain.linearRampToValueAtTime(.022,t+.018);gain.gain.exponentialRampToValueAtTime(.0001,t+.39);
+ source.connect(high);high.connect(low);low.connect(gain);gain.connect(ctx.destination);source.start(t);source.stop(t+.4);gameSources.add(source);source.onended=()=>{gameSources.delete(source);source.disconnect();high.disconnect();low.disconnect();gain.disconnect();};
+ }catch{}
+}
