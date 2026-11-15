@@ -1629,3 +1629,8 @@ img[src*="/frame-thorn."]{filter:invert(1)}.equipped-avatar[data-equipped-frame=
 @keyframes sodaCanRelease{0%,100%{transform:rotate(0);opacity:1}22%{transform:translateY(2px) rotate(-3deg)}55%{transform:rotate(2deg)}}
 @keyframes sodaDroplet{0%{opacity:0;transform:translate(0,0) scale(.3)}12%{opacity:.85}48%{opacity:.7;transform:translate(calc(var(--dx)*.6),calc(var(--dy)*.45)) scale(.85) rotate(20deg)}100%{opacity:0;transform:translate(calc(var(--dx)*.85),45px) scale(.3) rotate(75deg)}}
 @media(prefers-reduced-motion:reduce){.soda-stream{display:none}}
+.casino-title{display:flex;align-items:center;gap:12px}
+.casino-header-tools{display:inline-flex;align-items:center;gap:7px}
+.casino-header-tools :is(.notify-toggle,.game-sound-toggle){display:inline-grid;place-items:center;width:34px;height:34px;padding:7px;border:1px solid #ffffff23;border-radius:9px;background:#ffffff06;color:#a4b6c8;flex:none}
+.casino-header-tools :is(.notify-toggle,.game-sound-toggle) svg{width:19px;height:19px}
+.casino-header-tools :is(.notify-toggle,.game-sound-toggle)[aria-pressed="true"]{color:#d5edff;border-color:#b3d9f178;box-shadow:0 0 10px #b3d9f11a}
