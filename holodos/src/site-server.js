@@ -32,7 +32,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  }
  for(const id of ['donation','twitch','chat','vip','coins','subscriber'])assetFiles['/assets/case-'+id+'.webp']={file:new URL('./site/case-'+id+'.webp',import.meta.url),type:'image/webp'};
  assetFiles['/assets/frost-edge.webp']={file:new URL('./site/frost-edge.webp',import.meta.url),type:'image/webp'};
- for(const id of ['ultra','original','mango'])for(const ext of ['png','gif'])assetFiles['/assets/frame-'+id+'.'+ext]={file:new URL('./site/frame-'+id+'.'+ext,import.meta.url),type:'image/'+ext};
+ for(const id of ['ultra','original','mango','thorn'])for(const ext of ['png','gif'])assetFiles['/assets/frame-'+id+'.'+ext]={file:new URL('./site/frame-'+id+'.'+ext,import.meta.url),type:'image/'+ext};
  assetFiles['/assets/case-subscriber-open.webp']={file:new URL('./site/case-subscriber-open.webp',import.meta.url),type:'image/webp'};
  assetFiles['/assets/notification.mp3']={file:new URL('./site/notification.mp3',import.meta.url),type:'audio/mpeg'};
  for(const id of Object.keys(duelVisuals.catalog))assetFiles['/assets/duel-can-'+id+'.webp']={file:new URL('./site/duel-can-'+id+'.webp',import.meta.url),type:'image/webp'};

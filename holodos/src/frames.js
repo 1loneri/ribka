@@ -1,4 +1,4 @@
-export const frameCatalog={ultra:'Ultra Frost',original:'Original Splash',mango:'Mango Loco'};
+export const frameCatalog={ultra:'Ultra Frost',original:'Original Splash',mango:'Mango Loco',thorn:'White Thorns'};
 export function createFrames(db,transaction){
  db.exec("CREATE TABLE IF NOT EXISTS frame_inventory(player_id TEXT NOT NULL,frame_id TEXT NOT NULL,granted_by TEXT NOT NULL,created_at INTEGER NOT NULL,PRIMARY KEY(player_id,frame_id));");
  const valid=id=>Object.hasOwn(frameCatalog,id);

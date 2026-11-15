@@ -252,9 +252,15 @@
     "duplicateCosmeticCompensationW": 1000,
     "vpReward": {
       "amount": 240,
-      "probability": 0.005
+      "probability": 0.001
     },
-    "cosmeticProbabilities": null,
-    "status": "awaiting_cosmetic_probabilities_and_opening_backend"
+    "cosmeticProbabilities": {
+      "title": 0.354,
+      "nickname_style": 0.3,
+      "frame_effect": 0.25,
+      "duel_can": 0.09,
+      "site_theme": 0.005
+    },
+    "status": "awaiting_opening_backend"
   }
 }
