@@ -1,5 +1,5 @@
 {
-  "version": "1.1.1",
+  "version": "1.1.2",
   "source": "war1ouss_hub_economy_v1_1.xlsx",
   "shopPricesW": {
     "240": 25000,
@@ -245,5 +245,16 @@
       "badapple"
     ],
     "duelCanConditionalProbability": 0.2
+  },
+  "coins": {
+    "enabled": false,
+    "priceW": 5000,
+    "duplicateCosmeticCompensationW": 1000,
+    "vpReward": {
+      "amount": 240,
+      "probability": 0.005
+    },
+    "cosmeticProbabilities": null,
+    "status": "awaiting_cosmetic_probabilities_and_opening_backend"
   }
 }
