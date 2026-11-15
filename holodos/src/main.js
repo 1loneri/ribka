@@ -1,3 +1,4 @@
+import {createChannelConnections} from './channel-connections.js';
 import http from 'node:http';
 import {DatabaseSync} from 'node:sqlite';
 import {mkdirSync,existsSync,readFileSync} from 'node:fs';
@@ -254,6 +255,7 @@ if(!existsSync(siteBackupPath)){
  db.prepare('VACUUM INTO ?').run(siteBackupPath);
  console.log('Pre-website SQLite backup created on persistent volume');
 }
+const channelConnections=createChannelConnections({db,app,tokenRequest,validate,encrypt,decrypt,channel,publicUrl,states});
 const streamStatus=createStreamStatus({app,tokenRequest,channel});
 const site=createSite({db,publicUrl,app,tokenRequest,validate,player,transaction,draw,cans,duelChallenge,duelRespond,say,channel,duelsEnabled,states,secret,streamStatus});
 function equal(a,b){const x=Buffer.from(a),y=Buffer.from(b);return x.length===y.length&&timingSafeEqual(x,y);}
@@ -271,6 +273,9 @@ const server=http.createServer(async(req,res)=>{
  if(url.pathname==='/health'){res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify({ok:true,twitch_connected:connected}));return;}
  if(url.pathname==='/oauth/callback'){
   const state=url.searchParams.get('state')||'',until=states.get(state);states.delete(state);
+  if(until&&typeof until==='object'&&until.type==='channel'){
+   try{const result=await channelConnections.callback(req,url,until);html(200,'<h2>Разрешение канала сохранено</h2><p>'+(result.ok?'Доступ к Twitch проверен.':'Разрешение сохранено, но проверка Twitch пока не прошла. Повтори её в панели.')+'</p><a href="/admin#channel-connections">Вернуться к подключениям</a>');}catch(e){html(e.status||400,'<h2>Подключение не завершено</h2><p>'+escape(e.status?e.message:'Не удалось подключиться к Twitch. Попробуй позже.')+'</p><a href="/admin#channel-connections">Вернуться</a>');}return;
+  }
   if(until&&typeof until==='object'&&until.type==='site'){await site.oauthCallback(req,res,url,state,until);return;}
   if(!until||until<Date.now()){html(403,'Подключение истекло. Начни заново в панели.');return;}
   if(url.searchParams.has('error')){html(400,'Twitch отменил подключение.');return;}
@@ -325,6 +330,9 @@ const server=http.createServer(async(req,res)=>{
   res.writeHead(303,{Location:'/',"Cache-Control":"no-store",'Set-Cookie':cookieName+'=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0'});res.end();return;
  }
  if(req.method==='POST'){
+  if(['/channel-connect','/channel-check','/channel-disconnect'].includes(url.pathname)){
+   try{const f=await formData(req);if(!validCsrf(f,'channel-connections')){html(403,'Форма устарела. Обнови страницу.');return;}const id=String(f.get('feature')||'');if(url.pathname==='/channel-connect'){const flow=channelConnections.begin(id);res.writeHead(303,{Location:flow.url,'Set-Cookie':flow.cookie,'Cache-Control':'no-store'});res.end();return;}if(url.pathname==='/channel-check')await channelConnections.check(id);else channelConnections.disconnect(id);res.writeHead(303,{Location:'/admin#channel-connections','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Не получилось выполнить действие</h2><p>'+escape(e.status?e.message:'Повтори попытку позже.')+'</p><a href="/admin#channel-connections">Вернуться</a>');}return;
+  }
   if(url.pathname==='/cosmetic-grant'){
    try{const f=await formData(req);if(!validCsrf(f,'cosmetic-grant')){html(403,'Форма устарела. Обнови страницу.');return;}const [kind,id]=String(f.get('item')||'').split(':');site.cosmetics.grant(f.get('login'),kind,id,site.adminIdentity(req).player_id);res.writeHead(303,{Location:'/admin#appearance','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Косметика не выдана</h2><p>'+escape(e.message)+'</p><a href="/admin#appearance">Вернуться</a>');}return;
   }
@@ -400,6 +408,9 @@ const server=http.createServer(async(req,res)=>{
  for(const [vp,price] of Object.entries(SHOP_PRICES))content+='<div class="admin-row"><span>'+vp+' VP</span><b>'+number(price)+' W</b></div>';
  content+='<div class="admin-row"><span>Версия настроек</span><b>'+escape(ECONOMY.version)+'</b></div><div class="admin-row"><span>Кейсы</span><b>Открытия отключены</b></div><p><a class="link" href="/cases">Посмотреть коллекцию ↗</a></p></section>';
  content+='<section class="admin-panel"><h2>Twitch-канал</h2><div class="admin-row"><span>Канал</span><b>#'+escape(channel)+'</b></div><div class="admin-row"><span>Аккаунт бота</span><b>@'+escape(linked?.login||botLogin)+'</b></div><div class="admin-row"><span>Подключение</span><b>'+(linked?'Авторизован':'Требуется вход')+'</b></div><p class="admin-note">Команды: !холодос · !баланс · !магазин · !заказ</p></section></div>';
+ content+='<section class="admin-panel" id="channel-connections"><h2>Баллы, подписки и VIP</h2><p class="admin-note">Подключения подтверждает владелец канала @'+escape(channel)+'. Бот остаётся подключён отдельно. Здесь проверяется доступ к данным Twitch; автоматическая выдача кейсов подключается отдельно.</p><div class="channel-connection-grid">';
+ for(const c of channelConnections.list()){content+='<article class="channel-connection-card"><h3>'+escape(c.label)+'</h3><span class="admin-badge '+(c.status==='ready'?'online':'')+'">'+escape(({disconnected:'Не подключено',authorized:'Разрешение получено',ready:'Подключено',error:'Нужна проверка'})[c.status]||c.status)+'</span><p>'+escape(c.detail||'Подтверди разрешение через Twitch.')+'</p>'+(c.login?'<p class="admin-note">Канал: @'+escape(c.login)+(c.checked_at?' · Проверено: '+escape(new Date(c.checked_at).toLocaleString('ru-RU',{timeZone:'Europe/Tallinn'})):'')+'</p>':'')+'<form method="post" action="/channel-connect"><input type="hidden" name="csrf" value="'+csrf('channel-connections')+'"><input type="hidden" name="feature" value="'+c.id+'"><button type="submit" '+(!a?'disabled':'')+'>'+(c.status==='disconnected'?'Подключить ':'Переподключить ')+escape(c.label)+'</button></form>'+(c.status!=='disconnected'?'<div class="channel-connection-actions"><form method="post" action="/channel-check"><input type="hidden" name="csrf" value="'+csrf('channel-connections')+'"><input type="hidden" name="feature" value="'+c.id+'"><button type="submit">Проверить</button></form><form method="post" action="/channel-disconnect"><input type="hidden" name="csrf" value="'+csrf('channel-connections')+'"><input type="hidden" name="feature" value="'+c.id+'"><button type="submit">Отключить</button></form></div>':'')+'</article>';}
+ content+='</div><p class="admin-note">Баллы канала подключаются через награды Twitch и их погашения. Это не W-монеты сайта. Подписки и VIP проверяются для этого канала.</p></section>';
  content+='<section class="admin-panel" id="settings"><h2>Настройки Twitch</h2>';
  if(!a)content+='<p>Создай приложение в <a class="link" href="https://dev.twitch.tv/console/apps" target="_blank" rel="noopener">Twitch Developer Console</a>. OAuth Redirect URL:</p><p><code>'+escape(publicUrl)+'/oauth/callback</code></p>'+setupForm(csrf('configure'));
  else{
