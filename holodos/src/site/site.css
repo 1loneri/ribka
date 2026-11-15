@@ -1608,3 +1608,24 @@ img[src*="/frame-thorn."]{filter:invert(1)}.equipped-avatar[data-equipped-frame=
 .frame-preview:has(img[src*="/frame-thorn."]) picture img{width:176px;height:176px}
 /* Use the gallery's 176:130 fit on equipped White Thorns at every avatar size. */
 .equipped-avatar[data-equipped-frame="thorn"]:not([data-equipped-frame=""])::after{inset:-17.6923%;background-size:contain}
+/* Correct W Edition's narrow artwork to the standard can silhouette. */
+.duel-can-wrap>img[src*="slot-w-edition"]{width:98px;object-fit:fill}
+@media(max-width:540px){.duel-can-wrap>img[src*="slot-w-edition"]{width:82px}}
+/* Curved soda ribbons draw outward from the rim, behind the can. */
+.duel-soda{left:50%;top:9px}
+.duel-soda::before{display:none}
+.soda-stream{position:absolute;left:-100px;top:-90px;width:200px;height:170px;overflow:visible;opacity:0}
+.soda-stream path{stroke:#c9f2ff;stroke-width:3;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1}
+.soda-stream path:nth-child(2){stroke-width:2.4}.soda-stream path:nth-child(3){stroke-width:1.8}
+.duel-fighter--lost .soda-stream{animation:sodaRibbonFade .78s ease-out both}
+.duel-fighter--lost .soda-stream path{animation:sodaRibbonFlow .72s cubic-bezier(.12,.55,.3,1) both}
+.duel-fighter--lost .soda-stream path:nth-child(2){animation-delay:.035s}
+.duel-fighter--lost .soda-stream path:nth-child(3){animation-delay:.065s}
+.duel-fighter--cosmetic .soda-stream path{stroke:#ffb7e3;filter:drop-shadow(0 0 3px #f9a2d955)}
+.duel-fighter--cosmetic .soda-stream path:nth-child(2){stroke:#a4f5d6}
+.duel-fighter--cosmetic .soda-stream path:nth-child(3){stroke:#bcb3ff}
+@keyframes sodaRibbonFlow{0%{stroke-dashoffset:1}45%{stroke-dashoffset:0}100%{stroke-dashoffset:-1}}
+@keyframes sodaRibbonFade{0%{opacity:0}8%,55%{opacity:.9}100%{opacity:0}}
+@keyframes sodaCanRelease{0%,100%{transform:rotate(0);opacity:1}22%{transform:translateY(2px) rotate(-3deg)}55%{transform:rotate(2deg)}}
+@keyframes sodaDroplet{0%{opacity:0;transform:translate(0,0) scale(.3)}12%{opacity:.85}48%{opacity:.7;transform:translate(calc(var(--dx)*.6),calc(var(--dy)*.45)) scale(.85) rotate(20deg)}100%{opacity:0;transform:translate(calc(var(--dx)*.85),45px) scale(.3) rotate(75deg)}}
+@media(prefers-reduced-motion:reduce){.soda-stream{display:none}}
