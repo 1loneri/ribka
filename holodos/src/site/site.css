@@ -1606,3 +1606,5 @@ img[src*="/frame-thorn."]{filter:invert(1)}.equipped-avatar[data-equipped-frame=
 .frame-preview:has(img[src*="/frame-thorn."]) .frame-preview-center{inset:26px}
 .equipped-avatar[data-equipped-frame="thorn"]{background:transparent}
 .equipped-avatar[data-equipped-frame="thorn"]>img{position:absolute;left:7%;top:7%;width:86%;height:86%;object-fit:cover}
+
+.top-equipped-avatar[data-equipped-frame="thorn"]{width:32px;height:32px}
