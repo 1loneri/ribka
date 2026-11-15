@@ -1,0 +1,17 @@
+export const cosmeticCatalog={
+ title:{frost:'Ледяной',night:'Ночная смена',keeper:'Хранитель холода',spark:'Искра',ultra:'На ультрах'},
+ name_color:{ice:'Ледяной голубой',rose:'Светло-розовый',amber:'Тёплый янтарь',white:'Белое сияние',aurora:'Северное сияние'},
+ theme:{arctic:'Arctic Blue',violet:'Midnight Violet',mint:'Frozen Mint'}
+};
+export function createCosmetics(db,transaction){
+ db.exec(`CREATE TABLE IF NOT EXISTS cosmetic_inventory(player_id TEXT NOT NULL,kind TEXT NOT NULL,item_id TEXT NOT NULL,granted_by TEXT NOT NULL,created_at INTEGER NOT NULL,PRIMARY KEY(player_id,kind,item_id));CREATE TABLE IF NOT EXISTS cosmetic_equipped(player_id TEXT NOT NULL,kind TEXT NOT NULL,item_id TEXT NOT NULL,PRIMARY KEY(player_id,kind));`);
+ const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
+ const valid=(kind,id)=>Object.hasOwn(cosmeticCatalog,kind)&&Object.hasOwn(cosmeticCatalog[kind],id);
+ function owned(playerId){const out={title:[],name_color:[],theme:[]};for(const r of db.prepare('SELECT kind,item_id FROM cosmetic_inventory WHERE player_id=? ORDER BY created_at,item_id').all(playerId))if(valid(r.kind,r.item_id))out[r.kind].push(r.item_id);return out;}
+ function active(playerId){const own=owned(playerId),out={title:'',name_color:'',theme:''};for(const r of db.prepare('SELECT kind,item_id FROM cosmetic_equipped WHERE player_id=?').all(playerId))if(valid(r.kind,r.item_id)&&own[r.kind].includes(r.item_id))out[r.kind]=r.item_id;return out;}
+ function summary(playerId){return {catalog:cosmeticCatalog,owned:owned(playerId),active:active(playerId)};}
+ function grant(login,kind,id,actor){login=String(login||'').replace(/^@/,'').toLowerCase();if(!/^[a-z0-9_]{1,25}$/.test(login)||!valid(kind,id))fail('Выбери игрока и косметику из каталога.');const p=db.prepare('SELECT id FROM players WHERE lower(login)=?').get(login);if(!p)fail('Игрок ещё не найден на сайте.',404);return transaction(()=>{const result=db.prepare('INSERT OR IGNORE INTO cosmetic_inventory VALUES(?,?,?,?,?)').run(p.id,kind,id,String(actor),Date.now());if(result.changes)db.prepare("INSERT OR IGNORE INTO account_notifications(event_key,owner_id,kind,title,body,url,created_at) VALUES(?,?,'prize','Новая косметика',?,'/profile',?)").run('cosmetic:'+p.id+':'+kind+':'+id,p.id,'Получено: '+cosmeticCatalog[kind][id]+'. Выбери оформление в разделе «Моя косметика».',Date.now());return {ok:true,alreadyOwned:!result.changes};});}
+ function equip(playerId,kind,id){if(!Object.hasOwn(cosmeticCatalog,kind))fail('Неизвестная категория.');if(id!==''&&(!valid(kind,id)||!owned(playerId)[kind].includes(id)))fail('Эта косметика ещё не получена.',403);return transaction(()=>{db.prepare('INSERT INTO cosmetic_equipped VALUES(?,?,?) ON CONFLICT(player_id,kind) DO UPDATE SET item_id=excluded.item_id').run(playerId,kind,id);if(kind==='title'||kind==='name_color'){const col=kind;const value=kind==='title'?(cosmeticCatalog.title[id]||''):id;db.prepare(`INSERT INTO cosmetic_profiles(player_id,${col}) VALUES(?,?) ON CONFLICT(player_id) DO UPDATE SET ${col}=excluded.${col}`).run(playerId,value);}return {ok:true};});}
+ function publicLooks(logins){const out={};for(const login of [...new Set(logins)].slice(0,50)){if(!/^[a-z0-9_]{1,25}$/.test(login))continue;const p=db.prepare('SELECT id FROM players WHERE lower(login)=?').get(login);if(p){const a=active(p.id);out[login]={title:cosmeticCatalog.title[a.title]||'',name_color:a.name_color};}}return out;}
+ return {catalog:cosmeticCatalog,summary,grant,equip,publicLooks};
+}
