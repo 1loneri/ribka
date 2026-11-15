@@ -1593,3 +1593,5 @@ body[data-site-theme="arctic"]{background-color:#080f18;background-image:radial-
 /* Recolor original black stencil in the renderer to preserve every thorn and alpha edge. */
 img[src*="/frame-thorn."]{filter:invert(1)}.equipped-avatar[data-equipped-frame="thorn"]::after{background-image:url('/assets/frame-thorn.png?v=71');filter:invert(1)}
 .monster-frame-grid{grid-template-columns:repeat(4,minmax(0,1fr))}@media(max-width:1050px){.monster-frame-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:700px){.monster-frame-grid{grid-template-columns:1fr}}
+
+.game-sound-toggle{display:inline-grid;place-items:center;width:46px;height:46px;padding:10px;flex:none}.game-sound-toggle svg{width:22px;height:22px}.casino-sound-toggle{display:grid;margin:12px auto 0}
