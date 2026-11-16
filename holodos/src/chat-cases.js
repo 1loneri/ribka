@@ -1,7 +1,7 @@
 import {createCasePurchases} from './case-purchases.js';
 import {randomInt} from 'node:crypto';
 import {caseRewardOptions} from './case-catalog.js';
-export function createChatCases({db,transaction,cases,player,random=randomInt,vipStatus=()=>null}){
+export function createChatCases({db,transaction,cases,player,random=randomInt,vipStatus=()=>null,tickets=null,controls=null}){
  db.exec(`CREATE TABLE IF NOT EXISTS chat_case_spending(player_id TEXT PRIMARY KEY,messages INTEGER NOT NULL DEFAULT 0);
  CREATE TABLE IF NOT EXISTS case_openings(id INTEGER PRIMARY KEY,request_id TEXT NOT NULL UNIQUE,player_id TEXT NOT NULL,login TEXT NOT NULL,case_id TEXT NOT NULL,cost INTEGER NOT NULL,revision INTEGER NOT NULL,reward_json TEXT NOT NULL,created_at INTEGER NOT NULL);
  CREATE INDEX IF NOT EXISTS case_openings_player ON case_openings(player_id,id DESC);
@@ -17,13 +17,14 @@ export function createChatCases({db,transaction,cases,player,random=randomInt,vi
  return {enabled,total:count,spent,threshold:c.priceAmount,available:enabled?Math.floor(remaining/c.priceAmount):0,progress:enabled?remaining%c.priceAmount:0};}
  function coinStatus(id){const c=config('coins'),balance=db.prepare('SELECT balance FROM players WHERE id=?').get(id)?.balance||0,enabled=c.priceUnit==='w'&&Number.isSafeInteger(c.priceAmount)&&c.priceAmount>0;return {enabled,cost:c.priceAmount,available:enabled?Math.floor(balance/c.priceAmount):0};}
  function history(id){return db.prepare(`SELECT o.id,o.case_id,o.reward_json,o.created_at,c.status AS claim_status FROM case_openings o LEFT JOIN case_prize_claims c ON c.opening_id=o.id WHERE o.player_id=? ORDER BY o.id DESC LIMIT 10`).all(id).map(r=>({id:r.id,caseId:r.case_id,reward:JSON.parse(r.reward_json),created_at:r.created_at,claim_status:r.claim_status}));}
- function open(session,requestId,allowed,caseId='chat',expectedCost){if(!['chat','coins','donation'].includes(caseId))fail('Неизвестный кейс.');return transaction(()=>{
+ function open(session,requestId,allowed,caseId='chat',expectedCost){if(!['chat','coins','donation','twitch','vip','subscriber'].includes(caseId))fail('Неизвестный кейс.');return transaction(()=>{
   const previous=db.prepare('SELECT * FROM case_openings WHERE request_id=?').get(requestId);
   if(previous){if(previous.player_id!==session.player_id)fail('Этот запрос принадлежит другому игроку.',409);if(previous.case_id!==caseId)fail('Этот запрос относится к другому кейсу.',409);return {ok:true,openingId:previous.id,reward:JSON.parse(previous.reward_json),replayed:true};}
   if(!allowed)fail('Кейсы доступны во время стрима. Вне эфира — только администраторам.',403);
-  const c=config(caseId),p=caseId==='chat'?progress(session.player_id):caseId==='coins'?coinStatus(session.player_id):purchases.status(session.player_id),cost=caseId==='chat'?p.threshold:caseId==='coins'?p.cost:1;if(caseId==='coins'&&expectedCost!==undefined&&expectedCost!==cost)fail('Цена кейса изменилась. Обнови страницу перед открытием.',409);if(!p.enabled)fail('Кейс временно недоступен.',409);if(!p.available)fail(caseId==='chat'?'Пока недостаточно сообщений для открытия.':caseId==='coins'?'Недостаточно W-монет для открытия.':'Нет подтверждённых покупок для открытия.',409);
+  controls?.requireEnabled('case:'+caseId);
+  const c=config(caseId),p=caseId==='chat'?progress(session.player_id):caseId==='coins'?coinStatus(session.player_id):caseId==='donation'?purchases.status(session.player_id):tickets.status(session.player_id)[caseId],cost=caseId==='chat'?p.threshold:caseId==='coins'?p.cost:1;if(caseId==='coins'&&expectedCost!==undefined&&expectedCost!==cost)fail('Цена кейса изменилась. Обнови страницу перед открытием.',409);if(!p.enabled)fail('Кейс временно недоступен.',409);if(!p.available)fail(caseId==='chat'?'Пока недостаточно сообщений для открытия.':caseId==='coins'?'Недостаточно W-монет для открытия.':'Нет подтверждённых покупок для открытия.',409);
   player(session.player_id,session.login);
-  const rows=c.rewards.map(r=>({...r,units:Math.round(r.weight*1e6)})),total=rows.reduce((s,r)=>s+r.units,0);
+  const rows=c.rewards.filter(r=>!controls||controls.enabled('reward:'+r.id)).map(r=>({...r,units:Math.round(r.weight*1e6)})),total=rows.reduce((s,r)=>s+r.units,0);
   if(!Number.isSafeInteger(total)||total<=0||rows.some(r=>!caseRewardOptions[r.id]||r.units<=0))fail('Проверь состав кейса в админ-панели.',409);
   let ticket=random(total),selected;for(const r of rows){ticket-=r.units;if(ticket<0){selected=r;break;}}
   if(!selected)throw Error('Invalid random result');
@@ -34,6 +35,7 @@ export function createChatCases({db,transaction,cases,player,random=randomInt,vi
    if(badges.vip||badges.broadcaster||priorVip||vipStatus(session.player_id)?.active||vipStatus(session.player_id)?.pending)reward={...caseRewardOptions['w-3000'],id:'w-3000',originalId:'vip-month',note:'VIP уже активен или ожидает выдачи: замена на 3 000 W.'};
   }
   if(reward.id.startsWith('w-'))gain=Number(reward.id.slice(2));
+  else if(reward.id==='case-donation'){db.prepare('INSERT INTO case_purchase_inventory VALUES(?,1) ON CONFLICT(player_id) DO UPDATE SET available=available+1').run(session.player_id);reward.note='Одно открытие покупного кейса добавлено на аккаунт.';}
   else if(['vp','vip','physical'].includes(reward.symbol))claim=true;
   else {
    let changes=0;const actor=caseId+'-case';
@@ -43,6 +45,7 @@ export function createChatCases({db,transaction,cases,player,random=randomInt,vi
    if(!changes){gain=1000;reward={...caseRewardOptions['w-1000'],id:'w-1000',originalId:reward.id,note:'Повторная косметика: компенсация 1 000 W.'};}
   }
   if(caseId==='donation'){const guaranteed=Number(c.guaranteedW||0);if(!Number.isSafeInteger(guaranteed)||guaranteed<0||guaranteed>10000000)throw Error('Invalid guaranteed reward');gain+=guaranteed;if(guaranteed){reward.guaranteedW=guaranteed;reward.note=[reward.note,'Дополнительно начислено '+guaranteed.toLocaleString('ru-RU')+' W.'].filter(Boolean).join(' ');}purchases.consume(session.player_id);}
+  if(['twitch','vip','subscriber'].includes(caseId))tickets.consume(session.player_id,caseId);
   reward.delivery=claim?'manual':'credited';const delta=gain-(caseId==='coins'?cost:0);if(delta)db.prepare('UPDATE players SET balance=balance+? WHERE id=?').run(delta,session.player_id);
   if(caseId==='chat')db.prepare('INSERT INTO chat_case_spending VALUES(?,?) ON CONFLICT(player_id) DO UPDATE SET messages=messages+excluded.messages').run(session.player_id,p.threshold);
   const o=db.prepare("INSERT INTO case_openings(request_id,player_id,login,case_id,cost,revision,reward_json,created_at) VALUES(?,?,?,?,?,?,?,?)").run(requestId,session.player_id,session.login,caseId,cost,c.revision,JSON.stringify(reward),now);

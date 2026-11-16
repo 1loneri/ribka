@@ -70,7 +70,7 @@ function draw(){
  // W Edition never appears in ordinary outcomes.
  const n=randomInt(2000);
  if(n===0)return {cans:[wEditionIndex,wEditionIndex,wEditionIndex],gain:400,description:'W EDITION! РЕДКИЙ ДЖЕКПОТ!'};
- if(n<11){const c=randomRegularCan();return {cans:[c,c,c],gain:20,description:'ДЖЕКПОТ!'};}
+ if(n<11){const c=randomRegularCan();return {cans:[c,c,c],gain:100,description:'ДЖЕКПОТ!'};}
  if(n<551){const c=randomRegularCan();return {cans:shuffle([c,c,chooseExcluding([c])]),gain:5,description:'ПАРА!'};}
  const a=randomRegularCan(),b=chooseExcluding([a]),c=chooseExcluding([a,b]);
  return {cans:shuffle([a,b,c]),gain:0,description:'не повезло.'};
@@ -264,7 +264,7 @@ if(!existsSync(siteBackupPath)){
 }
 const channelConnections=createChannelConnections({db,app,tokenRequest,validate,encrypt,decrypt,channel,publicUrl,states});
 const streamStatus=createStreamStatus({app,tokenRequest,channel});
-const site=createSite({db,publicUrl,app,tokenRequest,validate,player,transaction,draw,cans,duelChallenge,duelRespond,say,channel,duelsEnabled,states,secret,streamStatus});
+const site=createSite({db,publicUrl,app,tokenRequest,validate,player,transaction,draw,cans,duelChallenge,duelRespond,say,channel,duelsEnabled,states,secret,streamStatus,channelConnections});
 function equal(a,b){const x=Buffer.from(a),y=Buffer.from(b);return x.length===y.length&&timingSafeEqual(x,y);}
 function escape(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function page(body,path='/admin'){return renderAdminPage(body,{path});}
@@ -337,6 +337,9 @@ const server=http.createServer(async(req,res)=>{
   res.writeHead(303,{Location:'/',"Cache-Control":"no-store",'Set-Cookie':cookieName+'=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0'});res.end();return;
  }
  if(req.method==='POST'){
+  if(['/feature-save','/twitch-sync','/twitch-create-reward','/asset-upload','/asset-toggle'].includes(url.pathname)){
+   try{const parsed=url.pathname==='/asset-upload'?await site.uploads.parse(req):{form:await formData(req)},f=parsed.form;if(!validCsrf(f,'site-control')){html(403,'Форма устарела. Обнови страницу.');return;}const actor=site.adminIdentity(req).player_id;if(url.pathname==='/feature-save')site.controls.save(f,actor);else if(url.pathname==='/twitch-sync')await site.twitchRewards.syncAll(true);else if(url.pathname==='/twitch-create-reward')await site.twitchRewards.createReward();else if(url.pathname==='/asset-upload')site.uploads.upload(f,parsed.file,actor);else site.uploads.toggle(f.get('id'),f.get('enabled'),actor);res.writeHead(303,{Location:url.pathname.startsWith('/twitch')?'/admin/twitch#twitch-rewards':url.pathname.startsWith('/asset')?'/admin/cosmetics#asset-uploads':'/admin/settings#feature-control','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Настройки не обновлены</h2><p>'+escape(e.status?e.message:'Проверь форму и попробуй ещё раз.')+'</p><a href="/admin">Вернуться в админку</a>');}return;
+  }
   if(url.pathname==='/wallet-change'){
    try{const f=await formData(req);if(!validCsrf(f,'wallet-change')){html(403,'Форма устарела. Обнови страницу.');return;}site.adminWallet.change(f,site.adminIdentity(req).player_id);res.writeHead(303,{Location:'/admin/balances?wallet_login='+encodeURIComponent(String(f.get('login')||''))+'#balances','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Баланс не изменён</h2><p>'+escape(e.status?e.message:'Не получилось изменить баланс. Повтори попытку.')+'</p><a href="/admin/balances#balances">Вернуться к балансам</a>');}return;
   }
@@ -449,6 +452,9 @@ const server=http.createServer(async(req,res)=>{
  content+=site.chatCases.renderAdmin(escape,csrf('case-prizes'),'vp');
  content+=site.vipShop.renderAdmin(escape,csrf('vip-shop'));
  content+=site.vpShop.renderAdmin(escape,csrf('vp-stock'));
+ content+=site.controls.renderAdmin(escape,csrf('site-control'));
+ content+=site.uploads.renderAdmin(escape,csrf('site-control'));
+ content+=site.twitchRewards.renderAdmin(escape,csrf('site-control'));
  content+=site.manualVp.renderAdmin(escape,csrf('vp-manual'),randomBytes(16).toString('hex'));
  content+=site.chatCases.renderAdmin(escape,csrf('case-prizes'),'other');
  content+=renderBotCommands(escape,duelsEnabled);
@@ -476,15 +482,16 @@ const server=http.createServer(async(req,res)=>{
  content+='<section class="admin-panel" id="reviews"><h2>Отзывы магазина</h2><p class="admin-note">Отзывы пользователей доступны после выдачи VP. Внесённые вручную отзывы помечаются как добавленные администрацией.</p><form method="post" action="/review-add"><input type="hidden" name="csrf" value="'+csrf('reviews')+'"><label>Имя автора<input name="author" minlength="2" maxlength="60" required></label><label>Оценка<select name="rating"><option value="5">5 из 5</option><option value="4">4 из 5</option><option value="3">3 из 5</option><option value="2">2 из 5</option><option value="1">1 из 5</option></select></label><label>Текст отзыва<textarea name="body" minlength="5" maxlength="1200" rows="4" required></textarea></label><button type="submit">Добавить отзыв</button></form>';
  for(const r of site.reviews.list())content+='<article class="admin-support-message"><b>'+escape(r.author_name)+'</b> · '+r.rating+'/5 <small>'+escape(r.source==='verified'?'VP получены на сайте':'Добавлено администрацией')+' · '+escape(new Date(r.created_at).toLocaleString('ru-RU',{timeZone:'Europe/Tallinn'}))+'</small><p>'+escape(r.body)+'</p></article>';
  content+='</section>';
- content+='<section class="admin-panel" id="appearance"><h2>Титулы, ники и темы</h2><p class="admin-note">Выдача в коллекцию игрока. Игрок сам выбирает оформление в профиле. Повторная выдача не создаёт дубликат.</p><form method="post" action="/cosmetic-grant"><input type="hidden" name="csrf" value="'+csrf('cosmetic-grant')+'"><label>Twitch-ник<input name="login" maxlength="26" required placeholder="@игрок"></label><label>Косметика<select name="item">'+Object.entries(site.cosmetics.catalog).map(([kind,items])=>'<optgroup label="'+({title:'Титулы',name_color:'Оформление ника',theme:'Темы сайта'})[kind]+'">'+Object.entries(items).map(([id,label])=>'<option value="'+kind+':'+id+'">'+escape(label)+'</option>').join('')+'</optgroup>').join('')+'</select></label><button type="submit">Выдать косметику</button></form></section>';
+ content+='<section class="admin-panel" id="appearance"><h2>Титулы, ники и темы</h2><p class="admin-note">Выдача в коллекцию игрока. Игрок сам выбирает оформление в профиле. Повторная выдача не создаёт дубликат.</p><form method="post" action="/cosmetic-grant"><input type="hidden" name="csrf" value="'+csrf('cosmetic-grant')+'"><label>Twitch-ник<input name="login" maxlength="26" required placeholder="@игрок"></label><label>Косметика<select name="item">'+Object.entries(site.cosmetics.catalog).map(([kind,items])=>'<optgroup label="'+({title:'Титулы',name_color:'Оформление ника',theme:'Темы сайта',profile:'Оформление профиля',highlight:'Выделение профиля',effect:'Эффекты сайта'})[kind]+'">'+Object.entries(items).map(([id,label])=>'<option value="'+kind+':'+id+'">'+escape(label)+'</option>').join('')+'</optgroup>').join('')+'</select></label><button type="submit">Выдать косметику</button></form></section>';
  content+='<section class="admin-panel" id="frames"><h2>Выдача рамок</h2><p class="admin-note">Рамка сохраняется в коллекции игрока. Первая рамка надевается автоматически. Повторная выдача не создаёт дубликат.</p><form method="post" action="/frame-grant"><input type="hidden" name="csrf" value="'+csrf('frame-grant')+'"><label>Twitch-ник<input name="login" maxlength="26" required placeholder="@игрок"></label><label>Рамка<select name="frame">'+Object.entries(site.frames.catalog).map(([id,label])=>'<option value="'+id+'">'+escape(label)+'</option>').join('')+'</select></label><button type="submit">Выдать рамку</button></form></section>';
- content+='<section class="admin-panel" id="cosmetics"><h2>Банки для дуэлей</h2><p class="admin-note">Ручная выдача косметики существующему игроку. Не меняет баланс и шансы победы. Открытия кейса за подписку пока отключены.</p><form method="post" action="/duel-cosmetic"><input type="hidden" name="csrf" value="'+csrf('duel-cosmetic')+'"><label>Twitch-ник<input name="login" maxlength="26" required placeholder="@игрок"></label><label>Косметическая банка<select name="can">'+Object.entries(site.duelVisuals.catalog).map(([id,label])=>'<option value="'+id+'">'+escape(label)+'</option>').join('')+'</select></label><button type="submit">Выдать косметическую банку</button></form></section>';
+ content+='<section class="admin-panel" id="cosmetics"><h2>Банки для дуэлей</h2><p class="admin-note">Ручная выдача косметики существующему игроку. Не меняет баланс и шансы победы. Обычные цветные банки взрываются обычным всплеском. Пять эпических вариантов — радужным.</p><form method="post" action="/duel-cosmetic"><input type="hidden" name="csrf" value="'+csrf('duel-cosmetic')+'"><label>Twitch-ник<input name="login" maxlength="26" required placeholder="@игрок"></label><label>Косметическая банка<select name="can">'+Object.entries(site.duelVisuals.catalog).map(([id,label])=>'<option value="'+id+'">'+escape(label)+'</option>').join('')+'</select></label><button type="submit">Выдать косметическую банку</button></form></section>';
  html(200,content);
 });
 server.listen(port,'0.0.0.0',()=>console.log('Holodos panel listening on '+port+' for #'+channel));
 if(current()&&app())void start();
 const duelTimer=setInterval(()=>{try{expireDuels(Date.now(),true);duelFees.settle(Date.now());}catch(e){console.error('Duel expiration:',e.message);}},5000);
+const twitchRewardsTimer=setInterval(()=>{void site.twitchRewards.syncAll(false).catch(e=>console.error('Twitch rewards sync failed'));},60000);
 const heartbeat=setInterval(async()=>{if(ending||starting)return;try{if(!current()||!app())return;if(current().expires_at<Date.now()+30*60*1000){await refresh();await start();}else if(!connected)await start();db.prepare('DELETE FROM seen WHERE created_at<?').run(Date.now()-7*86400000);}catch(e){console.error('Twitch heartbeat:',e.message);}},60000);
-async function shutdown(){ending=true;clearInterval(heartbeat);clearInterval(duelTimer);await stop();server.close();db.close();}
+async function shutdown(){ending=true;clearInterval(heartbeat);clearInterval(twitchRewardsTimer);clearInterval(duelTimer);await stop();server.close();db.close();}
 process.once('SIGINT',()=>void shutdown().then(()=>process.exit(0)));
 process.once('SIGTERM',()=>void shutdown().then(()=>process.exit(0)));

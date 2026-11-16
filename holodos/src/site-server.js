@@ -1,3 +1,10 @@
+import {createCustomAssets} from './custom-assets.js';
+import {createFeatureControl} from './feature-control.js';
+import {freezeEarlyTesters} from './early-testers.js';
+import {createCaseTickets} from './case-tickets.js';
+import {createTwitchRewards} from './twitch-rewards.js';
+import {caseRewardOptions} from './case-catalog.js';
+import {canArt} from './duel-visuals.js';
 import {createCaseManagement} from './case-management.js';
 import {createVpShop} from './vp-shop.js';
 import {createManualVp} from './manual-vp.js';
@@ -17,8 +24,10 @@ import {createSupport} from './support.js';
 import {readFileSync,existsSync} from 'node:fs';
 import {createHash,randomBytes,createHmac,timingSafeEqual} from 'node:crypto';
 
-export function createSite({db,publicUrl,app,tokenRequest,validate,player,transaction,draw,cans,duelChallenge,duelRespond,say,channel,duelsEnabled,states,secret,streamStatus={get:async()=>({live:false,known:false,checked_at:0})}}){
+export function createSite({db,publicUrl,app,tokenRequest,validate,player,transaction,draw,cans,duelChallenge,duelRespond,say,channel,duelsEnabled,states,secret,channelConnections={helix:async()=>{throw Object.assign(Error('Подключи Twitch от владельца канала.'),{status:409})}},streamStatus={get:async()=>({live:false,known:false,checked_at:0})}}){
+ const uploads=createCustomAssets(db,transaction);
  const cases=createCaseCatalog(db,transaction);
+ const controls=createFeatureControl(db,transaction,()=>[['shop:vp','Магазин VP'],['shop:vip','Магазин VIP'],['sync:points','Twitch · баллы и выдача кейсов'],['sync:vip','Twitch · VIP-кейсы'],['sync:subscriber','Twitch · кейсы за подписку'],...cases.list().map(c=>['case:'+c.id,'Кейс · '+c.title]),...Object.entries(caseRewardOptions).map(([id,r])=>['reward:'+id,'Награда · '+r.label])]);
  const leaderboard=createLeaderboard(db);
  const support=createSupport(db,transaction);
  const reviews=createReviews(db,transaction);
@@ -27,7 +36,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  const frames=createFrames(db,transaction);
  const cosmetics=createCosmetics(db,transaction);
  const siteKey=createHash('sha256').update('war1ouss-web:'+secret).digest();
- const sitePages=new Set(['/','/casino','/cases','/duels','/top','/chat','/shop','/profile','/help','/requests']);
+ const sitePages=new Set(['/','/casino','/cases','/duels','/top','/chat','/shop','/profile','/help','/requests','/widget']);
  const assetFiles={
   '/assets/site.css':{file:new URL('./site/site.css',import.meta.url),type:'text/css; charset=utf-8'},
   '/assets/site.js':{file:new URL('./site/site.js',import.meta.url),type:'text/javascript; charset=utf-8'},
@@ -47,9 +56,12 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  assetFiles['/assets/frame-assault.png']={file:new URL('./site/frame-assault.png',import.meta.url),type:'image/png'};
  assetFiles['/assets/case-subscriber-open.webp']={file:new URL('./site/case-subscriber-open.webp',import.meta.url),type:'image/webp'};
  assetFiles['/assets/notification.mp3']={file:new URL('./site/notification.mp3',import.meta.url),type:'audio/mpeg'};
- for(const id of Object.keys(duelVisuals.catalog))assetFiles['/assets/duel-can-'+id+'.webp']={file:new URL('./site/duel-can-'+id+'.webp',import.meta.url),type:'image/webp'};
+ for(const id of ['pipeline','pacific','khaotic','violet','badapple'])assetFiles['/assets/duel-can-'+id+'.webp']={file:new URL('./site/duel-can-'+id+'.webp',import.meta.url),type:'image/webp'};
  assetFiles['/assets/dela-gothic-one.woff']={file:new URL('./site/dela-gothic-one.woff',import.meta.url),type:'font/woff'};
  assetFiles['/assets/dela-gothic-one.ttf']={file:new URL('./site/dela-gothic-one.ttf',import.meta.url),type:'font/ttf'};
+ for(const id of ['ears','jett','clove'])assetFiles['/assets/frame-'+id+'.svg']={file:new URL('./site/frame-'+id+'.svg',import.meta.url),type:'image/svg+xml'};
+ assetFiles['/assets/site-features.js']={file:new URL('./site/site-features.js',import.meta.url),type:'text/javascript; charset=utf-8'};
+ for(const id of ['cat','roses'])assetFiles['/assets/profile-'+id+'.svg']={file:new URL('./site/profile-'+id+'.svg',import.meta.url),type:'image/svg+xml'};
  const shell=readFileSync(new URL('./site/index.html',import.meta.url));
  const staticAssets={};
  for(const [name,info] of Object.entries(assetFiles)){
@@ -65,15 +77,19 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  if(!db.prepare('PRAGMA table_info(chat_stats)').all().some(c=>c.name==='badges_json'))db.exec("ALTER TABLE chat_stats ADD COLUMN badges_json TEXT NOT NULL DEFAULT '{}'");
  const chatLeaderboard=createChatLeaderboard(db);
  const adminWallet=createAdminWallet(db,transaction);
+ freezeEarlyTesters(db);
  const notifications=createNotifications(db);
+ const tickets=createCaseTickets(db,transaction);
+ const twitchRewards=createTwitchRewards({db,transaction,connections:channelConnections,tickets,controls});
  const vpShop=createVpShop(db,transaction,secret);
  const manualVp=createManualVp(db,transaction,adminWallet.lookup);
  const vipShop=createVipShop(db,transaction);
- const chatCases=createChatCases({db,transaction,cases,player,vipStatus:id=>vipShop.status(id)});
- const caseManagement=createCaseManagement(db,transaction,adminWallet.lookup,chatCases);
+ const chatCases=createChatCases({db,transaction,cases,player,vipStatus:id=>vipShop.status(id),tickets,controls});
+ const caseManagement=createCaseManagement(db,transaction,adminWallet.lookup,chatCases,tickets);
  const avatars=createAvatars(db,app,tokenRequest);
  db.prepare("DELETE FROM web_sessions WHERE expires_at<?").run(Date.now());
 
+ function publicCases(){return cases.list().map(c=>{const rewards=c.rewards.filter(r=>controls.enabled('reward:'+r.id)),sum=rewards.reduce((s,r)=>s+r.weight,0);return {...c,enabled:controls.enabled('case:'+c.id)&&sum>0,art:uploads.list().find(a=>a.enabled&&a.kind==='case'&&a.target===c.id)?.src||'/assets/case-'+c.id+'.webp',rewards:rewards.map(r=>({...r,weight:sum?r.weight*100/sum:0,src:r.can?canArt(r.can):r.src}))};});}
  const secure=publicUrl.startsWith('https:')?'; Secure':'';
  const baseCookies='; Path=/; HttpOnly; SameSite=Lax'+secure;
  const securityHeaders={
@@ -81,7 +97,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   'X-Frame-Options':'DENY',
   'Referrer-Policy':'strict-origin-when-cross-origin',
   'Permissions-Policy':'camera=(), microphone=(), geolocation=()',
-  'Content-Security-Policy':"default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://static-cdn.jtvnw.net; connect-src 'self'; media-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'"
+  'Content-Security-Policy':"default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://static-cdn.jtvnw.net; connect-src 'self'; media-src 'self'; form-action 'self'; base-uri 'none'; frame-src 'self' https://player.twitch.tv; frame-ancestors 'none'"
  };
  function send(res,status,body,type='application/json; charset=utf-8',headers={}){
   res.writeHead(status,{...securityHeaders,'Content-Type':type,'Cache-Control':'no-store',...headers});
@@ -146,7 +162,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   if(!session)return {authenticated:false};
   const p=player(session.player_id,session.login);
   const orders=db.prepare('SELECT id,vp,price,status,created_at FROM shop_orders WHERE player_id=? ORDER BY id DESC LIMIT 10').all(session.player_id);
-  return {authenticated:true,is_admin:isAdminSession(session),stream,spin_allowed:isAdminSession(session)||stream?.live===true,support_unread:support.unread(session),notification_unread:notifications.unread(session),csrf:csrf(session),chatCase:chatCases.progress(p.id),coinCase:chatCases.coinStatus(p.id),donationCase:chatCases.purchases.status(p.id),vipShop:vipShop.status(p.id),vipOrders:vipShop.orders(p.id),manualVp:manualVp.list(p.id),vpCodes:vpShop.list(p.id),caseHistory:chatCases.history(p.id),cosmetics:{...cosmetics.summary(p.id),duel_cans:db.prepare('SELECT can_id FROM duel_can_inventory WHERE player_id=? ORDER BY can_id').all(p.id).map(r=>({id:r.can_id,label:duelVisuals.catalog[r.can_id]})).filter(r=>r.label)},frames:{catalog:frames.catalog,rarity:frames.rarity,owned:frames.owned(p.id),active:frames.active(p.id)},player:{id:p.id,login:p.login,display_name:session.display_name,avatar:session.avatar,balance:p.balance,opens:p.opens,wins:p.wins,jackpots:p.jackpots,last_opened:p.last_opened,message_count:db.prepare('SELECT message_count FROM chat_stats WHERE player_id=?').get(session.player_id)?.message_count||0},orders};
+  return {authenticated:true,is_admin:isAdminSession(session),stream,spin_allowed:isAdminSession(session)||stream?.live===true,support_unread:support.unread(session),notification_unread:notifications.unread(session),csrf:csrf(session),chatCase:chatCases.progress(p.id),coinCase:chatCases.coinStatus(p.id),donationCase:chatCases.purchases.status(p.id),entitlements:tickets.status(p.id),memberships:twitchRewards.eligibility(p.id),features:Object.fromEntries(controls.list().map(f=>[f.key,f.enabled])),vipShop:vipShop.status(p.id),vipOrders:vipShop.orders(p.id),manualVp:manualVp.list(p.id),vpCodes:vpShop.list(p.id),caseHistory:chatCases.history(p.id),cosmetics:{...cosmetics.summary(p.id),duel_cans:db.prepare('SELECT can_id FROM duel_can_inventory WHERE player_id=? ORDER BY can_id').all(p.id).map(r=>({id:r.can_id,label:duelVisuals.catalog[r.can_id],src:canArt(r.can_id)})).filter(r=>r.label)},frames:{catalog:frames.catalog,rarity:frames.rarity,owned:frames.owned(p.id),active:frames.active(p.id)},player:{id:p.id,login:p.login,display_name:session.display_name,avatar:session.avatar,balance:p.balance,opens:p.opens,wins:p.wins,jackpots:p.jackpots,last_opened:p.last_opened,message_count:db.prepare('SELECT message_count FROM chat_stats WHERE player_id=?').get(session.player_id)?.message_count||0},orders};
  }
  function spinsQuery(sql,...params){
   return db.prepare(sql).all(...params).map(x=>({login:x.login,cans:JSON.parse(x.cans_json),gain:x.gain,description:x.description,source:x.source,created_at:x.created_at}));
@@ -203,6 +219,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  }
  async function handle(req,res,url){
   const path=url.pathname,method=req.method||'GET';
+  if(path.startsWith('/api/cosmetic-assets/')&&(method==='GET'||method==='HEAD')){const id=path.split('/').pop();if(!/^custom_[a-f0-9]{16}$/.test(id))return false;const media=uploads.media(id);if(!media){send(res,404,'Файл недоступен.','text/plain; charset=utf-8');return true;}send(res,200,method==='HEAD'?'':media.data,media.mime,media.mime.startsWith('text/html')?{'X-Frame-Options':'SAMEORIGIN','Content-Security-Policy':"sandbox; default-src 'none'; style-src 'unsafe-inline'; img-src data:; frame-ancestors 'self'; base-uri 'none'; form-action 'none'"}:{});return true;}
   if(path in staticAssets){
    if(method!=='GET'&&method!=='HEAD')return json(res,405,{error:'Метод не поддерживается'}),true;
    const asset=staticAssets[path];
@@ -222,11 +239,14 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   }
   if(path.startsWith('/api/')){
    if(method==='GET'){
+    if(path==='/api/site-features'){json(res,200,{features:Object.fromEntries(controls.list().map(f=>[f.key,f.enabled])),assets:uploads.list().filter(a=>a.enabled),cans:Object.fromEntries(Object.entries(duelVisuals.catalog).map(([id,label])=>[id,{label,src:canArt(id)}]))});return true;}
+    if(path==='/api/case-history'){const page=Math.max(1,Math.min(100000,parseInt(url.searchParams.get('page'))||1)),rows=db.prepare('SELECT id,login,case_id,reward_json,created_at FROM case_openings ORDER BY id DESC LIMIT 10 OFFSET ?').all((page-1)*10),total=db.prepare('SELECT COUNT(*) n FROM case_openings').get().n;json(res,200,{page,pages:Math.max(1,Math.ceil(total/10)),openings:rows.map(r=>({id:r.id,login:r.login,caseId:r.case_id,reward:JSON.parse(r.reward_json),created_at:r.created_at}))});return true;}
+    if(path==='/api/player'){const login=String(url.searchParams.get('login')||'').toLowerCase();if(!/^[a-z0-9_]{1,25}$/.test(login)){json(res,400,{error:'Неверный ник'});return true;}const p=db.prepare('SELECT id,login,balance,opens,wins FROM players WHERE lower(login)=?').get(login);if(!p){json(res,404,{error:'Игрок не найден'});return true;}const {id,...profile}=p;json(res,200,{player:profile,messages:db.prepare('SELECT message_count FROM chat_stats WHERE player_id=?').get(id)?.message_count||0,frame:frames.active(id),look:cosmetics.publicLooks([login])[login]||{}});return true;}
     if(path==='/api/shop/vp'){json(res,200,{packages:vpShop.catalog()});return true;}
     if(path==='/api/shop/vip'){json(res,200,vipShop.settings());return true;}
     if(path==='/api/chat-leaderboard'){json(res,200,chatLeaderboard(url.searchParams.get('page')));return true;}
     if(path==='/api/leaderboard'){json(res,200,leaderboard(url.searchParams.get('page')));return true;}
-    if(path==='/api/cases'){json(res,200,{cases:cases.list(),previewOnly:false,activeCaseIds:['chat','coins','donation']});return true;}
+    if(path==='/api/cases'){json(res,200,{cases:publicCases(),previewOnly:false,activeCaseIds:['chat','coins','donation','twitch','vip','subscriber']});return true;}
     if(path==='/api/reviews'){const session=getSession(req);json(res,200,{reviews:reviews.list(),eligibleOrders:reviews.eligible(session)});return true;}
     if(path==='/api/frames'){json(res,200,{frames:frames.publicFrames((url.searchParams.get('logins')||'').toLowerCase().split(',')),cosmetics:cosmetics.publicLooks((url.searchParams.get('logins')||'').toLowerCase().split(','))});return true;}
     if(path==='/api/avatars'){const names=(url.searchParams.get('logins')||'').split(',').slice(0,50);json(res,200,{avatars:await avatars.get(names)});return true;}
@@ -243,8 +263,9 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
      json(res,200,{top,chat,recent});return true;
     }
     if(path==='/api/spins'){
-     const mine=url.searchParams.get('scope')==='mine',session=mine?getSession(req):null;if(mine&&!session){json(res,401,{error:'Войди через Twitch, чтобы посмотреть свои открытия.'});return true;}
-     const spins=mine?spinsQuery('SELECT login,cans_json,gain,description,source,created_at FROM fridge_spins WHERE player_id=? ORDER BY id DESC LIMIT 50',session.player_id):spinsQuery('SELECT login,cans_json,gain,description,source,created_at FROM fridge_spins ORDER BY id DESC LIMIT 10');
+     const scope=url.searchParams.get('scope'),mine=scope==='mine',session=mine?getSession(req):null;if(mine&&!session){json(res,401,{error:'Войди через Twitch, чтобы посмотреть свои открытия.'});return true;}
+     const jackpotFilter=scope==='jackpots'?' WHERE gain IN (20,100)':scope==='superjackpots'?' WHERE gain=400':'';
+     const spins=mine?spinsQuery('SELECT login,cans_json,gain,description,source,created_at FROM fridge_spins WHERE player_id=? ORDER BY id DESC LIMIT 50',session.player_id):spinsQuery('SELECT login,cans_json,gain,description,source,created_at FROM fridge_spins'+jackpotFilter+' ORDER BY id DESC LIMIT '+(jackpotFilter?'50':'10'));
      json(res,200,{spins,scope:mine?'mine':'recent'});return true;
     }
     if(path==='/api/duels'){
@@ -262,8 +283,11 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
    if(!constantTime(String(req.headers['x-csrf-token']||''),csrf(session))){json(res,403,{error:'Сессия устарела. Обнови страницу.'});return true;}
    try{
     const data=await readJson(req);
-    if(path==='/api/shop/vp'){const rid=actionId(data);if(!Number.isSafeInteger(data.vp)||!Number.isSafeInteger(data.expectedPrice))throw Error('Неверный пакет VP');json(res,200,vpShop.buy(session,rid,data.vp,data.expectedPrice));return true;}
-    if(path==='/api/shop/vip'){const rid=actionId(data);if(!Number.isSafeInteger(data.expectedPrice)||data.expectedPrice<1)throw Error('Неверная цена VIP');json(res,200,vipShop.buy(session,rid,data.expectedPrice));return true;}
+    if(path==='/api/twitch/refresh'){const result=await twitchRewards.syncAll(false);json(res,200,{...result,memberships:twitchRewards.eligibility(session.player_id)});return true;}
+    if(path==='/api/twitch/claim'){json(res,200,await twitchRewards.claim(session,String(data.kind||'')));return true;}
+    if(/^\/api\/cases\/(twitch|vip|subscriber)\/open$/.test(path)){const id=path.split('/')[3],rid=actionId(data),status=await streamStatus.get();json(res,200,chatCases.open(session,rid,isAdminSession(session)||status.live===true,id));return true;}
+    if(path==='/api/shop/vp'){controls.requireEnabled('shop:vp');const rid=actionId(data);if(!Number.isSafeInteger(data.vp)||!Number.isSafeInteger(data.expectedPrice))throw Error('Неверный пакет VP');json(res,200,vpShop.buy(session,rid,data.vp,data.expectedPrice));return true;}
+    if(path==='/api/shop/vip'){controls.requireEnabled('shop:vip');const rid=actionId(data);if(!Number.isSafeInteger(data.expectedPrice)||data.expectedPrice<1)throw Error('Неверная цена VIP');json(res,200,vipShop.buy(session,rid,data.expectedPrice));return true;}
     if(path==='/api/cases/donation/open'){const rid=actionId(data),status=await streamStatus.get();json(res,200,chatCases.openDonation(session,rid,isAdminSession(session)||status.live===true));return true;}
     if(path==='/api/cases/coins/open'){if(!Number.isSafeInteger(data.expectedCost)||data.expectedCost<=0)throw Error('Неверная цена');const rid=actionId(data),status=await streamStatus.get();json(res,200,chatCases.openCoins(session,rid,isAdminSession(session)||status.live===true,data.expectedCost));return true;}
     if(path==='/api/cases/chat/open'){const rid=actionId(data),status=await streamStatus.get();json(res,200,chatCases.open(session,rid,isAdminSession(session)||status.live===true));return true;}
@@ -327,5 +351,5 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   }
   return false;
  }
- return {handle,oauthCallback,recordSpin,trackChat,isAdminRequest,cases,chatCases,adminWallet,vipShop,manualVp,vpShop,caseManagement,support,reviews,duelVisuals,frames,cosmetics,isAdminIdentity:isAdminSession,adminIdentity:req=>{const s=getSession(req);return s&&isAdminSession(s)?s:{player_id:'admin-panel',login:'Администратор'};}};
+ return {handle,oauthCallback,recordSpin,trackChat,isAdminRequest,cases,chatCases,adminWallet,vipShop,manualVp,vpShop,caseManagement,uploads,controls,twitchRewards,support,reviews,duelVisuals,frames,cosmetics,isAdminIdentity:isAdminSession,adminIdentity:req=>{const s=getSession(req);return s&&isAdminSession(s)?s:{player_id:'admin-panel',login:'Администратор'};}};
 }

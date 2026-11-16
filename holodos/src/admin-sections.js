@@ -1,11 +1,12 @@
 export const adminSections=[
  {key:'overview',path:'/admin',label:'Обзор',description:'Баланс сообщества и основные показатели.',ids:[]},
+ {key:'settings',path:'/admin/settings',label:'Включения и награды',description:'Управление доступностью разделов, кейсов и дропа.',ids:['feature-control']},
  {key:'vp',path:'/admin/vp',label:'VP, VIP и магазин',description:'Заявки VP и VIP, призы VP из кейсов, цены и отзывы.',ids:['vp-stock','vp-manual','orders','case-vp-prizes','vip-shop','economy','reviews']},
  {key:'cases',path:'/admin/cases',label:'Кейсы',description:'Покупки, редактор кейсов и остальные призы.',ids:['case-management','case-purchases','case-prizes','cases-editor']},
  {key:'balances',path:'/admin/balances',label:'W-монеты игроков',description:'Поиск баланса, начисление и списание W.',ids:['balances']},
- {key:'cosmetics',path:'/admin/cosmetics',label:'Косметика',description:'Рамки, титулы, оформление ников, темы и банки.',ids:['appearance','frames','cosmetics']},
+ {key:'cosmetics',path:'/admin/cosmetics',label:'Косметика',description:'Рамки, титулы, оформление ников, темы и банки.',ids:['asset-uploads','appearance','frames','cosmetics']},
  {key:'support',path:'/admin/support',label:'Обращения',description:'Вопросы игроков и ответы администрации.',ids:['support']},
- {key:'twitch',path:'/admin/twitch',label:'Twitch и бот',description:'Подключения, настройки канала и команды.',ids:['channel-status','channel-connections','bot-commands','settings']}
+ {key:'twitch',path:'/admin/twitch',label:'Twitch и бот',description:'Подключения, настройки канала и команды.',ids:['twitch-rewards','channel-status','channel-connections','bot-commands','settings']}
 ];
 export function selectAdminContent(body,path='/admin'){
  if(!body.includes('id="overview"'))return body;
