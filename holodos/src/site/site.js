@@ -59,6 +59,7 @@ function renderRoute(path,replace=false){
  applySidebarMode(sidebarMode);
  const titles={'/':'Главная','/casino':'Холодос','/cases':'Кейсы','/duels':'Дуэли','/top':'Топ игроков','/chat':'Топ чата','/profile':'Профиль','/shop':'Магазин','/help':'Помощь','/requests':'Запросы'};
  document.title=(titles[path]||'Главная')+' — War1ouss';
+ if(path==='/top')refreshTop();
  window.scrollTo({top:0,behavior:'instant'});
  if(path==='/duels')refreshDuels();
  if(path==='/casino')refreshSpins();
@@ -71,9 +72,9 @@ function chatBadgesHtml(row){
  const labels={broadcaster:'Стример',moderator:'Модератор',vip:'VIP',subscriber:'Подписчик',founder:'Основатель',premium:'Prime'};
  return Object.entries(labels).filter(([k])=>badges[k]).map(([k,label])=>'<span class="chat-badge chat-badge--'+k+'" title="'+esc(label)+'">'+esc(label)+'</span>').join('');
 }
-function rankHtml(list,kind='balance'){
+function rankHtml(list,kind='balance',offset=0){
  if(!list||!list.length)return '<p class="muted">Пока нет данных. Рейтинг обновляется по мере активности игроков.</p>';
- return list.map((r,i)=>'<div class="rank-item '+(kind==='chat'&&['ice','rose','amber','violet'].includes(r.frame)?'chat-frame-'+r.frame:'')+'"><span class="rank-position">'+(i+1)+'</span><div class="rank-name"><span class="player-line">'+avatarHtml(r.login)+'<b>@'+esc(r.login)+'</b></span>'+(kind==='balance'?'<small>Открытий: '+fmt(r.opens)+'</small>':'<small>'+chatBadgesHtml(r)+(r.title?'<span class="chat-title">'+esc(r.title)+'</span>':'')+'</small>')+'</div><div class="rank-score">'+fmt(kind==='balance'?r.balance:r.message_count)+' '+(kind==='balance'?'W':'сообщ.')+'</div></div>').join('');
+ return list.map((r,i)=>'<div class="rank-item '+(kind==='chat'&&['ice','rose','amber','violet'].includes(r.frame)?'chat-frame-'+r.frame:'')+'"><span class="rank-position">'+(offset+i+1)+'</span><div class="rank-name"><span class="player-line">'+avatarHtml(r.login)+'<b>@'+esc(r.login)+'</b></span>'+(kind==='balance'?'<small>Открытий: '+fmt(r.opens)+'</small>':'<small>'+chatBadgesHtml(r)+(r.title?'<span class="chat-title">'+esc(r.title)+'</span>':'')+'</small>')+'</div><div class="rank-score">'+fmt(kind==='balance'?r.balance:r.message_count)+' '+(kind==='balance'?'W':'сообщ.')+'</div></div>').join('');
 }
 function winsHtml(list){
  if(!list||!list.length)return '<p class="muted">Реальные выигрыши появятся здесь после следующих открытий. Прошлые игры бота ещё не записывались в историю.</p>';
@@ -101,7 +102,7 @@ async function refreshCases(){try{const r=await api('/api/cases');if(Array.isArr
 function pendingChatKey(){return 'war1ouss-chat-case-request:'+state.me?.player?.id;}
 function pendingChatRequest(){try{return sessionStorage.getItem(pendingChatKey())||'';}catch{return '';}}
 function renderChatCase(){
- const button=document.querySelector('[data-case-preview="chat"]');if(!button)return;
+ const button=document.querySelector('[data-case-open="chat"]');if(!button)return;
  const me=state.me,p=me?.chatCase,logged=me?.authenticated;
  const recover=logged&&!!pendingChatRequest();button.disabled=!logged||!p?.enabled||(!recover&&(!p.available||!me.spin_allowed));
  button.textContent=!logged?'Войди через Twitch':recover?'Проверить открытие':p?.available?'Открыть · '+fmt(p.available)+' доступно':'Копи сообщения';
@@ -116,7 +117,6 @@ function renderPublic(){
  const p=state.public;if(!p)return;
  $('home-top').innerHTML=rankHtml((p.top||[]).slice(0,5));
  $('home-wins').innerHTML=winsHtml(p.recent);
- $('top-list').innerHTML=rankHtml(p.top);
  $('chat-list').innerHTML=rankHtml(p.chat,'chat');hydrateAvatars();
 }
 function canUseAdminDemo(){return state.me?.authenticated===true&&state.me?.is_admin===true;}
@@ -271,9 +271,29 @@ async function spin(){
   if(e.status===429)state.me.player.last_opened=Date.now()+(e.remaining||1)*1000-120000;
  }finally{state.busy=false;updateCooldown();}
 }
+
+let topPage=1,topPageCount=1,topRequest=0;
+async function refreshTop(page=topPage,fromNavigation=false){
+ const request=++topRequest;topPage=page;
+ const list=$('top-list'),prev=$('top-prev'),next=$('top-next');list.setAttribute('aria-busy','true');prev.disabled=true;next.disabled=true;
+ for(const b of $('top-pages').querySelectorAll('button'))b.disabled=true;
+ try{
+  const data=await api('/api/leaderboard?page='+page);if(request!==topRequest)return;
+  topPage=data.page;topPageCount=data.pages;list.dataset.page=String(data.page);list.innerHTML=rankHtml(data.players,'balance',data.offset);
+  const visible=[...new Set([1,data.pages,...Array.from({length:5},(_,i)=>data.page+i-2).filter(p=>p>=1&&p<=data.pages)])].sort((a,b)=>a-b);
+  $('top-pages').innerHTML=visible.map((p,i)=>(i&&p-visible[i-1]>1?'<span aria-hidden="true">…</span>':'')+'<button type="button" class="button button-ghost" data-top-page="'+p+'" aria-label="Страница '+p+'" '+(p===data.page?'aria-current="page"':'')+'>'+p+'</button>').join('');
+  $('top-page-info').textContent=data.total?'Места '+fmt(data.offset+1)+'–'+fmt(data.offset+data.players.length)+' из '+fmt(data.total)+' · Страница '+fmt(data.page)+' из '+fmt(data.pages):'Игроков пока нет';
+  hydrateAvatars();if(fromNavigation)list.focus({preventScroll:true});
+ }catch(error){if(request!==topRequest)return;list.innerHTML='<p class="muted">'+esc(error.message)+'</p>'; if(!$('top-pages').children.length)$('top-pages').innerHTML='<button type="button" class="button button-ghost" data-top-page="'+topPage+'">Повторить</button>'; $('top-page-info').textContent='Не удалось загрузить рейтинг. Нажми на номер страницы, чтобы повторить.';for(const b of $('top-pages').querySelectorAll('button'))b.disabled=false;}
+ finally{if(request===topRequest){list.removeAttribute('aria-busy');prev.disabled=topPage<=1;next.disabled=topPage>=topPageCount;}}
+}
+$('top-prev').addEventListener('click',()=>refreshTop(Math.max(1,topPage-1),true));
+$('top-next').addEventListener('click',()=>refreshTop(Math.min(topPageCount,topPage+1),true));
+$('top-pages').addEventListener('click',event=>{const b=event.target.closest('[data-top-page]');if(b&&!b.disabled)refreshTop(Number(b.dataset.topPage),true);});
+
 async function refreshPublic(){
  try{state.public=await api('/api/public');renderPublic();}
- catch(e){const text='<p class="muted">'+esc(e.message)+'</p>';['home-top','home-wins','top-list','chat-list'].forEach(id=>$(id).innerHTML=text);}
+ catch(e){const text='<p class="muted">'+esc(e.message)+'</p>';['home-top','home-wins','chat-list'].forEach(id=>$(id).innerHTML=text);}
 }
 async function refreshMe(){
  try{state.me=await api('/api/me');renderMe();}
@@ -341,9 +361,9 @@ setInterval(updateCooldown,1000);
 // Keep W coins, cooldown and chat ranks in sync with the same live SQLite-backed API.
 // Poll only while the tab is visible; never invent a client-side balance.
 setInterval(()=>{if(document.visibilityState==='visible'&&!state.busy)refreshMe();},12000);
-setInterval(()=>{if(document.visibilityState==='visible'){refreshPublic();if(currentRoute()==='/cases')refreshCases();if(currentRoute()==='/duels')refreshDuels();}},20000);
+setInterval(()=>{if(document.visibilityState==='visible'){refreshPublic();if(currentRoute()==='/top')refreshTop();if(currentRoute()==='/cases')refreshCases();if(currentRoute()==='/duels')refreshDuels();}},20000);
 document.addEventListener('visibilitychange',()=>{
- if(document.visibilityState==='visible'&&!state.busy){refreshMe();refreshPublic();if(currentRoute()==='/cases')refreshCases();if(currentRoute()==='/duels')refreshDuels();}
+ if(document.visibilityState==='visible'&&!state.busy){refreshMe();refreshPublic();if(currentRoute()==='/top')refreshTop();if(currentRoute()==='/cases')refreshCases();if(currentRoute()==='/duels')refreshDuels();}
 });
 
 // Decorative idle frost never captures input and clears on any activity.
@@ -538,7 +558,8 @@ function openCasePreview(type='subscriber',trigger=$('case-demo-launch'),real=fa
  caseDemo.showModal();const first=caseDemoTrack.children[5];caseDemoTrack.style.transform='translateX('+(-(first.offsetLeft+first.offsetWidth/2))+'px)';$('case-demo-start').focus();
 }
 $('case-demo-launch').addEventListener('click',()=>openCasePreview());
-for(const button of document.querySelectorAll('[data-case-preview]'))button.addEventListener('click',()=>openCasePreview(button.dataset.casePreview,button,button.dataset.casePreview==='chat'));
+for(const button of document.querySelectorAll('[data-case-preview]'))button.addEventListener('click',()=>openCasePreview(button.dataset.casePreview,button));
+document.querySelector('[data-case-open="chat"]').addEventListener('click',event=>openCasePreview('chat',event.currentTarget,true));
 $('case-demo-start').addEventListener('click',startCaseDemo);$('case-demo-again').addEventListener('click',startCaseDemo);$('case-demo-skip').addEventListener('click',()=>revealCaseDemo(true));for(const id of ['case-demo-close','case-demo-done'])$(id).addEventListener('click',()=>caseDemo.close());caseDemo.addEventListener('close',()=>{resetCaseDemo();if(canUseAdminDemo())(caseDemoTrigger||$('case-demo-launch')).focus();});window.addEventListener('resize',()=>{if(caseDemo.open&&caseDemoStage.dataset.phase==='opening'){const card=caseDemoTrack.children[24];caseDemoEnd=-(card.offsetLeft+card.offsetWidth/2);revealCaseDemo();}});
 
 function applyPlayerCosmetics(avatar,look){const line=avatar.closest('.player-line');if(!line)return;line.dataset.nameStyle=['ice','rose','amber','white','aurora'].includes(look?.name_color)?look.name_color:'';let badge=line.querySelector('.player-cosmetic-title');if(look?.title){if(!badge){badge=document.createElement('span');badge.className='player-cosmetic-title';line.append(badge);}badge.textContent=look.title;}else badge?.remove();}

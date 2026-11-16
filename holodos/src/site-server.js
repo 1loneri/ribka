@@ -1,3 +1,4 @@
+import {createLeaderboard} from './leaderboard.js';
 import {createChatCases} from './chat-cases.js';
 import {shouldCountChatMessage} from './chat-statistics.js';
 import {createCaseCatalog} from './case-catalog.js';
@@ -13,6 +14,7 @@ import {createHash,randomBytes,createHmac,timingSafeEqual} from 'node:crypto';
 
 export function createSite({db,publicUrl,app,tokenRequest,validate,player,transaction,draw,cans,duelChallenge,duelRespond,say,channel,duelsEnabled,states,secret,streamStatus={get:async()=>({live:false,known:false,checked_at:0})}}){
  const cases=createCaseCatalog(db,transaction);
+ const leaderboard=createLeaderboard(db);
  const support=createSupport(db,transaction);
  const reviews=createReviews(db,transaction);
  const duelVisuals=createDuelVisuals(db);
@@ -208,6 +210,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   }
   if(path.startsWith('/api/')){
    if(method==='GET'){
+    if(path==='/api/leaderboard'){json(res,200,leaderboard(url.searchParams.get('page')));return true;}
     if(path==='/api/cases'){json(res,200,{cases:cases.list(),previewOnly:false,activeCaseIds:['chat']});return true;}
     if(path==='/api/reviews'){const session=getSession(req);json(res,200,{reviews:reviews.list(),eligibleOrders:reviews.eligible(session)});return true;}
     if(path==='/api/frames'){json(res,200,{frames:frames.publicFrames((url.searchParams.get('logins')||'').toLowerCase().split(',')),cosmetics:cosmetics.publicLooks((url.searchParams.get('logins')||'').toLowerCase().split(','))});return true;}
