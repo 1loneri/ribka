@@ -2,7 +2,7 @@
 let siteFeatures={features:{},assets:[],cans:{}},liveCaseCatalog=[],globalCasePage=1,globalCaseBusy=false;
 function caseArtSource(id){return liveCaseCatalog.find(c=>c.id===id)?.art||siteFeatures.assets.find(a=>a.enabled&&a.kind==='case'&&a.target===id)?.src||'/assets/case-'+id+'.webp';}
 const originalApplyCases=applyCaseCatalog;
-applyCaseCatalog=function(catalog){liveCaseCatalog=catalog;originalApplyCases(catalog);for(const c of catalog){const card=document.querySelector('.collection-case--'+c.id);if(!card)continue;const image=card.querySelector('.case-artwork>img');if(image&&image.getAttribute('src')!==c.art)image.src=c.art;card.dataset.disabled=String(!c.enabled);if(!c.enabled)for(const b of card.querySelectorAll('[data-case-open],[data-ticket-open]'))b.disabled=true;}paintEntitlements();};
+applyCaseCatalog=function(catalog){liveCaseCatalog=catalog;originalApplyCases(catalog);for(const c of catalog){const card=document.querySelector('.collection-case--'+c.id);if(!card)continue;const image=card.querySelector('.case-artwork>img');if(image&&image.getAttribute('src')!==c.art)image.src=c.art;card.dataset.disabled=String(!c.enabled);if(!c.enabled)for(const b of card.querySelectorAll('[data-case-open],[data-ticket-open]'))b.disabled=true;}paintEntitlements();for(const card of document.querySelectorAll('.collection-case:hover,.collection-case:focus-within'))requestAnimationFrame(()=>measureCaseRewards(card));};
 const originalRenderMe=renderMe;
 renderMe=function(){originalRenderMe();paintEntitlements();paintCaseSwitches();paintCosmeticEffects();paintOwnRows();paintShopSwitches();paintMini();paintSidebarWallet();};
 const originalHydrate=hydrateAvatars;
@@ -53,3 +53,18 @@ async function featureRefresh(){if(document.visibilityState!=='visible')return;a
 void refreshSiteFeatures().then(()=>{paintEntitlements();paintCosmeticEffects();paintTitles();paintOwnRows();paintSidebarWallet();if(currentRoute()==='/cases')refreshGlobalCases();});
 document.addEventListener('click',e=>{if(e.target.closest('[data-route="/cases"]'))setTimeout(()=>refreshGlobalCases(),0);});
 setInterval(featureRefresh,30000);
+
+function measureCaseRewards(card){
+ const overlay=card.querySelector('.case-hover-rewards');if(!overlay)return;
+ let viewport=overlay.querySelector('.case-hover-viewport'),track;
+ if(!viewport){viewport=overlay.querySelector(':scope > div');if(!viewport)return;viewport.classList.add('case-hover-viewport');track=document.createElement('div');track.className='case-hover-track';while(viewport.firstChild)track.append(viewport.firstChild);viewport.append(track);}else track=viewport.querySelector('.case-hover-track');
+ const distance=Math.max(0,track.scrollHeight-viewport.clientHeight);
+ overlay.classList.toggle('has-reward-overflow',distance>1);
+ overlay.style.setProperty('--reward-pan-distance',distance+'px');
+ overlay.style.setProperty('--reward-pan-duration',Math.max(12,Math.ceil(distance/14)*2+4)+'s');
+}
+for(const card of document.querySelectorAll('.collection-case')){
+ card.addEventListener('pointerenter',()=>measureCaseRewards(card));
+ card.addEventListener('focusin',()=>measureCaseRewards(card));
+}
+window.addEventListener('resize',()=>{for(const card of document.querySelectorAll('.collection-case:hover,.collection-case:focus-within'))measureCaseRewards(card);});

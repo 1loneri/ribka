@@ -1271,7 +1271,7 @@ body.inner-page .view.active{animation:slideIn .25s ease both}
 .case-hover-rewards{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;justify-content:center;padding:18px;background:linear-gradient(135deg,#090c13ed,#11151fe8);backdrop-filter:blur(8px);opacity:0;visibility:hidden;transform:translateY(8px);transition:opacity .32s ease,transform .32s ease,visibility .32s;pointer-events:none}
 .case-hover-label{font-size:8px;letter-spacing:.16em;font-weight:800;color:var(--case-accent);margin-bottom:12px}
 .case-hover-rewards>div{display:flex;flex-wrap:wrap;gap:6px}
-.case-hover-rewards>div>span{font-size:10px;line-height:1.5;color:#e0e5ee;padding:5px 8px;border:1px solid #ffffff18;border-radius:6px;background:#ffffff05}
+.case-hover-rewards>div>span,.case-hover-track>span{font-size:10px;line-height:1.5;color:#e0e5ee;padding:5px 8px;border:1px solid #ffffff18;border-radius:6px;background:#ffffff05}
 .case-hover-rewards p{font-size:11px;color:#b5becb}
 @media(hover:hover){.collection-case:hover .case-hover-rewards{opacity:1;visibility:visible;transform:translateY(0)}}
 .collection-case:focus-within .case-hover-rewards{opacity:1;visibility:visible;transform:translateY(0)}
@@ -1751,3 +1751,13 @@ img[src*="/frame-thorn."]{filter:invert(1)}.equipped-avatar[data-equipped-frame=
 .side-navigation:not(.expanded)>.watch-stream-side span{display:none}
 .side-navigation.fully-hidden>.watch-stream-side{display:none}
 .side-navigation .side-links{min-height:0;flex-shrink:1}
+
+/* Reveal overflowing reward chips at a slow, readable pace. */
+.case-hover-rewards{justify-content:flex-start;overflow:hidden}
+.case-hover-rewards>.case-hover-viewport{display:block;flex:1;min-height:0;overflow:hidden}
+.case-hover-track{display:flex;flex-wrap:wrap;align-content:flex-start;gap:6px;will-change:transform}
+.case-hover-rewards.has-reward-overflow .case-hover-track{animation:caseRewardsPan var(--reward-pan-duration,18s) linear infinite;animation-play-state:paused}
+.collection-case:focus-within .case-hover-rewards.has-reward-overflow .case-hover-track{animation-play-state:running}
+@media(hover:hover){.collection-case:hover .case-hover-rewards.has-reward-overflow .case-hover-track{animation-play-state:running}}
+@keyframes caseRewardsPan{0%,10%,100%{transform:translateY(0)}45%,55%{transform:translateY(calc(-1 * var(--reward-pan-distance,0px)))}90%{transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.case-hover-rewards.has-reward-overflow .case-hover-track{animation:none;will-change:auto}}
