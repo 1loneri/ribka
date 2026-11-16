@@ -474,7 +474,7 @@ const demoPrizes=[{id:'ultra',label:'Ultra Frost',kind:'Рамка'},{id:'origin
 const previewW=amount=>({id:'w-'+amount,label:amount.toLocaleString('ru-RU')+' W',kind:'W-монеты',symbol:'w'});
 const previewVp={id:'vp',label:'240 VP',kind:'Пример награды',symbol:'vp'};
 const previewVip={id:'vip-month',label:'VIP на месяц',kind:'VIP канала',symbol:'vip'};
-const casePreviewPools={twitch:[500,1000,2000,5000].map(previewW).concat(previewVp),chat:[100,250,1000,3000,8000].map(previewW).concat(previewVp,previewVip),vip:[500,2000,5000,10000].map(previewW).concat(previewVp),coins:demoPrizes.concat(previewVp),subscriber:demoPrizes,donation:demoPrizes};
+const casePreviewPools={twitch:[500,1000,2000,5000].map(previewW).concat(previewVp),chat:[100,250,1000,3000,8000].map(previewW).concat(previewVp,previewVip),vip:[50,100,500,2000,5000,10000].map(previewW).concat(previewVp),coins:demoPrizes.concat(previewVp),subscriber:demoPrizes,donation:demoPrizes};
 function demoPrizeArt(p){
  if(['ultra','original','mango'].includes(p.id))return '<img src="/assets/frame-'+p.id+'.png?v=55" alt="">';
  if(p.id==='can')return '<img src="/assets/duel-can-violet.webp?v=50" alt="">';
