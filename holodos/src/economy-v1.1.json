@@ -143,9 +143,10 @@
     ]
   },
   "donation": {
-    "priceRub": 400,
+    "priceRub": 0,
     "guaranteedW": 2000,
-    "enabled": false
+    "enabled": false,
+    "mode": "gift"
   },
   "chat": {
     "threshold": 1500,

@@ -1659,3 +1659,7 @@ img[src*="/frame-thorn."]{filter:invert(1)}.equipped-avatar[data-equipped-frame=
 .demo-symbol svg{width:60px;height:60px}.demo-symbol--vip{color:#e6a9d0}.demo-symbol--vp{color:#f2ce91;font-size:30px;font-weight:800}
 .demo-prize--w{border-bottom-color:#a5d7f2}.demo-prize--vip{border-bottom-color:#e6a9d0}.demo-prize--vp{border-bottom-color:#f2ce91}
 .case-demo-sample{height:176px;display:grid;place-items:center}.case-demo-sample .demo-symbol{height:140px;font-size:70px}.case-demo-sample .demo-symbol svg{width:110px;height:110px}.case-demo-sample .demo-w-coin{width:106px;height:106px;font-size:56px}.case-demo-sample>img{width:110px;height:150px;object-fit:contain}
+.case-rewards .case-reward-list{max-height:290px;overflow:auto;padding-right:6px}#case-demo-selected-odds .case-reward-list{max-height:320px;overflow:auto}.demo-symbol--physical{color:#ef96a6}.demo-prize--physical{border-bottom-color:#d46a80}
+.case-demo-avatar[data-demo-frame="thorn"] picture,.case-demo-avatar[data-demo-frame="thorn"] picture img{inset:-8.12px;width:192.25px;height:192.25px}
+.case-demo-avatar[data-demo-frame="assault"] picture,.case-demo-avatar[data-demo-frame="assault"] picture img{left:-3.75px;top:-5.94px;width:187.88px;height:187.88px}
+.case-demo-avatar[data-demo-frame]:is([data-demo-frame="thorn"],[data-demo-frame="assault"]) picture img{inset:0}

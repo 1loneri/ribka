@@ -89,6 +89,14 @@ function historyHtml(list){
  if(!list||!list.length)return '<p class="muted">Открытий пока нет. История сохраняется с запуска сайта.</p>';
  return list.map(r=>'<div class="history-item"><strong class="player-line">'+avatarHtml(r.login)+'@'+esc(r.login)+'</strong>'+historySymbolsHtml(r.cans)+'<em>+'+fmt(r.gain)+' W</em><time>'+ruTime(r.created_at)+'</time></div>').join('');
 }
+function caseRewardClass(r){return ({vp:'reward-glow reward-glow--vp',vip:'reward-glow reward-glow--vip',physical:'reward-glow reward-glow--popmart',frame:'cosmetic-frame',title:'cosmetic-title',name:'cosmetic-name',theme:'cosmetic-theme',can:'cosmetic-can'})[r.symbol]||'';}
+function applyCaseCatalog(catalog){for(const c of catalog){const card=document.querySelector('.collection-case--'+c.id);if(!card||card.dataset.configRevision===String(c.revision))continue;card.dataset.configRevision=String(c.revision);card.querySelector('h2').textContent=c.title;card.querySelector('.case-category').textContent=c.category;card.querySelector('.case-description').textContent=c.description;card.querySelector('.case-cost').textContent=c.priceText;
+ const chips=new Map();for(const r of c.rewards){const cosmetic=['frame','title','name','theme','can'].includes(r.symbol);const label=cosmetic?r.kind:r.label;chips.set(label,{label,css:caseRewardClass(r)});}
+ card.querySelector('.case-hover-rewards').innerHTML='<span class="case-hover-label">МОЖЕТ ВЫПАСТЬ</span><div>'+[...chips.values()].map(r=>'<span class="'+r.css+'">'+esc(r.label)+'</span>').join('')+'</div>';
+ card.querySelector('.case-reward-list').innerHTML=c.rewards.map(r=>'<div><span class="'+caseRewardClass(r)+'">'+esc(r.label)+'</span><strong>'+Number(r.weight).toLocaleString('ru-RU',{maximumFractionDigits:6})+'%</strong></div>').join('');
+ casePreviewNames[c.id]=c.title;casePreviewPools[c.id]=c.rewards.map(r=>({...r}));}
+}
+async function refreshCases(){try{const r=await api('/api/cases');if(Array.isArray(r.cases))applyCaseCatalog(r.cases);}catch(error){console.warn('Не удалось обновить каталог кейсов:',error.message);}}
 function renderPublic(){
  const p=state.public;if(!p)return;
  $('home-top').innerHTML=rankHtml((p.top||[]).slice(0,5));
@@ -312,14 +320,14 @@ $('spin-button').addEventListener('click',spin);
 $('duel-form').addEventListener('submit',challenge);
 $('refresh-duels').addEventListener('click',refreshDuels);
 navigate(currentRoute(),true);
-Promise.all([refreshPublic(),refreshMe(),refreshSpins()]).then(()=>{if(currentRoute()==='/duels')refreshDuels();});
+Promise.all([refreshPublic(),refreshMe(),refreshSpins(),refreshCases()]).then(()=>{if(currentRoute()==='/duels')refreshDuels();});
 setInterval(updateCooldown,1000);
 // Keep W coins, cooldown and chat ranks in sync with the same live SQLite-backed API.
 // Poll only while the tab is visible; never invent a client-side balance.
 setInterval(()=>{if(document.visibilityState==='visible'&&!state.busy)refreshMe();},12000);
-setInterval(()=>{if(document.visibilityState==='visible'){refreshPublic();if(currentRoute()==='/duels')refreshDuels();}},20000);
+setInterval(()=>{if(document.visibilityState==='visible'){refreshPublic();if(currentRoute()==='/cases')refreshCases();if(currentRoute()==='/duels')refreshDuels();}},20000);
 document.addEventListener('visibilitychange',()=>{
- if(document.visibilityState==='visible'&&!state.busy){refreshMe();refreshPublic();if(currentRoute()==='/duels')refreshDuels();}
+ if(document.visibilityState==='visible'&&!state.busy){refreshMe();refreshPublic();if(currentRoute()==='/cases')refreshCases();if(currentRoute()==='/duels')refreshDuels();}
 });
 
 // Decorative idle frost never captures input and clears on any activity.
@@ -474,27 +482,28 @@ const demoPrizes=[{id:'ultra',label:'Ultra Frost',kind:'Рамка'},{id:'origin
 const previewW=amount=>({id:'w-'+amount,label:amount.toLocaleString('ru-RU')+' W',kind:'W-монеты',symbol:'w'});
 const previewVp={id:'vp',label:'240 VP',kind:'Пример награды',symbol:'vp'};
 const previewVip={id:'vip-month',label:'VIP на месяц',kind:'VIP канала',symbol:'vip'};
-const casePreviewPools={twitch:[500,1000,2000,5000].map(previewW).concat(previewVp),chat:[100,250,1000,3000,8000].map(previewW).concat(previewVp,previewVip),vip:[50,100,500,2000,5000,10000].map(previewW).concat(previewVp),coins:demoPrizes.concat(previewVp),subscriber:demoPrizes,donation:demoPrizes};
+const casePreviewPools={twitch:[500,1000,2000,5000].map(previewW).concat(previewVp),chat:[100,250,1000,3000,8000].map(previewW).concat(previewVp,previewVip),vip:[50,100,500,2000,5000,10000].map(previewW).concat(previewVp),coins:demoPrizes.concat(previewVp),subscriber:demoPrizes,donation:[3000,5000,10000,15000].map(previewW).concat(previewVp,{id:'vp-475',label:'475 VP',kind:'VP',symbol:'vp'},{id:'vp-1000',label:'1000 VP',kind:'VP',symbol:'vp'},{id:'popmart',label:'Фигурка POP MART',kind:'Фигурка',symbol:'physical'})};
 function demoPrizeArt(p){
- if(['ultra','original','mango'].includes(p.id))return '<img src="/assets/frame-'+p.id+'.png?v=55" alt="">';
- if(p.id==='can')return '<img src="/assets/duel-can-violet.webp?v=50" alt="">';
- const icon=p.symbol==='vip'?'<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="m10 20 12 11 10-19 10 19 12-11-6 29H16l-6-29Z"/><path d="M17 55h30"/></svg>':p.symbol==='w'?'<span class="demo-w-coin">W</span>':p.symbol==='vp'?'VP':p.id==='name'?'W':p.id==='title'?'✦':'◈';
+ const frameId=p.frame||(['ultra','original','mango'].includes(p.id)?p.id:'');if(frameId)return '<img src="/assets/frame-'+esc(frameId)+'.png?v=85" alt="">';
+ if(p.can||p.id==='can')return '<img src="/assets/duel-can-'+esc(p.can||'violet')+'.webp?v=50" alt="">';
+ const icon=p.symbol==='vip'?'<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="m10 20 12 11 10-19 10 19 12-11-6 29H16l-6-29Z"/><path d="M17 55h30"/></svg>':p.symbol==='w'?'<span class="demo-w-coin">W</span>':p.symbol==='vp'?'VP':p.symbol==='physical'?'✧':(p.symbol==='name'||p.id==='name')?'W':(p.symbol==='title'||p.id==='title')?'✦':'◈';
  return '<span class="demo-symbol demo-symbol--'+(p.symbol||p.id)+'">'+icon+'</span>';
 }
 function demoPrizeHtml(p){return '<div class="demo-prize demo-prize--'+(p.symbol||p.id)+'">'+demoPrizeArt(p)+'<strong>'+esc(p.label)+'</strong><small>'+esc(p.kind)+'</small></div>';}
-function renderDemoResult(){const p=caseDemoResult||casePreviewPools[caseDemoType][0],frame=['ultra','original','mango'].includes(p.id),src=safeAvatar(state.me?.player?.avatar);caseDemoStage.querySelector('.case-demo-reward').innerHTML=(frame?'<div class="case-demo-avatar"><span>'+(src?'<img src="'+esc(src)+'" alt="Твоя аватарка">':'W')+'</span><picture><img src="/assets/frame-'+p.id+'.png?v=55" alt="'+esc(p.label)+'" width="176" height="176"></picture></div>':'<div class="case-demo-sample">'+demoPrizeArt(p)+'</div>')+'<h3>'+esc(p.label)+'</h3><p>'+esc(p.kind)+'</p>';}
+function renderDemoResult(){const p=caseDemoResult||casePreviewPools[caseDemoType][0],frame=p.frame||(['ultra','original','mango'].includes(p.id)?p.id:''),src=safeAvatar(state.me?.player?.avatar);caseDemoStage.querySelector('.case-demo-reward').innerHTML=(frame?'<div class="case-demo-avatar" data-demo-frame="'+esc(frame)+'"><span>'+(src?'<img src="'+esc(src)+'" alt="Твоя аватарка">':'W')+'</span><picture><img src="/assets/frame-'+esc(frame)+'.png?v=85" alt="'+esc(p.label)+'" width="176" height="176"></picture></div>':'<div class="case-demo-sample">'+demoPrizeArt(p)+'</div>')+'<h3>'+esc(p.label)+'</h3><p>'+esc(p.kind)+'</p>';}
 function buildDemoReel(){const pool=casePreviewPools[caseDemoType];caseDemoTrack.innerHTML=Array.from({length:30},(_,i)=>demoPrizeHtml(i===24?(caseDemoResult||pool[0]):pool[i%pool.length])).join('');renderDemoResult();}
-function resetCaseDemo(){stopAllGameSound();$('case-demo-odds').hidden=true;$('case-demo-odds-toggle').setAttribute('aria-expanded','false');clearTimeout(caseDemoLidTimer);caseDemoRun++;caseDemoAnimation?.cancel();caseDemoAnimation=null;caseDemoStage.dataset.phase='ready';caseDemoStage.querySelector('.case-demo-reward').setAttribute('aria-hidden','true');$('case-demo-start').hidden=false;for(const id of ['case-demo-skip','case-demo-again','case-demo-done'])$(id).hidden=true;$('case-demo-title').textContent='Прокрутка: '+casePreviewNames[caseDemoType];$('case-demo-caption').textContent=caseDemoType==='donation'?'Тест анимации с примером косметической награды.':'Предпросмотр состава кейса. Награды не начисляются.';$('case-demo-status').textContent='';buildDemoReel();caseDemoTrack.style.transform='translateX(-732px)';}
+function resetCaseDemo(){stopAllGameSound();$('case-demo-odds').hidden=true;$('case-demo-odds-toggle').setAttribute('aria-expanded','false');clearTimeout(caseDemoLidTimer);caseDemoRun++;caseDemoAnimation?.cancel();caseDemoAnimation=null;caseDemoStage.dataset.phase='ready';caseDemoStage.querySelector('.case-demo-reward').setAttribute('aria-hidden','true');$('case-demo-start').hidden=false;for(const id of ['case-demo-skip','case-demo-again','case-demo-done'])$(id).hidden=true;$('case-demo-title').textContent='Прокрутка: '+casePreviewNames[caseDemoType];$('case-demo-caption').textContent='Предпросмотр состава кейса. Награды не начисляются.';$('case-demo-status').textContent='';buildDemoReel();caseDemoTrack.style.transform='translateX(-732px)';}
 function revealCaseDemo(skip=false){stopCaseIceSound();clearTimeout(caseDemoLidTimer);caseDemoRun++;const run=caseDemoRun;caseDemoAnimation?.cancel();caseDemoAnimation=null;caseDemoTrack.style.transform='translateX('+caseDemoEnd+'px)';$('case-demo-skip').hidden=true;caseDemoStage.dataset.phase='unsealing';playIceStop(0);$('case-demo-caption').textContent='Кейс раскрывается…';const finish=()=>{if(run!==caseDemoRun||!caseDemo.open)return;caseDemoStage.dataset.phase='revealed';caseDemoStage.querySelector('.case-demo-reward').removeAttribute('aria-hidden');$('case-demo-title').textContent=caseDemoResult.label;$('case-demo-caption').textContent='Пример результата анимации. Награда не выдана.';$('case-demo-again').hidden=false;$('case-demo-done').hidden=false;$('case-demo-status').textContent='Демонстрация: '+caseDemoResult.label+'. Приз не выдаётся.';};if(skip||matchMedia('(prefers-reduced-motion: reduce)').matches)finish();else caseDemoLidTimer=setTimeout(finish,850);}
 
-function startCaseDemo(){if(!canUseAdminDemo())return;const pool=casePreviewPools[caseDemoType];caseDemoResult=caseDemoType==='donation'?demoPrizes[0]:pool[Math.floor(Math.random()*pool.length)];resetCaseDemo();const run=caseDemoRun;const cards=caseDemoTrack.children,start=-(cards[5].offsetLeft+cards[5].offsetWidth/2);caseDemoEnd=-(cards[24].offsetLeft+cards[24].offsetWidth/2);$('case-demo-start').hidden=true;$('case-demo-skip').hidden=false;$('case-demo-skip').focus();caseDemoStage.dataset.phase='opening';$('case-demo-caption').textContent='Лента замедляется. Награда остановится под указателем.';if(matchMedia('(prefers-reduced-motion: reduce)').matches){revealCaseDemo();return;}caseDemoAnimation=caseDemoTrack.animate([{transform:'translateX('+start+'px)'},{transform:'translateX('+caseDemoEnd+'px)'}],{duration:8000,easing:'cubic-bezier(.08,.55,.12,1)',fill:'forwards'});startCaseIceSound(caseDemoAnimation,Math.abs(caseDemoEnd-start),cards[0].offsetWidth+10);caseDemoAnimation.finished.then(()=>{if(run===caseDemoRun&&caseDemo.open)revealCaseDemo();}).catch(()=>{});}
-const casePreviewNames={donation:'Донатный',twitch:'Баллы Twitch',chat:'За сообщения',vip:'VIP',coins:'За W-монеты',subscriber:'За подписку'};
+function startCaseDemo(){if(!canUseAdminDemo())return;const pool=casePreviewPools[caseDemoType];caseDemoResult=pool[Math.floor(Math.random()*pool.length)];resetCaseDemo();const run=caseDemoRun;const cards=caseDemoTrack.children,start=-(cards[5].offsetLeft+cards[5].offsetWidth/2);caseDemoEnd=-(cards[24].offsetLeft+cards[24].offsetWidth/2);$('case-demo-start').hidden=true;$('case-demo-skip').hidden=false;$('case-demo-skip').focus();caseDemoStage.dataset.phase='opening';$('case-demo-caption').textContent='Лента замедляется. Награда остановится под указателем.';if(matchMedia('(prefers-reduced-motion: reduce)').matches){revealCaseDemo();return;}caseDemoAnimation=caseDemoTrack.animate([{transform:'translateX('+start+'px)'},{transform:'translateX('+caseDemoEnd+'px)'}],{duration:8000,easing:'cubic-bezier(.08,.55,.12,1)',fill:'forwards'});startCaseIceSound(caseDemoAnimation,Math.abs(caseDemoEnd-start),cards[0].offsetWidth+10);caseDemoAnimation.finished.then(()=>{if(run===caseDemoRun&&caseDemo.open)revealCaseDemo();}).catch(()=>{});}
+const casePreviewNames={donation:'Подарочный',twitch:'Баллы Twitch',chat:'За сообщения',vip:'VIP',coins:'За W-монеты',subscriber:'За подписку'};
 function openCasePreview(type='subscriber',trigger=$('case-demo-launch')){
  if(!canUseAdminDemo()||!Object.hasOwn(casePreviewNames,type))return;
  caseDemoType=type;caseDemoResult=casePreviewPools[type][0];caseDemoTrigger=trigger;caseDemo.dataset.caseType=type;
  const art='/assets/case-'+type+'.webp';caseDemo.querySelector('.case-demo-closed').src=art;
  for(const node of caseDemo.querySelectorAll('.case-demo-open-body,.case-demo-open-lid'))node.src=type==='subscriber'?'/assets/case-subscriber-open.webp?v=64':art;
  resetCaseDemo();
+ const card=document.querySelector?.('.collection-case--'+type),odds=$('case-demo-selected-odds');if(card&&odds)odds.innerHTML='<h4>'+esc(casePreviewNames[type])+'</h4><p>Шансы показаны для состава кейса. Предпросмотр не выдаёт награды.</p>'+card.querySelector('.case-reward-list').outerHTML;
  caseDemo.showModal();const first=caseDemoTrack.children[5];caseDemoTrack.style.transform='translateX('+(-(first.offsetLeft+first.offsetWidth/2))+'px)';$('case-demo-start').focus();
 }
 $('case-demo-launch').addEventListener('click',()=>openCasePreview());

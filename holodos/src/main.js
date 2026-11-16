@@ -1,3 +1,4 @@
+import {renderCaseEditor} from './case-admin.js';
 import {createChannelConnections} from './channel-connections.js';
 import http from 'node:http';
 import {DatabaseSync} from 'node:sqlite';
@@ -330,6 +331,9 @@ const server=http.createServer(async(req,res)=>{
   res.writeHead(303,{Location:'/',"Cache-Control":"no-store",'Set-Cookie':cookieName+'=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0'});res.end();return;
  }
  if(req.method==='POST'){
+  if(url.pathname==='/case-save'){
+   try{const form=await formData(req);if(!validCsrf(form,'case-settings')){html(403,'Форма устарела. Обнови страницу.');return;}site.cases.save(form,site.adminIdentity(req).player_id);res.writeHead(303,{Location:'/admin#cases-editor','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Кейс не сохранён</h2><p>'+escape(e.status?e.message:'Не удалось сохранить настройки. Повтори попытку.')+'</p><a href="/admin#cases-editor">Вернуться к редактору</a>');}return;
+  }
   if(['/channel-connect','/channel-check','/channel-disconnect'].includes(url.pathname)){
    try{const f=await formData(req);if(!validCsrf(f,'channel-connections')){html(403,'Форма устарела. Обнови страницу.');return;}const id=String(f.get('feature')||'');if(url.pathname==='/channel-connect'){const flow=channelConnections.begin(id),target=escape(flow.url);html(200,'<meta http-equiv="refresh" content="0;url='+target+'"><h2>Подключение Twitch</h2><p>Переходим в Twitch. Подтверди доступ к баллам, подпискам и VIP от аккаунта @'+escape(channel)+'.</p><p><a class="admin-button" href="'+target+'">Перейти в Twitch</a></p>',{'Set-Cookie':flow.cookie});return;}if(url.pathname==='/channel-check')await channelConnections.check(id);else channelConnections.disconnect(id);res.writeHead(303,{Location:'/admin#channel-connections','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Не получилось выполнить действие</h2><p>'+escape(e.status?e.message:'Повтори попытку позже.')+'</p><a href="/admin#channel-connections">Вернуться</a>');}return;
   }
@@ -408,6 +412,7 @@ const server=http.createServer(async(req,res)=>{
  for(const [vp,price] of Object.entries(SHOP_PRICES))content+='<div class="admin-row"><span>'+vp+' VP</span><b>'+number(price)+' W</b></div>';
  content+='<div class="admin-row"><span>Версия настроек</span><b>'+escape(ECONOMY.version)+'</b></div><div class="admin-row"><span>Кейсы</span><b>Открытия отключены</b></div><p><a class="link" href="/cases">Посмотреть коллекцию ↗</a></p></section>';
  content+='<section class="admin-panel"><h2>Twitch-канал</h2><div class="admin-row"><span>Канал</span><b>#'+escape(channel)+'</b></div><div class="admin-row"><span>Аккаунт бота</span><b>@'+escape(linked?.login||botLogin)+'</b></div><div class="admin-row"><span>Подключение</span><b>'+(linked?'Авторизован':'Требуется вход')+'</b></div><p class="admin-note">Команды: !холодос · !баланс · !магазин · !заказ</p></section></div>';
+ content+=renderCaseEditor(site.cases,csrf('case-settings'),escape);
  const connections=channelConnections.list(),hasConnection=connections.some(c=>c.status!=='disconnected');
  content+='<section class="admin-panel" id="channel-connections"><h2>Баллы, подписки и VIP</h2><p class="admin-note">Одно подключение для трёх разделов. Подтверждает владелец канала @'+escape(channel)+'. Бот подключается отдельно.</p><div class="channel-unified-actions"><form method="post" action="/channel-connect"><input type="hidden" name="csrf" value="'+csrf('channel-connections')+'"><input type="hidden" name="feature" value="all"><button type="submit" '+(!a?'disabled':'')+'>'+(hasConnection?'Переподключить Twitch':'Подключить Twitch')+'</button></form>';
  if(hasConnection)for(const [action,label] of [['check','Проверить подключение'],['disconnect','Отключить']])content+='<form method="post" action="/channel-'+action+'"><input type="hidden" name="csrf" value="'+csrf('channel-connections')+'"><input type="hidden" name="feature" value="all"><button type="submit">'+label+'</button></form>';

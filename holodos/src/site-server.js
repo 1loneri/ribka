@@ -1,3 +1,4 @@
+import {createCaseCatalog} from './case-catalog.js';
 import {createCosmetics} from './cosmetics.js';
 import {createFrames} from './frames.js';
 import {createReviews} from './reviews.js';
@@ -9,6 +10,7 @@ import {readFileSync,existsSync} from 'node:fs';
 import {createHash,randomBytes,createHmac,timingSafeEqual} from 'node:crypto';
 
 export function createSite({db,publicUrl,app,tokenRequest,validate,player,transaction,draw,cans,duelChallenge,duelRespond,say,channel,duelsEnabled,states,secret,streamStatus={get:async()=>({live:false,known:false,checked_at:0})}}){
+ const cases=createCaseCatalog(db,transaction);
  const support=createSupport(db,transaction);
  const reviews=createReviews(db,transaction);
  const duelVisuals=createDuelVisuals(db);
@@ -198,6 +200,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   }
   if(path.startsWith('/api/')){
    if(method==='GET'){
+    if(path==='/api/cases'){json(res,200,{cases:cases.list(),previewOnly:true});return true;}
     if(path==='/api/reviews'){const session=getSession(req);json(res,200,{reviews:reviews.list(),eligibleOrders:reviews.eligible(session)});return true;}
     if(path==='/api/frames'){json(res,200,{frames:frames.publicFrames((url.searchParams.get('logins')||'').toLowerCase().split(',')),cosmetics:cosmetics.publicLooks((url.searchParams.get('logins')||'').toLowerCase().split(','))});return true;}
     if(path==='/api/avatars'){const names=(url.searchParams.get('logins')||'').split(',').slice(0,50);json(res,200,{avatars:await avatars.get(names)});return true;}
@@ -293,5 +296,5 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   }
   return false;
  }
- return {handle,oauthCallback,recordSpin,trackChat,isAdminRequest,support,reviews,duelVisuals,frames,cosmetics,isAdminIdentity:isAdminSession,adminIdentity:req=>{const s=getSession(req);return s&&isAdminSession(s)?s:{player_id:'admin-panel',login:'Администратор'};}};
+ return {handle,oauthCallback,recordSpin,trackChat,isAdminRequest,cases,support,reviews,duelVisuals,frames,cosmetics,isAdminIdentity:isAdminSession,adminIdentity:req=>{const s=getSession(req);return s&&isAdminSession(s)?s:{player_id:'admin-panel',login:'Администратор'};}};
 }
