@@ -7,3 +7,11 @@ const all=[...p1.players,...p2.players,...p3.players];assert.equal(new Set(all.m
 for(const invalid of [null,undefined,'0','-1','1.5','NaN','1 OR 1=1','9999999999'])assert.equal(list(invalid).page,1);
 assert.equal(list('999').page,3);db.exec('DELETE FROM players WHERE opens>=10');assert.equal(list('3').page,1);
 console.log('PASS: pagination, 10 rows, stable tied ordering, complete coverage without duplicates, invalid pages, empty list, final short page and out-of-range page clamping');
+const {createChatLeaderboard}=await import('../src/leaderboard.js');
+db.exec(`CREATE TABLE chat_stats(player_id TEXT PRIMARY KEY,login TEXT,message_count INTEGER,badges_json TEXT);CREATE TABLE cosmetic_profiles(player_id TEXT PRIMARY KEY,frame TEXT,title TEXT,name_color TEXT);`);
+const chat=createChatLeaderboard(db);assert.equal(chat(1).total,0);
+for(let i=0;i<25;i++)db.prepare('INSERT INTO chat_stats VALUES(?,?,?,?)').run(String(i),'chatter'+String(i).padStart(2,'0'),200-Math.floor(i/2),JSON.stringify({subscriber:'1'}));
+db.prepare('INSERT INTO chat_stats VALUES(?,?,?,?)').run('zero','zero',0,'{}');db.prepare('INSERT INTO cosmetic_profiles VALUES(?,?,?,?)').run('0','ultra','Ледяной','ice');
+const chats=[chat('1'),chat('2'),chat('3')];assert.deepEqual(chats.map(c=>c.players.length),[10,10,5]);assert.equal(chats[2].offset,20);assert.equal(chats[0].total,25);assert.equal(new Set(chats.flatMap(c=>c.players.map(p=>p.login))).size,25);
+assert.equal(chats[0].players[0].login,'chatter00');assert.equal(chats[0].players[1].login,'chatter01');assert.equal(chats[0].players[0].frame,'ultra');assert.equal(chats[0].players[0].title,'Ледяной');assert.equal(chats[0].players[0].badges_json,'{"subscriber":"1"}');assert.equal(chats[0].players[1].frame,'');assert.equal(chat('-1').page,1);assert.equal(chat('100').page,3);
+console.log('PASS: chat pages include every counted chatter, preserve badge/cosmetic data and tie ordering, exclude empty statistics and clamp invalid pages');

@@ -60,6 +60,7 @@ function renderRoute(path,replace=false){
  const titles={'/':'Главная','/casino':'Холодос','/cases':'Кейсы','/duels':'Дуэли','/top':'Топ игроков','/chat':'Топ чата','/profile':'Профиль','/shop':'Магазин','/help':'Помощь','/requests':'Запросы'};
  document.title=(titles[path]||'Главная')+' — War1ouss';
  if(path==='/top')refreshTop();
+ if(path==='/chat')refreshChatTop();
  window.scrollTo({top:0,behavior:'instant'});
  if(path==='/duels')refreshDuels();
  if(path==='/casino')refreshSpins();
@@ -127,7 +128,7 @@ function renderPublic(){
  const p=state.public;if(!p)return;
  $('home-top').innerHTML=rankHtml((p.top||[]).slice(0,5));
  $('home-wins').innerHTML=winsHtml(p.recent);
- $('chat-list').innerHTML=rankHtml(p.chat,'chat');hydrateAvatars();
+ hydrateAvatars();
 }
 function canUseAdminDemo(){return state.me?.authenticated===true&&state.me?.is_admin===true;}
 function renderMe(){
@@ -284,28 +285,32 @@ async function spin(){
  }finally{state.busy=false;updateCooldown();}
 }
 
-let topPage=1,topPageCount=1,topRequest=0;
-async function refreshTop(page=topPage,fromNavigation=false){
- const request=++topRequest;topPage=page;
- const list=$('top-list'),prev=$('top-prev'),next=$('top-next');list.setAttribute('aria-busy','true');prev.disabled=true;next.disabled=true;
- for(const b of $('top-pages').querySelectorAll('button'))b.disabled=true;
+const rankingPages={top:{page:1,pages:1,request:0,kind:'balance',endpoint:'/api/leaderboard'},chat:{page:1,pages:1,request:0,kind:'chat',endpoint:'/api/chat-leaderboard'}};
+function refreshTop(page=rankingPages.top.page,fromNavigation=false){return refreshRanking('top',page,fromNavigation);}
+function refreshChatTop(page=rankingPages.chat.page,fromNavigation=false){return refreshRanking('chat',page,fromNavigation);}
+async function refreshRanking(type,page,fromNavigation=false){
+ const ranking=rankingPages[type],request=++ranking.request;ranking.page=page;
+ const list=$(type+'-list'),prev=$(type+'-prev'),next=$(type+'-next'),pages=$(type+'-pages'),info=$(type+'-page-info');list.setAttribute('aria-busy','true');prev.disabled=true;next.disabled=true;
+ for(const b of pages.querySelectorAll('button'))b.disabled=true;
  try{
-  const data=await api('/api/leaderboard?page='+page);if(request!==topRequest)return;
-  topPage=data.page;topPageCount=data.pages;list.dataset.page=String(data.page);list.innerHTML=rankHtml(data.players,'balance',data.offset);
+  const data=await api(ranking.endpoint+'?page='+page);if(request!==ranking.request)return;
+  ranking.page=data.page;ranking.pages=data.pages;list.dataset.page=String(data.page);list.innerHTML=rankHtml(data.players,ranking.kind,data.offset);
   const visible=[...new Set([1,data.pages,...Array.from({length:5},(_,i)=>data.page+i-2).filter(p=>p>=1&&p<=data.pages)])].sort((a,b)=>a-b);
-  $('top-pages').innerHTML=visible.map((p,i)=>(i&&p-visible[i-1]>1?'<span aria-hidden="true">…</span>':'')+'<button type="button" class="button button-ghost" data-top-page="'+p+'" aria-label="Страница '+p+'" '+(p===data.page?'aria-current="page"':'')+'>'+p+'</button>').join('');
-  $('top-page-info').textContent=data.total?'Места '+fmt(data.offset+1)+'–'+fmt(data.offset+data.players.length)+' из '+fmt(data.total)+' · Страница '+fmt(data.page)+' из '+fmt(data.pages):'Игроков пока нет';
+  pages.innerHTML=visible.map((p,i)=>(i&&p-visible[i-1]>1?'<span aria-hidden="true">…</span>':'')+'<button type="button" class="button button-ghost" data-rank-page="'+p+'" aria-label="Страница '+p+'" '+(p===data.page?'aria-current="page"':'')+'>'+p+'</button>').join('');
+  info.textContent=data.total?'Места '+fmt(data.offset+1)+'–'+fmt(data.offset+data.players.length)+' из '+fmt(data.total)+' · Страница '+fmt(data.page)+' из '+fmt(data.pages):'Игроков пока нет';
   hydrateAvatars();if(fromNavigation)list.focus({preventScroll:true});
- }catch(error){if(request!==topRequest)return;list.innerHTML='<p class="muted">'+esc(error.message)+'</p>'; if(!$('top-pages').children.length)$('top-pages').innerHTML='<button type="button" class="button button-ghost" data-top-page="'+topPage+'">Повторить</button>'; $('top-page-info').textContent='Не удалось загрузить рейтинг. Нажми на номер страницы, чтобы повторить.';for(const b of $('top-pages').querySelectorAll('button'))b.disabled=false;}
- finally{if(request===topRequest){list.removeAttribute('aria-busy');prev.disabled=topPage<=1;next.disabled=topPage>=topPageCount;}}
+ }catch(error){if(request!==ranking.request)return;list.innerHTML='<p class="muted">'+esc(error.message)+'</p>';if(!pages.children.length)pages.innerHTML='<button type="button" class="button button-ghost" data-rank-page="'+ranking.page+'">Повторить</button>';info.textContent='Не удалось загрузить рейтинг. Нажми на номер страницы, чтобы повторить.';for(const b of pages.querySelectorAll('button'))b.disabled=false;}
+ finally{if(request===ranking.request){list.removeAttribute('aria-busy');prev.disabled=ranking.page<=1;next.disabled=ranking.page>=ranking.pages;}}
 }
-$('top-prev').addEventListener('click',()=>refreshTop(Math.max(1,topPage-1),true));
-$('top-next').addEventListener('click',()=>refreshTop(Math.min(topPageCount,topPage+1),true));
-$('top-pages').addEventListener('click',event=>{const b=event.target.closest('[data-top-page]');if(b&&!b.disabled)refreshTop(Number(b.dataset.topPage),true);});
+for(const type of ['top','chat']){
+ $(type+'-prev').addEventListener('click',()=>refreshRanking(type,Math.max(1,rankingPages[type].page-1),true));
+ $(type+'-next').addEventListener('click',()=>refreshRanking(type,Math.min(rankingPages[type].pages,rankingPages[type].page+1),true));
+ $(type+'-pages').addEventListener('click',event=>{const b=event.target.closest('[data-rank-page]');if(b&&!b.disabled)refreshRanking(type,Number(b.dataset.rankPage),true);});
+}
 
 async function refreshPublic(){
  try{state.public=await api('/api/public');renderPublic();}
- catch(e){const text='<p class="muted">'+esc(e.message)+'</p>';['home-top','home-wins','chat-list'].forEach(id=>$(id).innerHTML=text);}
+ catch(e){const text='<p class="muted">'+esc(e.message)+'</p>';['home-top','home-wins'].forEach(id=>$(id).innerHTML=text);}
 }
 async function refreshMe(){
  try{state.me=await api('/api/me');renderMe();}
@@ -373,9 +378,9 @@ setInterval(updateCooldown,1000);
 // Keep W coins, cooldown and chat ranks in sync with the same live SQLite-backed API.
 // Poll only while the tab is visible; never invent a client-side balance.
 setInterval(()=>{if(document.visibilityState==='visible'&&!state.busy)refreshMe();},12000);
-setInterval(()=>{if(document.visibilityState==='visible'){refreshPublic();if(currentRoute()==='/top')refreshTop();if(currentRoute()==='/cases')refreshCases();if(currentRoute()==='/duels')refreshDuels();}},20000);
+setInterval(()=>{if(document.visibilityState==='visible'){refreshPublic();if(currentRoute()==='/top')refreshTop();if(currentRoute()==='/chat')refreshChatTop();if(currentRoute()==='/cases')refreshCases();if(currentRoute()==='/duels')refreshDuels();}},20000);
 document.addEventListener('visibilitychange',()=>{
- if(document.visibilityState==='visible'&&!state.busy){refreshMe();refreshPublic();if(currentRoute()==='/top')refreshTop();if(currentRoute()==='/cases')refreshCases();if(currentRoute()==='/duels')refreshDuels();}
+ if(document.visibilityState==='visible'&&!state.busy){refreshMe();refreshPublic();if(currentRoute()==='/top')refreshTop();if(currentRoute()==='/chat')refreshChatTop();if(currentRoute()==='/cases')refreshCases();if(currentRoute()==='/duels')refreshDuels();}
 });
 
 // Decorative idle frost never captures input and clears on any activity.

@@ -1,4 +1,4 @@
-import {createLeaderboard} from './leaderboard.js';
+import {createLeaderboard,createChatLeaderboard} from './leaderboard.js';
 import {createChatCases} from './chat-cases.js';
 import {shouldCountChatMessage} from './chat-statistics.js';
 import {createCaseCatalog} from './case-catalog.js';
@@ -57,6 +57,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  db.exec("CREATE INDEX IF NOT EXISTS idx_fridge_spins_player ON fridge_spins(player_id,id DESC);");
  db.exec("CREATE TABLE IF NOT EXISTS chat_stats(player_id TEXT PRIMARY KEY,login TEXT NOT NULL,message_count INTEGER NOT NULL DEFAULT 0,last_seen INTEGER NOT NULL DEFAULT 0);");
  if(!db.prepare('PRAGMA table_info(chat_stats)').all().some(c=>c.name==='badges_json'))db.exec("ALTER TABLE chat_stats ADD COLUMN badges_json TEXT NOT NULL DEFAULT '{}'");
+ const chatLeaderboard=createChatLeaderboard(db);
  const notifications=createNotifications(db);
  const chatCases=createChatCases({db,transaction,cases,player});
  const avatars=createAvatars(db,app,tokenRequest);
@@ -210,6 +211,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   }
   if(path.startsWith('/api/')){
    if(method==='GET'){
+    if(path==='/api/chat-leaderboard'){json(res,200,chatLeaderboard(url.searchParams.get('page')));return true;}
     if(path==='/api/leaderboard'){json(res,200,leaderboard(url.searchParams.get('page')));return true;}
     if(path==='/api/cases'){json(res,200,{cases:cases.list(),previewOnly:false,activeCaseIds:['chat','coins']});return true;}
     if(path==='/api/reviews'){const session=getSession(req);json(res,200,{reviews:reviews.list(),eligibleOrders:reviews.eligible(session)});return true;}
