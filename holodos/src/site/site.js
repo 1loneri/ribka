@@ -70,7 +70,7 @@ function renderRoute(path,replace=false){
 }
 function chatBadgesHtml(row){
  let badges={};try{badges=JSON.parse(row.badges_json||'{}')}catch{}
- const labels={broadcaster:'Стример',moderator:'Модератор',vip:'VIP',subscriber:'Подписчик',founder:'Основатель',premium:'Prime'};
+ const labels={broadcaster:'Стример',moderator:'Модератор',vip:'VIP',subscriber:'Подписчик',founder:'Ранний подписчик',premium:'Prime'};
  return Object.entries(labels).filter(([k])=>badges[k]).map(([k,label])=>'<span class="chat-badge chat-badge--'+k+'" title="'+esc(label)+'">'+esc(label)+'</span>').join('');
 }
 function rankHtml(list,kind='balance',offset=0){
