@@ -1,3 +1,4 @@
+import {renderBotCommands} from './bot-command-list.js';
 import {renderCaseEditor} from './case-admin.js';
 import {createChannelConnections} from './channel-connections.js';
 import http from 'node:http';
@@ -413,6 +414,7 @@ const server=http.createServer(async(req,res)=>{
  content+='<div class="admin-row"><span>Версия настроек</span><b>'+escape(ECONOMY.version)+'</b></div><div class="admin-row"><span>Кейсы</span><b>Открытия отключены</b></div><p><a class="link" href="/cases">Посмотреть коллекцию ↗</a></p></section>';
  content+='<section class="admin-panel"><h2>Twitch-канал</h2><div class="admin-row"><span>Канал</span><b>#'+escape(channel)+'</b></div><div class="admin-row"><span>Аккаунт бота</span><b>@'+escape(linked?.login||botLogin)+'</b></div><div class="admin-row"><span>Подключение</span><b>'+(linked?'Авторизован':'Требуется вход')+'</b></div><p class="admin-note">Команды: !холодос · !баланс · !магазин · !заказ</p></section></div>';
  content+=renderCaseEditor(site.cases,csrf('case-settings'),escape);
+ content+=renderBotCommands(escape,duelsEnabled);
  const connections=channelConnections.list(),hasConnection=connections.some(c=>c.status!=='disconnected');
  content+='<section class="admin-panel" id="channel-connections"><h2>Баллы, подписки и VIP</h2><p class="admin-note">Одно подключение для трёх разделов. Подтверждает владелец канала @'+escape(channel)+'. Бот подключается отдельно.</p><div class="channel-unified-actions"><form method="post" action="/channel-connect"><input type="hidden" name="csrf" value="'+csrf('channel-connections')+'"><input type="hidden" name="feature" value="all"><button type="submit" '+(!a?'disabled':'')+'>'+(hasConnection?'Переподключить Twitch':'Подключить Twitch')+'</button></form>';
  if(hasConnection)for(const [action,label] of [['check','Проверить подключение'],['disconnect','Отключить']])content+='<form method="post" action="/channel-'+action+'"><input type="hidden" name="csrf" value="'+csrf('channel-connections')+'"><input type="hidden" name="feature" value="all"><button type="submit">'+label+'</button></form>';

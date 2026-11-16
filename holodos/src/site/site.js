@@ -384,7 +384,7 @@ for(const button of document.querySelectorAll('.page-back-button'))button.addEve
 
 let noticeSoundEnabled=true,lastNoticeTone=0;
 try{noticeSoundEnabled=localStorage.getItem('war1ouss-notification-sound')!=='off'}catch{}
-const noticeAudio=new Audio('/assets/notification.mp3?v=47');noticeAudio.preload='auto';noticeAudio.volume=.58;
+const noticeAudio=new Audio('/assets/notification.mp3?v=47');noticeAudio.preload='auto';noticeAudio.volume=.1;
 let noticeAudioContext=null,noticeBuffer=null,noticeBufferLoading=null;
 function unlockNoticeAudio(){
  try{const AC=window.AudioContext||window.webkitAudioContext;if(!noticeAudioContext&&AC)noticeAudioContext=new AC();if(noticeAudioContext?.state==='suspended')noticeAudioContext.resume().catch(()=>{});if(noticeAudioContext&&!noticeBufferLoading)noticeBufferLoading=fetch('/assets/notification.mp3?v=47').then(r=>{if(!r.ok)throw Error('audio');return r.arrayBuffer()}).then(b=>noticeAudioContext.decodeAudioData(b)).then(b=>noticeBuffer=b).catch(()=>{noticeBufferLoading=null;});}catch{}
@@ -392,7 +392,7 @@ function unlockNoticeAudio(){
 window.addEventListener('pointerdown',unlockNoticeAudio,{passive:true});window.addEventListener('keydown',unlockNoticeAudio);
 async function playNoticeTone(){
  if(!noticeSoundEnabled||Date.now()-lastNoticeTone<1000)return;lastNoticeTone=Date.now();unlockNoticeAudio();
- try{if(noticeAudioContext){await noticeAudioContext.resume();if(noticeBufferLoading)await noticeBufferLoading;if(noticeBuffer&&noticeAudioContext.state==='running'){const source=noticeAudioContext.createBufferSource(),gain=noticeAudioContext.createGain();source.buffer=noticeBuffer;gain.gain.value=.58;source.connect(gain);gain.connect(noticeAudioContext.destination);source.start();return;}}noticeAudio.currentTime=0;noticeAudio.volume=.58;await noticeAudio.play();}catch{}
+ try{if(noticeAudioContext){await noticeAudioContext.resume();if(noticeBufferLoading)await noticeBufferLoading;if(noticeBuffer&&noticeAudioContext.state==='running'){const source=noticeAudioContext.createBufferSource(),gain=noticeAudioContext.createGain();source.buffer=noticeBuffer;gain.gain.value=.58;source.connect(gain);gain.connect(noticeAudioContext.destination);source.start();return;}}noticeAudio.currentTime=0;noticeAudio.volume=.1;await noticeAudio.play();}catch{}
 }
 let notificationLastSeenId=0,notificationUser='',notificationLoading=false;
 async function refreshAccountNotifications(){
