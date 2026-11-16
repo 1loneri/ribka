@@ -343,6 +343,9 @@ const server=http.createServer(async(req,res)=>{
   if(url.pathname==='/case-purchase-confirm'){
    try{const f=await formData(req);if(!validCsrf(f,'case-purchase')){html(403,'Форма устарела. Обнови страницу.');return;}site.chatCases.purchases.grant(f.get('login'),f.get('receipt'),f.get('request_id'),site.adminIdentity(req).player_id);res.writeHead(303,{Location:'/admin/cases#case-purchases','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Покупка не подтверждена</h2><p>'+escape(e.status?e.message:'Не удалось подтвердить покупку. Повтори попытку.')+'</p><a href="/admin/cases#case-purchases">Вернуться</a>');}return;
   }
+  if(['/vp-stock-upload','/vp-stock-disable'].includes(url.pathname)){
+   try{const f=await formData(req);if(!validCsrf(f,'vp-stock')){html(403,'Форма устарела. Обнови страницу.');return;}const actor=site.adminIdentity(req).player_id;if(url.pathname==='/vp-stock-upload')site.vpShop.upload(f.get('vp'),f.get('codes'),actor);else site.vpShop.disable(f.get('code_id'),actor);res.writeHead(303,{Location:'/admin/vp#vp-stock','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Коды не обновлены</h2><p>'+escape(e.status?e.message:'Повтори попытку.')+'</p><a href="/admin/vp#vp-stock">Вернуться</a>');}return;
+  }
   if(['/vp-manual-create','/vp-manual-resolve'].includes(url.pathname)){
    try{const f=await formData(req);if(!validCsrf(f,'vp-manual')){html(403,'Форма устарела. Обнови страницу.');return;}const actor=site.adminIdentity(req).player_id;if(url.pathname==='/vp-manual-create')site.manualVp.create(f,actor);else site.manualVp.resolve(f.get('issuance_id'),f.get('action'),actor);res.writeHead(303,{Location:'/admin/vp#vp-manual','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Выдача VP не обновлена</h2><p>'+escape(e.status?e.message:'Повтори попытку.')+'</p><a href="/admin/vp#vp-manual">Вернуться</a>');}return;
   }
@@ -441,6 +444,7 @@ const server=http.createServer(async(req,res)=>{
  content+=site.chatCases.purchases.renderAdmin(escape,csrf('case-purchase'),randomBytes(16).toString('hex'));
  content+=site.chatCases.renderAdmin(escape,csrf('case-prizes'),'vp');
  content+=site.vipShop.renderAdmin(escape,csrf('vip-shop'));
+ content+=site.vpShop.renderAdmin(escape,csrf('vp-stock'));
  content+=site.manualVp.renderAdmin(escape,csrf('vp-manual'),randomBytes(16).toString('hex'));
  content+=site.chatCases.renderAdmin(escape,csrf('case-prizes'),'other');
  content+=renderBotCommands(escape,duelsEnabled);

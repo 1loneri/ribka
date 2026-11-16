@@ -66,7 +66,7 @@ function renderRoute(path,replace=false){
  if(path==='/casino')refreshSpins();
  if(path==='/profile')renderProfile();
  if(path==='/requests')refreshRequests();
- if(path==='/shop'){refreshReviews();refreshVipShop();}
+ if(path==='/shop'){refreshReviews();refreshVipShop();refreshVpShop();}
 }
 function chatBadgesHtml(row){
  let badges={};try{badges=JSON.parse(row.badges_json||'{}')}catch{}
@@ -132,8 +132,15 @@ function renderDonationCase(){
  b.title=!me?.spin_allowed?'Открытия доступны во время стрима':'Доступно подтверждённых кейсов: '+fmt(p?.available);
 }
 
+let vpShopPackages=[],vpShopBusy=false;
+function renderVpShop(){for(const button of document.querySelectorAll('[data-vp-buy]')){const vp=Number(button.dataset.vpBuy),p=vpShopPackages.find(p=>p.vp===vp),me=state.me,missing=Math.max(0,(p?.price||0)-(me?.player?.balance||0));button.disabled=vpShopBusy||me===null||!p||!p.available||!!(me?.authenticated&&missing);button.textContent=vpShopBusy?'Оформляем…':!p?'Загрузка…':!p.available?'Нет в наличии':!me?.authenticated?'Войти через Twitch':missing?'Недостаточно W':'Купить · '+fmt(p.price)+' W';const hint=document.querySelector('[data-vp-status="'+vp+'"]');hint.textContent=!p?'':!p.available?'Коды закончились.':me?.authenticated&&missing?'Не хватает '+fmt(missing)+' W':'Код придёт в личное уведомление.';}}
+async function refreshVpShop(){try{const r=await api('/api/shop/vp');vpShopPackages=r.packages;renderVpShop();}catch{}}
+for(const button of document.querySelectorAll('[data-vp-buy]'))button.addEventListener('click',async()=>{if(!state.me?.authenticated){location.href='/auth/twitch';return;}if(vpShopBusy)return;const vp=Number(button.dataset.vpBuy),p=vpShopPackages.find(p=>p.vp===vp);if(!p)return;const key='vp-purchase-'+state.me.player.id+'-'+vp;let requestId;try{requestId=localStorage.getItem(key);if(!requestId){requestId=crypto.randomUUID();localStorage.setItem(key,requestId);}}catch{requestId=crypto.randomUUID();}vpShopBusy=true;renderVpShop();try{await api('/api/shop/vp',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':state.me.csrf},body:JSON.stringify({requestId,vp,expectedPrice:p.price})});try{localStorage.removeItem(key)}catch{}await refreshMe();$('account-notifications').hidden=false;await refreshAccountNotifications();}catch(error){notice(error.message);}finally{vpShopBusy=false;await Promise.all([refreshMe(),refreshVpShop()]);}});
+function vpCodesHtml(list){return list.length?'<h3>Мои коды VP</h3>'+list.map(o=>'<div class="vp-code-receipt"><strong>'+o.vp+' VP · Заказ №'+o.order_id+'</strong><p>Вот твой код — <code>'+esc(o.code)+'</code></p><span class="muted">'+ruTime(o.created_at)+' · '+fmt(o.price)+' W</span></div>').join(''):'';}
+
 let vipShopQuote={price:25000},vipShopBuying=false;
 function renderVipShop(){
+ renderVpShop();
  const button=$('vip-shop-buy');if(!button)return;const me=state.me,quote=me?.authenticated?me.vipShop:vipShopQuote;if(!quote)return;
  $('vip-shop-price').textContent=fmt(quote.price)+' W';const missing=Math.max(0,quote.price-(me?.player?.balance||0));
  button.disabled=vipShopBuying||state.me===null||!!(me?.authenticated&&(quote.active||quote.pending||missing));
@@ -205,7 +212,7 @@ function renderProfile(){
  const avatar=safeAvatar(p.avatar),activeTitle=me.cosmetics?.catalog?.title?.[me.cosmetics?.active?.title]||'';
  $('profile-content').innerHTML='<div class="profile-bell-container"><a class="button button-ghost profile-requests-button" href="/requests" data-route="/requests">Запросы <span class="support-count"></span></a><button class="profile-notifications-button" type="button" data-account-notifications aria-label="Уведомления аккаунта">'+bellSvg+'<span class="account-unread-count">'+(me.notification_unread||'')+'</span></button></div><div class="profile-card">'+'<span class="profile-equipped-avatar">'+avatarHtml(p.login)+'</span>'+'<div><div class="profile-name-line"><div class="profile-name">@'+esc(p.display_name||p.login)+'</div>'+(activeTitle?'<span class="profile-equipped-title">'+esc(activeTitle)+'</span>':'')+'</div><span class="profile-muted">Аккаунт Twitch · W-монеты синхронизированы с чатом</span></div></div>'
   +'<div class="stats-grid"><div class="stat"><strong>'+fmt(p.balance)+'</strong><span>Баланс W</span></div><div class="stat"><strong>'+fmt(p.opens)+'</strong><span>Открытий</span></div><div class="stat"><strong>'+fmt(p.wins)+'</strong><span>Выигрышей</span></div><div class="stat"><strong>'+fmt(p.jackpots)+'</strong><span>Суперджекпотов</span></div></div>'
-  +'<div class="stat"><strong>'+fmt(p.message_count)+'</strong><span>Сообщений в чате с начала учёта</span></div>'+ '<div class="profile-orders"><h3>Заявки и выдачи</h3>'+((orders.length||vipOrders.length||manualVp.length)?orders.map(o=>'<div class="history-item"><strong>№'+o.id+' · '+o.vp+' VP</strong><span>'+esc(o.status==='pending'?'Ожидает выдачи':o.status==='fulfilled'?'Выдано':'Отменено')+'</span><em>'+fmt(o.price)+' W</em><time>'+ruTime(o.created_at)+'</time></div>').join('')+vipOrdersHtml(vipOrders)+manualVpHtml(manualVp):'<p class="muted">Пока нет заявок. Оформить можно через команду !купить в чате.</p>')+'</div>'
+  +'<div class="stat"><strong>'+fmt(p.message_count)+'</strong><span>Сообщений в чате с начала учёта</span></div>'+ '<div class="profile-orders"><h3>Заявки и выдачи</h3>'+((orders.length||vipOrders.length||manualVp.length)?orders.map(o=>'<div class="history-item"><strong>№'+o.id+' · '+o.vp+' VP</strong><span>'+esc(o.status==='pending'?'Ожидает выдачи':o.status==='fulfilled'?'Выдано':'Отменено')+'</span><em>'+fmt(o.price)+' W</em><time>'+ruTime(o.created_at)+'</time></div>').join('')+vipOrdersHtml(vipOrders)+manualVpHtml(manualVp)+vpCodesHtml(me.vpCodes||[]):'<p class="muted">Пока нет заявок. Оформить можно через команду !купить в чате.</p>')+'</div>'
   +'<section class="chat-case-history" id="chat-case-history" aria-labelledby="case-history-heading"><h3 id="case-history-heading">Мои открытия</h3><div>'+((me.caseHistory||[]).map(o=>'<p><strong>'+esc(o.reward.label)+(o.reward.guaranteedW?' + '+fmt(o.reward.guaranteedW)+' W':'')+'</strong><small>'+esc(o.caseId==='coins'?'W-кейс':o.caseId==='donation'?'Донатный кейс':'За сообщения')+'</small><span>'+esc(o.claim_status==='fulfilled'?'Выдано':o.claim_status==='cancelled'?'Выдача отменена':o.claim_status==='pending'?'Ожидает выдачи':'Начислено')+'</span><time>'+ruTime(o.created_at)+'</time></p>').join('')||'<p class="muted">Открытий пока нет.</p>')+'</div></section>'
   +frameInventoryHtml(me.frames,me.cosmetics)+'<button type="button" class="logout-btn" id="logout-btn">Выйти из профиля</button>';
  $('logout-btn').addEventListener('click',logout);
@@ -401,7 +408,7 @@ $('spin-button').addEventListener('click',spin);
 $('duel-form').addEventListener('submit',challenge);
 $('refresh-duels').addEventListener('click',refreshDuels);
 navigate(currentRoute(),true);
-Promise.all([refreshPublic(),refreshMe(),refreshSpins(),refreshCases(),refreshVipShop()]).then(()=>{if(currentRoute()==='/duels')refreshDuels();});
+Promise.all([refreshPublic(),refreshMe(),refreshSpins(),refreshCases(),refreshVipShop(),refreshVpShop()]).then(()=>{if(currentRoute()==='/duels')refreshDuels();});
 setInterval(updateCooldown,1000);
 // Keep W coins, cooldown and chat ranks in sync with the same live SQLite-backed API.
 // Poll only while the tab is visible; never invent a client-side balance.
@@ -480,7 +487,7 @@ async function refreshAccountNotifications(){
  if(notificationLoading||!state.me?.authenticated)return;notificationLoading=true;
  try{const user=String(state.me.player.id);if(notificationUser!==user){notificationUser=user;notificationLastSeenId=0;try{notificationLastSeenId=Number(localStorage.getItem('war1ouss-notification-last-'+user)||0)}catch{}}
  const {notifications}=await api('/api/notifications');if(!state.me?.authenticated||String(state.me.player.id)!==user)return;const latest=notifications[0]?.id||0;const newest=notifications.find(n=>n.unread&&n.id>notificationLastSeenId);
- if(newest){notice(newest.title+': '+newest.body);if(document.visibilityState==='hidden'&&'Notification' in window&&Notification.permission==='granted')try{new Notification(newest.title,{body:newest.body,tag:'account-'+newest.id})}catch{}}
+ if(newest){notice(newest.title+': '+newest.body);if(document.visibilityState==='hidden'&&'Notification' in window&&Notification.permission==='granted')try{new Notification(newest.title,{body:newest.kind==='vp-code'?'Код VP доступен в личном кабинете.':newest.body,tag:'account-'+newest.id})}catch{}}
  notificationLastSeenId=Math.max(notificationLastSeenId,latest);try{localStorage.setItem('war1ouss-notification-last-'+user,String(notificationLastSeenId))}catch{}
  $('account-notification-list').innerHTML=notifications.length?notifications.map(n=>'<a class="account-notification '+(n.unread?'unread':'')+'" href="'+esc(/^\/(?:requests|profile|help|cases|duels)\b/.test(n.url)?n.url:'/profile')+'" data-route="'+esc(n.url)+'"><strong>'+esc(n.title)+'</strong><p>'+esc(n.body)+'</p><time>'+ruTime(n.created_at)+'</time></a>').join(''):'<p class="muted">Пока нет уведомлений.</p>';
  if(!$('account-notifications').hidden&&latest){await supportPost('/api/notifications/read',{maxId:latest});state.me.notification_unread=0;for(const badge of document.querySelectorAll('.account-unread-count'))badge.textContent='';renderNotificationBadges();}
