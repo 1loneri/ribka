@@ -1,3 +1,4 @@
+import {createAdminWallet} from './admin-wallet.js';
 import {createLeaderboard,createChatLeaderboard} from './leaderboard.js';
 import {createChatCases} from './chat-cases.js';
 import {shouldCountChatMessage} from './chat-statistics.js';
@@ -58,6 +59,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  db.exec("CREATE TABLE IF NOT EXISTS chat_stats(player_id TEXT PRIMARY KEY,login TEXT NOT NULL,message_count INTEGER NOT NULL DEFAULT 0,last_seen INTEGER NOT NULL DEFAULT 0);");
  if(!db.prepare('PRAGMA table_info(chat_stats)').all().some(c=>c.name==='badges_json'))db.exec("ALTER TABLE chat_stats ADD COLUMN badges_json TEXT NOT NULL DEFAULT '{}'");
  const chatLeaderboard=createChatLeaderboard(db);
+ const adminWallet=createAdminWallet(db,transaction);
  const notifications=createNotifications(db);
  const chatCases=createChatCases({db,transaction,cases,player});
  const avatars=createAvatars(db,app,tokenRequest);
@@ -312,5 +314,5 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   }
   return false;
  }
- return {handle,oauthCallback,recordSpin,trackChat,isAdminRequest,cases,chatCases,support,reviews,duelVisuals,frames,cosmetics,isAdminIdentity:isAdminSession,adminIdentity:req=>{const s=getSession(req);return s&&isAdminSession(s)?s:{player_id:'admin-panel',login:'Администратор'};}};
+ return {handle,oauthCallback,recordSpin,trackChat,isAdminRequest,cases,chatCases,adminWallet,support,reviews,duelVisuals,frames,cosmetics,isAdminIdentity:isAdminSession,adminIdentity:req=>{const s=getSession(req);return s&&isAdminSession(s)?s:{player_id:'admin-panel',login:'Администратор'};}};
 }

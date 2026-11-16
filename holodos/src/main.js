@@ -335,6 +335,9 @@ const server=http.createServer(async(req,res)=>{
   res.writeHead(303,{Location:'/',"Cache-Control":"no-store",'Set-Cookie':cookieName+'=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0'});res.end();return;
  }
  if(req.method==='POST'){
+  if(url.pathname==='/wallet-change'){
+   try{const f=await formData(req);if(!validCsrf(f,'wallet-change')){html(403,'Форма устарела. Обнови страницу.');return;}site.adminWallet.change(f,site.adminIdentity(req).player_id);res.writeHead(303,{Location:'/admin?wallet_login='+encodeURIComponent(String(f.get('login')||''))+'#balances','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Баланс не изменён</h2><p>'+escape(e.status?e.message:'Не получилось изменить баланс. Повтори попытку.')+'</p><a href="/admin#balances">Вернуться к балансам</a>');}return;
+  }
   if(url.pathname==='/case-purchase-confirm'){
    try{const f=await formData(req);if(!validCsrf(f,'case-purchase')){html(403,'Форма устарела. Обнови страницу.');return;}site.chatCases.purchases.grant(f.get('login'),f.get('receipt'),f.get('request_id'),site.adminIdentity(req).player_id);res.writeHead(303,{Location:'/admin#case-purchases','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Покупка не подтверждена</h2><p>'+escape(e.status?e.message:'Не удалось подтвердить покупку. Повтори попытку.')+'</p><a href="/admin#case-purchases">Вернуться</a>');}return;
   }
@@ -422,6 +425,7 @@ const server=http.createServer(async(req,res)=>{
  for(const [vp,price] of Object.entries(SHOP_PRICES))content+='<div class="admin-row"><span>'+vp+' VP</span><b>'+number(price)+' W</b></div>';
  content+='<div class="admin-row"><span>Версия настроек</span><b>'+escape(ECONOMY.version)+'</b></div><div class="admin-row"><span>Кейсы</span><b>Кейсы за сообщения и W активны</b></div><p><a class="link" href="/cases">Посмотреть коллекцию ↗</a></p></section>';
  content+='<section class="admin-panel"><h2>Twitch-канал</h2><div class="admin-row"><span>Канал</span><b>#'+escape(channel)+'</b></div><div class="admin-row"><span>Аккаунт бота</span><b>@'+escape(linked?.login||botLogin)+'</b></div><div class="admin-row"><span>Подключение</span><b>'+(linked?'Авторизован':'Требуется вход')+'</b></div><p class="admin-note">Команды: !холодос · !баланс · !магазин · !заказ</p></section></div>';
+ content+=site.adminWallet.render(escape,csrf('wallet-change'),randomBytes(16).toString('hex'),url.searchParams.get('wallet_login')||'');
  content+=renderCaseEditor(site.cases,csrf('case-settings'),escape);
  content+=site.chatCases.purchases.renderAdmin(escape,csrf('case-purchase'),randomBytes(16).toString('hex'));
  content+=site.chatCases.renderAdmin(escape,csrf('case-prizes'));
