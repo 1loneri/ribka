@@ -66,7 +66,7 @@ function renderRoute(path,replace=false){
  if(path==='/casino')refreshSpins();
  if(path==='/profile')renderProfile();
  if(path==='/requests')refreshRequests();
- if(path==='/shop')refreshReviews();
+ if(path==='/shop'){refreshReviews();refreshVipShop();}
 }
 function chatBadgesHtml(row){
  let badges={};try{badges=JSON.parse(row.badges_json||'{}')}catch{}
@@ -132,6 +132,24 @@ function renderDonationCase(){
  b.title=!me?.spin_allowed?'Открытия доступны во время стрима':'Доступно подтверждённых кейсов: '+fmt(p?.available);
 }
 
+let vipShopQuote={price:25000},vipShopBuying=false;
+function renderVipShop(){
+ const button=$('vip-shop-buy');if(!button)return;const me=state.me,quote=me?.authenticated?me.vipShop:vipShopQuote;if(!quote)return;
+ $('vip-shop-price').textContent=fmt(quote.price)+' W';const missing=Math.max(0,quote.price-(me?.player?.balance||0));
+ button.disabled=vipShopBuying||state.me===null||!!(me?.authenticated&&(quote.active||quote.pending||missing));
+ button.textContent=vipShopBuying?'Оформляем…':!me?.authenticated?'Войти через Twitch':quote.active?'VIP уже активен':quote.pending?'VIP ожидает выдачи':missing?'Недостаточно W':'Купить VIP · '+fmt(quote.price)+' W';
+ $('vip-shop-status').textContent=!me?.authenticated?'Войди, чтобы купить VIP за W.':quote.active?'У тебя уже есть VIP на канале.':quote.pending?'Заявка сохранена. Администратор выдаст VIP вручную.':missing?'Баланс: '+fmt(me.player.balance)+' W · Не хватает '+fmt(missing)+' W':'Спишется '+fmt(quote.price)+' W. Выдача VIP — вручную.';
+}
+async function refreshVipShop(){try{vipShopQuote=await api('/api/shop/vip');renderVipShop();}catch{}}
+$('vip-shop-buy').addEventListener('click',async()=>{
+ if(!state.me?.authenticated){location.href='/auth/twitch';return;}if(vipShopBuying)return;vipShopBuying=true;renderVipShop();
+ try{const r=await api('/api/shop/vip',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':state.me.csrf},body:JSON.stringify({requestId:crypto.randomUUID(),expectedPrice:state.me.vipShop.price})});notice('Заявка на VIP №'+r.orderId+' создана. Ожидает выдачи.');}
+ catch(error){notice(error.message);}finally{vipShopBuying=false;await refreshMe();renderVipShop();}
+});
+function vipOrdersHtml(list){return list.map(o=>'<div class="history-item"><strong>VIP · №'+o.id+'</strong><span>'+esc(o.status==='pending'?'Ожидает выдачи':o.status==='fulfilled'?'VIP выдан':'Отменено · W возвращены')+'</span><em>'+fmt(o.price)+' W</em><time>'+ruTime(o.created_at)+'</time></div>').join('');}
+
+function manualVpHtml(list){return list.map(o=>'<div class="history-item"><strong>'+o.vp+' VP · Выдача №'+o.id+'</strong><span>'+esc(o.status==='pending'?'Ожидает выдачи':o.status==='fulfilled'?'Выдано':'Выдача отменена')+'</span><time>'+ruTime(o.created_at)+'</time></div>').join('');}
+
 function renderPublic(){
  const p=state.public;if(!p)return;
  $('home-top').innerHTML=rankHtml((p.top||[]).slice(0,5));
@@ -162,6 +180,7 @@ function renderMe(){
  renderChatCase();
  renderCoinCase();
  renderDonationCase();
+ renderVipShop();
  updateCooldown();
  renderProfile();
 
@@ -182,12 +201,12 @@ function renderProfile(){
   $('profile-content').innerHTML='<h3>Войди через Twitch</h3><p class="muted">После входа здесь появятся твой реальный баланс, статистика «Холодоса» и магазинные заявки.</p><a class="button button-primary" href="/auth/twitch">Войти через Twitch ↗</a>';
   return;
  }
- const p=me.player,orders=me.orders||[];
+ const p=me.player,orders=me.orders||[],vipOrders=me.vipOrders||[],manualVp=me.manualVp||[];
  const avatar=safeAvatar(p.avatar),activeTitle=me.cosmetics?.catalog?.title?.[me.cosmetics?.active?.title]||'';
  $('profile-content').innerHTML='<div class="profile-bell-container"><a class="button button-ghost profile-requests-button" href="/requests" data-route="/requests">Запросы <span class="support-count"></span></a><button class="profile-notifications-button" type="button" data-account-notifications aria-label="Уведомления аккаунта">'+bellSvg+'<span class="account-unread-count">'+(me.notification_unread||'')+'</span></button></div><div class="profile-card">'+'<span class="profile-equipped-avatar">'+avatarHtml(p.login)+'</span>'+'<div><div class="profile-name-line"><div class="profile-name">@'+esc(p.display_name||p.login)+'</div>'+(activeTitle?'<span class="profile-equipped-title">'+esc(activeTitle)+'</span>':'')+'</div><span class="profile-muted">Аккаунт Twitch · W-монеты синхронизированы с чатом</span></div></div>'
   +'<div class="stats-grid"><div class="stat"><strong>'+fmt(p.balance)+'</strong><span>Баланс W</span></div><div class="stat"><strong>'+fmt(p.opens)+'</strong><span>Открытий</span></div><div class="stat"><strong>'+fmt(p.wins)+'</strong><span>Выигрышей</span></div><div class="stat"><strong>'+fmt(p.jackpots)+'</strong><span>Суперджекпотов</span></div></div>'
-  +'<div class="stat"><strong>'+fmt(p.message_count)+'</strong><span>Сообщений в чате с начала учёта</span></div>'+ '<div class="profile-orders"><h3>Заявки магазина</h3>'+(orders.length?orders.map(o=>'<div class="history-item"><strong>№'+o.id+' · '+o.vp+' VP</strong><span>'+esc(o.status==='pending'?'Ожидает выдачи':o.status==='fulfilled'?'Выдано':'Отменено')+'</span><em>'+fmt(o.price)+' W</em><time>'+ruTime(o.created_at)+'</time></div>').join(''):'<p class="muted">Пока нет заявок. Оформить можно через команду !купить в чате.</p>')+'</div>'
-  +'<section class="chat-case-history" id="chat-case-history" aria-labelledby="case-history-heading"><h3 id="case-history-heading">Мои открытия</h3><div>'+((me.caseHistory||[]).map(o=>'<p><strong>'+esc(o.reward.label)+(o.reward.guaranteedW?' + '+fmt(o.reward.guaranteedW)+' W':'')+'</strong><small>'+esc(o.caseId==='coins'?'W-кейс':o.caseId==='donation'?'Донатный кейс':'За сообщения')+'</small><span>'+esc(o.claim_status==='fulfilled'?'Выдано':o.claim_status==='pending'?'Ожидает выдачи':'Начислено')+'</span><time>'+ruTime(o.created_at)+'</time></p>').join('')||'<p class="muted">Открытий пока нет.</p>')+'</div></section>'
+  +'<div class="stat"><strong>'+fmt(p.message_count)+'</strong><span>Сообщений в чате с начала учёта</span></div>'+ '<div class="profile-orders"><h3>Заявки и выдачи</h3>'+((orders.length||vipOrders.length||manualVp.length)?orders.map(o=>'<div class="history-item"><strong>№'+o.id+' · '+o.vp+' VP</strong><span>'+esc(o.status==='pending'?'Ожидает выдачи':o.status==='fulfilled'?'Выдано':'Отменено')+'</span><em>'+fmt(o.price)+' W</em><time>'+ruTime(o.created_at)+'</time></div>').join('')+vipOrdersHtml(vipOrders)+manualVpHtml(manualVp):'<p class="muted">Пока нет заявок. Оформить можно через команду !купить в чате.</p>')+'</div>'
+  +'<section class="chat-case-history" id="chat-case-history" aria-labelledby="case-history-heading"><h3 id="case-history-heading">Мои открытия</h3><div>'+((me.caseHistory||[]).map(o=>'<p><strong>'+esc(o.reward.label)+(o.reward.guaranteedW?' + '+fmt(o.reward.guaranteedW)+' W':'')+'</strong><small>'+esc(o.caseId==='coins'?'W-кейс':o.caseId==='donation'?'Донатный кейс':'За сообщения')+'</small><span>'+esc(o.claim_status==='fulfilled'?'Выдано':o.claim_status==='cancelled'?'Выдача отменена':o.claim_status==='pending'?'Ожидает выдачи':'Начислено')+'</span><time>'+ruTime(o.created_at)+'</time></p>').join('')||'<p class="muted">Открытий пока нет.</p>')+'</div></section>'
   +frameInventoryHtml(me.frames,me.cosmetics)+'<button type="button" class="logout-btn" id="logout-btn">Выйти из профиля</button>';
  $('logout-btn').addEventListener('click',logout);
 }
@@ -382,7 +401,7 @@ $('spin-button').addEventListener('click',spin);
 $('duel-form').addEventListener('submit',challenge);
 $('refresh-duels').addEventListener('click',refreshDuels);
 navigate(currentRoute(),true);
-Promise.all([refreshPublic(),refreshMe(),refreshSpins(),refreshCases()]).then(()=>{if(currentRoute()==='/duels')refreshDuels();});
+Promise.all([refreshPublic(),refreshMe(),refreshSpins(),refreshCases(),refreshVipShop()]).then(()=>{if(currentRoute()==='/duels')refreshDuels();});
 setInterval(updateCooldown,1000);
 // Keep W coins, cooldown and chat ranks in sync with the same live SQLite-backed API.
 // Poll only while the tab is visible; never invent a client-side balance.

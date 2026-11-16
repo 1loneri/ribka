@@ -1,3 +1,4 @@
+import {adminSections} from './admin-sections.js';
 import {createDuelFees} from './duel-fees.js';
 import {renderBotCommands} from './bot-command-list.js';
 import {renderCaseEditor} from './case-admin.js';
@@ -265,7 +266,7 @@ const streamStatus=createStreamStatus({app,tokenRequest,channel});
 const site=createSite({db,publicUrl,app,tokenRequest,validate,player,transaction,draw,cans,duelChallenge,duelRespond,say,channel,duelsEnabled,states,secret,streamStatus});
 function equal(a,b){const x=Buffer.from(a),y=Buffer.from(b);return x.length===y.length&&timingSafeEqual(x,y);}
 function escape(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function page(body){return renderAdminPage(body);}
+function page(body,path='/admin'){return renderAdminPage(body,{path});}
 async function formData(req){let text='';for await(const chunk of req){text+=chunk;if(text.length>16384)throw Error('Слишком большая форма');}return new URLSearchParams(text);}
 function setupForm(token){
  const a=app();
@@ -273,13 +274,13 @@ function setupForm(token){
 }
 const server=http.createServer(async(req,res)=>{
  const url=new URL(req.url,'http://localhost');
- const html=(status,body,headers={})=>{res.writeHead(status,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','X-Frame-Options':'DENY','Referrer-Policy':'no-referrer','Content-Security-Policy':"default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'",...headers});res.end(page(body));};
- const redirect=()=>{res.writeHead(303,{Location:'/admin',"Cache-Control":"no-store"});res.end();};
+ const html=(status,body,headers={})=>{res.writeHead(status,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','X-Frame-Options':'DENY','Referrer-Policy':'no-referrer','Content-Security-Policy':"default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'",...headers});res.end(page(body,url.pathname));};
+ const redirect=(target='/admin')=>{res.writeHead(303,{Location:target,"Cache-Control":"no-store"});res.end();};
  if(url.pathname==='/health'){res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify({ok:true,twitch_connected:connected}));return;}
  if(url.pathname==='/oauth/callback'){
   const state=url.searchParams.get('state')||'',until=states.get(state);states.delete(state);
   if(until&&typeof until==='object'&&until.type==='channel'){
-   try{const result=await channelConnections.callback(req,url,until);html(200,'<h2>Разрешение канала сохранено</h2><p>'+(result.ok?'Доступ к Twitch проверен.':'Разрешение сохранено, но проверка Twitch пока не прошла. Повтори её в панели.')+'</p><a href="/admin#channel-connections">Вернуться к подключениям</a>');}catch(e){html(e.status||400,'<h2>Подключение не завершено</h2><p>'+escape(e.status?e.message:'Не удалось подключиться к Twitch. Попробуй позже.')+'</p><a href="/admin#channel-connections">Вернуться</a>');}return;
+   try{const result=await channelConnections.callback(req,url,until);html(200,'<h2>Разрешение канала сохранено</h2><p>'+(result.ok?'Доступ к Twitch проверен.':'Разрешение сохранено, но проверка Twitch пока не прошла. Повтори её в панели.')+'</p><a href="/admin/twitch#channel-connections">Вернуться к подключениям</a>');}catch(e){html(e.status||400,'<h2>Подключение не завершено</h2><p>'+escape(e.status?e.message:'Не удалось подключиться к Twitch. Попробуй позже.')+'</p><a href="/admin/twitch#channel-connections">Вернуться</a>');}return;
   }
   if(until&&typeof until==='object'&&until.type==='site'){await site.oauthCallback(req,res,url,state,until);return;}
   if(!until||until<Date.now()){html(403,'Подключение истекло. Начни заново в панели.');return;}
@@ -336,38 +337,47 @@ const server=http.createServer(async(req,res)=>{
  }
  if(req.method==='POST'){
   if(url.pathname==='/wallet-change'){
-   try{const f=await formData(req);if(!validCsrf(f,'wallet-change')){html(403,'Форма устарела. Обнови страницу.');return;}site.adminWallet.change(f,site.adminIdentity(req).player_id);res.writeHead(303,{Location:'/admin?wallet_login='+encodeURIComponent(String(f.get('login')||''))+'#balances','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Баланс не изменён</h2><p>'+escape(e.status?e.message:'Не получилось изменить баланс. Повтори попытку.')+'</p><a href="/admin#balances">Вернуться к балансам</a>');}return;
+   try{const f=await formData(req);if(!validCsrf(f,'wallet-change')){html(403,'Форма устарела. Обнови страницу.');return;}site.adminWallet.change(f,site.adminIdentity(req).player_id);res.writeHead(303,{Location:'/admin/balances?wallet_login='+encodeURIComponent(String(f.get('login')||''))+'#balances','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Баланс не изменён</h2><p>'+escape(e.status?e.message:'Не получилось изменить баланс. Повтори попытку.')+'</p><a href="/admin/balances#balances">Вернуться к балансам</a>');}return;
   }
   if(url.pathname==='/case-purchase-confirm'){
-   try{const f=await formData(req);if(!validCsrf(f,'case-purchase')){html(403,'Форма устарела. Обнови страницу.');return;}site.chatCases.purchases.grant(f.get('login'),f.get('receipt'),f.get('request_id'),site.adminIdentity(req).player_id);res.writeHead(303,{Location:'/admin#case-purchases','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Покупка не подтверждена</h2><p>'+escape(e.status?e.message:'Не удалось подтвердить покупку. Повтори попытку.')+'</p><a href="/admin#case-purchases">Вернуться</a>');}return;
+   try{const f=await formData(req);if(!validCsrf(f,'case-purchase')){html(403,'Форма устарела. Обнови страницу.');return;}site.chatCases.purchases.grant(f.get('login'),f.get('receipt'),f.get('request_id'),site.adminIdentity(req).player_id);res.writeHead(303,{Location:'/admin/cases#case-purchases','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Покупка не подтверждена</h2><p>'+escape(e.status?e.message:'Не удалось подтвердить покупку. Повтори попытку.')+'</p><a href="/admin/cases#case-purchases">Вернуться</a>');}return;
+  }
+  if(['/vp-manual-create','/vp-manual-resolve'].includes(url.pathname)){
+   try{const f=await formData(req);if(!validCsrf(f,'vp-manual')){html(403,'Форма устарела. Обнови страницу.');return;}const actor=site.adminIdentity(req).player_id;if(url.pathname==='/vp-manual-create')site.manualVp.create(f,actor);else site.manualVp.resolve(f.get('issuance_id'),f.get('action'),actor);res.writeHead(303,{Location:'/admin/vp#vp-manual','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Выдача VP не обновлена</h2><p>'+escape(e.status?e.message:'Повтори попытку.')+'</p><a href="/admin/vp#vp-manual">Вернуться</a>');}return;
+  }
+  if(['/vip-shop-price','/vip-shop-order'].includes(url.pathname)){
+   try{const f=await formData(req);if(!validCsrf(f,'vip-shop')){html(403,'Форма устарела. Обнови страницу.');return;}const actor=site.adminIdentity(req).player_id;if(url.pathname==='/vip-shop-price')site.vipShop.savePrice(f.get('price'),f.get('revision'),actor);else site.vipShop.resolve(f.get('order_id'),f.get('action'),actor);res.writeHead(303,{Location:'/admin/vp#vip-shop','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>VIP не обновлён</h2><p>'+escape(e.status?e.message:'Повтори попытку.')+'</p><a href="/admin/vp#vip-shop">Вернуться</a>');}return;
+  }
+  if(url.pathname==='/case-prize-cancel'){
+   try{const f=await formData(req);if(!validCsrf(f,'case-prizes')){html(403,'Форма устарела. Обнови страницу.');return;}site.chatCases.cancel(f.get('claim_id'),site.adminIdentity(req).player_id);res.writeHead(303,{Location:f.get('return_section')==='vp'?'/admin/vp#case-vp-prizes':'/admin/cases#case-prizes','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Выдача не отменена</h2><p>'+escape(e.status?e.message:'Повтори попытку.')+'</p><a href="/admin/vp">Вернуться к призам VP</a>');}return;
   }
   if(url.pathname==='/case-prize-fulfill'){
-   try{const f=await formData(req);if(!validCsrf(f,'case-prizes')){html(403,'Форма устарела. Обнови страницу.');return;}site.chatCases.fulfill(f.get('claim_id'),site.adminIdentity(req).player_id);res.writeHead(303,{Location:'/admin#case-prizes','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Приз не отмечен</h2><p>'+escape(e.status?e.message:'Повтори попытку.')+'</p>');}return;
+   try{const f=await formData(req);if(!validCsrf(f,'case-prizes')){html(403,'Форма устарела. Обнови страницу.');return;}site.chatCases.fulfill(f.get('claim_id'),site.adminIdentity(req).player_id);res.writeHead(303,{Location:f.get('return_section')==='vp'?'/admin/vp#case-vp-prizes':'/admin/cases#case-prizes','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Приз не отмечен</h2><p>'+escape(e.status?e.message:'Повтори попытку.')+'</p>');}return;
   }
   if(url.pathname==='/case-save'){
-   try{const form=await formData(req);if(!validCsrf(form,'case-settings')){html(403,'Форма устарела. Обнови страницу.');return;}site.cases.save(form,site.adminIdentity(req).player_id);res.writeHead(303,{Location:'/admin#cases-editor','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Кейс не сохранён</h2><p>'+escape(e.status?e.message:'Не удалось сохранить настройки. Повтори попытку.')+'</p><a href="/admin#cases-editor">Вернуться к редактору</a>');}return;
+   try{const form=await formData(req);if(!validCsrf(form,'case-settings')){html(403,'Форма устарела. Обнови страницу.');return;}site.cases.save(form,site.adminIdentity(req).player_id);res.writeHead(303,{Location:'/admin/cases#cases-editor','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Кейс не сохранён</h2><p>'+escape(e.status?e.message:'Не удалось сохранить настройки. Повтори попытку.')+'</p><a href="/admin/cases#cases-editor">Вернуться к редактору</a>');}return;
   }
   if(['/channel-connect','/channel-check','/channel-disconnect'].includes(url.pathname)){
-   try{const f=await formData(req);if(!validCsrf(f,'channel-connections')){html(403,'Форма устарела. Обнови страницу.');return;}const id=String(f.get('feature')||'');if(url.pathname==='/channel-connect'){const flow=channelConnections.begin(id),target=escape(flow.url);html(200,'<meta http-equiv="refresh" content="0;url='+target+'"><h2>Подключение Twitch</h2><p>Переходим в Twitch. Подтверди доступ к баллам, подпискам и VIP от аккаунта @'+escape(channel)+'.</p><p><a class="admin-button" href="'+target+'">Перейти в Twitch</a></p>',{'Set-Cookie':flow.cookie});return;}if(url.pathname==='/channel-check')await channelConnections.check(id);else channelConnections.disconnect(id);res.writeHead(303,{Location:'/admin#channel-connections','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Не получилось выполнить действие</h2><p>'+escape(e.status?e.message:'Повтори попытку позже.')+'</p><a href="/admin#channel-connections">Вернуться</a>');}return;
+   try{const f=await formData(req);if(!validCsrf(f,'channel-connections')){html(403,'Форма устарела. Обнови страницу.');return;}const id=String(f.get('feature')||'');if(url.pathname==='/channel-connect'){const flow=channelConnections.begin(id),target=escape(flow.url);html(200,'<meta http-equiv="refresh" content="0;url='+target+'"><h2>Подключение Twitch</h2><p>Переходим в Twitch. Подтверди доступ к баллам, подпискам и VIP от аккаунта @'+escape(channel)+'.</p><p><a class="admin-button" href="'+target+'">Перейти в Twitch</a></p>',{'Set-Cookie':flow.cookie});return;}if(url.pathname==='/channel-check')await channelConnections.check(id);else channelConnections.disconnect(id);res.writeHead(303,{Location:'/admin/twitch#channel-connections','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Не получилось выполнить действие</h2><p>'+escape(e.status?e.message:'Повтори попытку позже.')+'</p><a href="/admin/twitch#channel-connections">Вернуться</a>');}return;
   }
   if(url.pathname==='/cosmetic-grant'){
-   try{const f=await formData(req);if(!validCsrf(f,'cosmetic-grant')){html(403,'Форма устарела. Обнови страницу.');return;}const [kind,id]=String(f.get('item')||'').split(':');site.cosmetics.grant(f.get('login'),kind,id,site.adminIdentity(req).player_id);res.writeHead(303,{Location:'/admin#appearance','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Косметика не выдана</h2><p>'+escape(e.message)+'</p><a href="/admin#appearance">Вернуться</a>');}return;
+   try{const f=await formData(req);if(!validCsrf(f,'cosmetic-grant')){html(403,'Форма устарела. Обнови страницу.');return;}const [kind,id]=String(f.get('item')||'').split(':');site.cosmetics.grant(f.get('login'),kind,id,site.adminIdentity(req).player_id);res.writeHead(303,{Location:'/admin/cosmetics#appearance','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Косметика не выдана</h2><p>'+escape(e.message)+'</p><a href="/admin/cosmetics#appearance">Вернуться</a>');}return;
   }
   if(url.pathname==='/frame-grant'){
-   try{const f=await formData(req);if(!validCsrf(f,'frame-grant')){html(403,'Форма устарела. Обнови страницу.');return;}site.frames.grant(f.get('login'),f.get('frame'),site.adminIdentity(req).player_id);res.writeHead(303,{Location:'/admin#frames','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Рамка не выдана</h2><p>'+escape(e.message)+'</p><a href="/admin#frames">Вернуться</a>');}return;
+   try{const f=await formData(req);if(!validCsrf(f,'frame-grant')){html(403,'Форма устарела. Обнови страницу.');return;}site.frames.grant(f.get('login'),f.get('frame'),site.adminIdentity(req).player_id);res.writeHead(303,{Location:'/admin/cosmetics#frames','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Рамка не выдана</h2><p>'+escape(e.message)+'</p><a href="/admin/cosmetics#frames">Вернуться</a>');}return;
   }
   if(url.pathname==='/duel-cosmetic'){
-   try{const f=await formData(req);if(!validCsrf(f,'duel-cosmetic')){html(403,'Форма устарела. Обнови страницу.');return;}site.duelVisuals.grant(f.get('login'),f.get('can'),site.adminIdentity(req).player_id);res.writeHead(303,{Location:'/admin#cosmetics','Cache-Control':'no-store'});res.end();}
-   catch(e){html(e.status||400,'<h2>Банка не выдана</h2><p>'+escape(e.message)+'</p><a href="/admin#cosmetics">Вернуться</a>');}return;
+   try{const f=await formData(req);if(!validCsrf(f,'duel-cosmetic')){html(403,'Форма устарела. Обнови страницу.');return;}site.duelVisuals.grant(f.get('login'),f.get('can'),site.adminIdentity(req).player_id);res.writeHead(303,{Location:'/admin/cosmetics#cosmetics','Cache-Control':'no-store'});res.end();}
+   catch(e){html(e.status||400,'<h2>Банка не выдана</h2><p>'+escape(e.message)+'</p><a href="/admin/cosmetics#cosmetics">Вернуться</a>');}return;
   }
   if(url.pathname==='/review-add'){
    try{const f=await formData(req);if(!validCsrf(f,'reviews')){html(403,'Форма устарела. Обнови страницу.');return;}
-    site.reviews.addByAdmin({author:f.get('author'),rating:f.get('rating'),body:f.get('body')});res.writeHead(303,{Location:'/admin#reviews','Cache-Control':'no-store'});res.end();
-   }catch(e){html(e.status||400,'<h2>Отзыв не добавлен</h2><p>'+escape(e.message)+'</p><a href="/admin#reviews">Вернуться</a>');}return;
+    site.reviews.addByAdmin({author:f.get('author'),rating:f.get('rating'),body:f.get('body')});res.writeHead(303,{Location:'/admin/vp#reviews','Cache-Control':'no-store'});res.end();
+   }catch(e){html(e.status||400,'<h2>Отзыв не добавлен</h2><p>'+escape(e.message)+'</p><a href="/admin/vp#reviews">Вернуться</a>');}return;
   }
   if(url.pathname==='/support-reply'){
    try{const f=await formData(req);if(!validCsrf(f,'support')){html(403,'Форма устарела. Обнови страницу.');return;}
-    const actor=site.adminIdentity(req);site.support.reply(actor,f.get('ticket_id'),f.get('body'),true);res.writeHead(303,{Location:'/admin#support','Cache-Control':'no-store'});res.end();
+    const actor=site.adminIdentity(req);site.support.reply(actor,f.get('ticket_id'),f.get('body'),true);res.writeHead(303,{Location:'/admin/support#support','Cache-Control':'no-store'});res.end();
    }catch(e){html(e.status||400,'Не удалось отправить ответ: '+escape(e.message));}return;
   }
   if(url.pathname==='/order'){
@@ -378,7 +388,7 @@ const server=http.createServer(async(req,res)=>{
     const action=String(f.get('action')||'');
     if(!/^\d{1,12}$/.test(id)||!['fulfilled','cancelled'].includes(action)){html(400,'Неверный заказ или действие.');return;}
     resolveOrder(Number(id),action,Date.now());
-    redirect();
+    redirect('/admin/vp');
    }catch(err){html(400,'Не удалось обработать заказ: '+escape(err.message));}
    return;
   }
@@ -391,11 +401,11 @@ const server=http.createServer(async(req,res)=>{
     await stop();
     db.prepare('DELETE FROM twitch_token WHERE id=1').run();
     db.prepare('INSERT INTO twitch_app(id,client_id,client_secret) VALUES(1,?,?) ON CONFLICT(id) DO UPDATE SET client_id=excluded.client_id,client_secret=excluded.client_secret').run(id,encrypt(s));
-    redirect();
+    redirect('/admin/twitch');
    }catch(e){html(400,'Не получилось сохранить: '+escape(e.message));}
    return;
   }
-  if(url.pathname==='/disconnect'){await stop();db.prepare('DELETE FROM twitch_token WHERE id=1').run();redirect();return;}
+  if(url.pathname==='/disconnect'){await stop();db.prepare('DELETE FROM twitch_token WHERE id=1').run();redirect('/admin/twitch');return;}
   html(404,'Не найдено');return;
  }
  if(url.pathname==='/connect'){
@@ -406,7 +416,7 @@ const server=http.createServer(async(req,res)=>{
   u.search=new URLSearchParams({client_id:a.id,redirect_uri:publicUrl+'/oauth/callback',response_type:'code',scope:'chat:read chat:edit',state,force_verify:'true'}).toString();
   res.writeHead(302,{Location:u.toString(),'Cache-Control':'no-store'});res.end();return;
  }
- if(url.pathname!=='/admin'){html(404,'Не найдено');return;}
+ if(!adminSections.some(s=>s.path===url.pathname)){html(404,'Не найдено');return;}
  const a=app(),linked=current();
  const stats=db.prepare('SELECT COUNT(*) AS users,COALESCE(SUM(balance),0) AS balance,COALESCE(SUM(opens),0) AS opens FROM players').get();
  const orders=db.prepare("SELECT id,login,vp,price,created_at FROM shop_orders WHERE status='pending' ORDER BY id ASC LIMIT 40").all();
@@ -421,14 +431,17 @@ const server=http.createServer(async(req,res)=>{
    '<form method="post" action="/order"><input type="hidden" name="csrf" value="'+csrf('shop-order')+'"><input type="hidden" name="order_id" value="'+o.id+'"><input type="hidden" name="action" value="fulfilled"><button type="submit">Код выдан</button></form>'+
    '<form method="post" action="/order"><input type="hidden" name="csrf" value="'+csrf('shop-order')+'"><input type="hidden" name="order_id" value="'+o.id+'"><input type="hidden" name="action" value="cancelled"><button class="danger" type="submit">Отменить и вернуть W</button></form></div></article>';
  }
- content+='</section><div class="admin-grid"><section class="admin-panel" id="economy"><h2>Экономика</h2><p class="admin-note">Текущие цены магазина. Уже созданные заявки сохраняют свою стоимость.</p>';
+ content+='</section><div class="admin-grid"><section class="admin-panel" id="economy"><h2>Цены магазина VP</h2><p class="admin-note">Текущие цены магазина. Уже созданные заявки сохраняют свою стоимость.</p>';
  for(const [vp,price] of Object.entries(SHOP_PRICES))content+='<div class="admin-row"><span>'+vp+' VP</span><b>'+number(price)+' W</b></div>';
- content+='<div class="admin-row"><span>Версия настроек</span><b>'+escape(ECONOMY.version)+'</b></div><div class="admin-row"><span>Кейсы</span><b>Кейсы за сообщения и W активны</b></div><p><a class="link" href="/cases">Посмотреть коллекцию ↗</a></p></section>';
- content+='<section class="admin-panel"><h2>Twitch-канал</h2><div class="admin-row"><span>Канал</span><b>#'+escape(channel)+'</b></div><div class="admin-row"><span>Аккаунт бота</span><b>@'+escape(linked?.login||botLogin)+'</b></div><div class="admin-row"><span>Подключение</span><b>'+(linked?'Авторизован':'Требуется вход')+'</b></div><p class="admin-note">Команды: !холодос · !баланс · !магазин · !заказ</p></section></div>';
+ content+='<div class="admin-row"><span>Версия настроек</span><b>'+escape(ECONOMY.version)+'</b></div></section>';
+ content+='<section class="admin-panel" id="channel-status"><h2>Twitch-канал</h2><div class="admin-row"><span>Канал</span><b>#'+escape(channel)+'</b></div><div class="admin-row"><span>Аккаунт бота</span><b>@'+escape(linked?.login||botLogin)+'</b></div><div class="admin-row"><span>Подключение</span><b>'+(linked?'Авторизован':'Требуется вход')+'</b></div><p class="admin-note">Команды: !холодос · !баланс · !магазин · !заказ</p></section></div>';
  content+=site.adminWallet.render(escape,csrf('wallet-change'),randomBytes(16).toString('hex'),url.searchParams.get('wallet_login')||'');
  content+=renderCaseEditor(site.cases,csrf('case-settings'),escape);
  content+=site.chatCases.purchases.renderAdmin(escape,csrf('case-purchase'),randomBytes(16).toString('hex'));
- content+=site.chatCases.renderAdmin(escape,csrf('case-prizes'));
+ content+=site.chatCases.renderAdmin(escape,csrf('case-prizes'),'vp');
+ content+=site.vipShop.renderAdmin(escape,csrf('vip-shop'));
+ content+=site.manualVp.renderAdmin(escape,csrf('vp-manual'),randomBytes(16).toString('hex'));
+ content+=site.chatCases.renderAdmin(escape,csrf('case-prizes'),'other');
  content+=renderBotCommands(escape,duelsEnabled);
  const connections=channelConnections.list(),hasConnection=connections.some(c=>c.status!=='disconnected');
  content+='<section class="admin-panel" id="channel-connections"><h2>Баллы, подписки и VIP</h2><p class="admin-note">Одно подключение для трёх разделов. Подтверждает владелец канала @'+escape(channel)+'. Бот подключается отдельно.</p><div class="channel-unified-actions"><form method="post" action="/channel-connect"><input type="hidden" name="csrf" value="'+csrf('channel-connections')+'"><input type="hidden" name="feature" value="all"><button type="submit" '+(!a?'disabled':'')+'>'+(hasConnection?'Переподключить Twitch':'Подключить Twitch')+'</button></form>';
