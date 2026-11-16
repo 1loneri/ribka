@@ -23,3 +23,12 @@ assert.equal((await c.check('all')).ok,true);assert.equal(refreshes,n+1);
 assert.equal(new Set(db.prepare('SELECT refresh FROM channel_connections').all().map(r=>decrypt(r.refresh))).size,1);
 c.disconnect('all');assert.ok(c.list().every(r=>r.status==='disconnected'));
 console.log('PASS: unified permissions, atomic rejection, shared token refresh, combined check and disconnect');
+// A completed POST renders a new document before leaving the origin, avoiding
+// form-action redirect blocking while retaining the nonce cookie and strict CSP.
+const {readFileSync}=await import('node:fs');const vm=await import('node:vm');
+const mainSource=readFileSync(new URL('../src/main.js',import.meta.url),'utf8');
+const branch=mainSource.match(/if\(url.pathname==='\/channel-connect'\)\{([\s\S]*?)\}if\(url.pathname==='\/channel-check'/);assert.ok(branch);
+let rendered;const testFlow={url:'https://id.twitch.tv/oauth2/authorize?client_id=test&scope=channel%3Aread%3Avips&state=fixture',cookie:'war_channel_oauth=fixture; Path=/oauth/callback; HttpOnly; Secure; SameSite=Lax'};
+vm.runInNewContext('(function(){'+branch[1]+'})();',{id:'all',channel:'war1ouss',channelConnections:{begin:()=>testFlow},escape:s=>String(s).replaceAll('&','&amp;').replaceAll('"','&quot;'),html:(status,body,headers)=>{rendered={status,body,headers}}});
+assert.equal(rendered.status,200);assert.match(rendered.body,/http-equiv="refresh"/);assert.match(rendered.body,/&amp;scope=/);assert.match(rendered.body,/Перейти в Twitch/);assert.equal(rendered.headers['Set-Cookie'],testFlow.cookie);
+assert.ok(mainSource.includes("form-action 'self'; base-uri 'none'"));console.log('PASS: OAuth document transition, fallback link, escaped URL, nonce cookie and unchanged form CSP');

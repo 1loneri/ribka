@@ -1655,3 +1655,7 @@ img[src*="/frame-thorn."]{filter:invert(1)}.equipped-avatar[data-equipped-frame=
 .case-demo[data-case-type]:not([data-case-type="subscriber"]) .case-demo-stage:is([data-phase="unsealing"],[data-phase="revealed"]) .case-demo-open-lid{transform:translateY(-12px) rotateX(-38deg)}
 @media(prefers-reduced-motion:reduce){.case-demo-open-lid{transition:none!important}}
 .case-demo[data-case-type]:not([data-case-type="subscriber"]) .case-demo-chest{perspective:none}
+.demo-w-coin{display:grid;place-items:center;width:56px;height:56px;border:2px solid #b7dcf4;border-radius:50%;font-size:29px;font-weight:800;color:#c9eaff;box-shadow:inset 0 0 12px #9dd7ff12,0 0 14px #9dd7ff12}
+.demo-symbol svg{width:60px;height:60px}.demo-symbol--vip{color:#e6a9d0}.demo-symbol--vp{color:#f2ce91;font-size:30px;font-weight:800}
+.demo-prize--w{border-bottom-color:#a5d7f2}.demo-prize--vip{border-bottom-color:#e6a9d0}.demo-prize--vp{border-bottom-color:#f2ce91}
+.case-demo-sample{height:176px;display:grid;place-items:center}.case-demo-sample .demo-symbol{height:140px;font-size:70px}.case-demo-sample .demo-symbol svg{width:110px;height:110px}.case-demo-sample .demo-w-coin{width:106px;height:106px;font-size:56px}.case-demo-sample>img{width:110px;height:150px;object-fit:contain}
