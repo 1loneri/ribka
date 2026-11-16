@@ -244,7 +244,7 @@ async function start(){
    if(self||!msg.trim())return;
    const login=String(tags.username||'').toLowerCase(),id=String(tags['user-id']||''),mid=String(tags.id||'');
    if(login===botLogin||!/^[a-z0-9_]{1,25}$/.test(login)||!/^\d+$/.test(id)||!mid||mid.length>200)return;
-   try{const now=Date.now();site.trackChat(id,login,now,tags);if(msg.trim().startsWith('!'))await handle(login,id,msg,mid,now);}catch(e){console.error('chat message:',e.message);}
+   try{const now=Date.now();site.trackChat(id,login,now,tags,msg);if(msg.trim().startsWith('!'))await handle(login,id,msg,mid,now);}catch(e){console.error('chat message:',e.message);}
   });
   await conn.connect();
  }catch(e){connected=false;console.error('Could not connect to Twitch:',e.message);}finally{starting=false;}

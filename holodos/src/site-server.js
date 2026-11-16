@@ -1,3 +1,4 @@
+import {shouldCountChatMessage} from './chat-statistics.js';
 import {createCaseCatalog} from './case-catalog.js';
 import {createCosmetics} from './cosmetics.js';
 import {createFrames} from './frames.js';
@@ -138,10 +139,12 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   const display=d.cans.map(i=>cans[i]);
   db.prepare('INSERT OR IGNORE INTO fridge_spins(request_id,player_id,login,cans_json,gain,description,source,created_at) VALUES(?,?,?,?,?,?,?,?)').run(requestId,id,login,JSON.stringify(display),d.gain,d.description,source,now);
  }
- function trackChat(id,login,now,tags={}){
+ function trackChat(id,login,now,tags={},message){
+  if(!shouldCountChatMessage(message))return false;
   db.prepare('INSERT INTO chat_stats(player_id,login,message_count,last_seen) VALUES(?,?,1,?) ON CONFLICT(player_id) DO UPDATE SET login=excluded.login,message_count=message_count+1,last_seen=excluded.last_seen').run(id,login,now);
   const badges=tags.badges||{};const safe={};for(const k of ['broadcaster','moderator','vip','subscriber','founder','premium'])if(badges[k])safe[k]=String(badges[k]).slice(0,12);
   db.prepare('UPDATE chat_stats SET badges_json=? WHERE player_id=?').run(JSON.stringify(safe),id);
+  return true;
  }
  async function oauthCallback(req,res,url,stateKey,meta){
   if(!meta||meta.type!=='site'||meta.until<Date.now())return send(res,403,'Авторизация истекла.','text/plain; charset=utf-8');

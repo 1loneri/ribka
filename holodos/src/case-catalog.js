@@ -3,7 +3,7 @@ import {frameCatalog,frameRarity} from './frames.js';
 import {cosmeticCatalog} from './cosmetics.js';
 import {duelCanCatalog} from './duel-visuals.js';
 const economy=JSON.parse(readFileSync(new URL('./economy-v1.1.json',import.meta.url),'utf8'));
-export const casePriceUnits={free:'Бесплатно',w:'W-монеты',points:'Баллы канала',messages:'Сообщения',subscriber:'За подписку',vip:'Для VIP-еров'};
+export const casePriceUnits={free:'Бесплатно',donation:'За донат',w:'W-монеты',points:'Баллы канала',messages:'Сообщения',subscriber:'За подписку',vip:'Для VIP-еров'};
 export const caseRewardOptions={};
 for(const amount of [50,100,250,500,1000,2000,3000,5000,8000,10000,15000])caseRewardOptions['w-'+amount]={label:amount.toLocaleString('ru-RU')+' W',kind:'W-монеты',symbol:'w'};
 for(const amount of [240,475,1000])caseRewardOptions['vp-'+amount]={label:amount+' VP',kind:'VP',symbol:'vp'};
@@ -24,7 +24,7 @@ export const defaultCases={
  coins:{title:'За W-монеты',category:'За валюту сайта',description:'Косметика и шанс получить 240 VP. За повторную косметику — 1 000 W.',priceAmount:5000,priceUnit:'w',rewards:exact([...cosmetics(economy.coins.cosmeticProbabilities),{id:'vp-240',weight:.1}])},
  subscriber:{title:'За подписку',category:'За подписку Twitch',description:'Каждый месяц подписки: уровень 1 даёт 1 кейс, уровень 2 даёт 2, уровень 3 даёт 3.',priceAmount:0,priceUnit:'subscriber',rewards:exact(cosmetics(economy.subscriber.probabilities))}
 };
-export function casePriceText(c){return ({free:'Бесплатно',subscriber:'1 / 2 / 3 кейса в месяц',vip:'Для VIP-еров'})[c.priceUnit]||c.priceAmount.toLocaleString('ru-RU')+' '+({w:'W',points:'баллов',messages:'сообщений'})[c.priceUnit];}
+export function casePriceText(c){return ({free:'Бесплатно',donation:'За донат',subscriber:'1 / 2 / 3 кейса в месяц',vip:'Для VIP-еров'})[c.priceUnit]||c.priceAmount.toLocaleString('ru-RU')+' '+({w:'W',points:'баллов',messages:'сообщений'})[c.priceUnit];}
 export function createCaseCatalog(db,transaction){
  db.exec(`CREATE TABLE IF NOT EXISTS case_settings(id TEXT PRIMARY KEY,config_json TEXT NOT NULL,revision INTEGER NOT NULL,updated_at INTEGER NOT NULL,updated_by TEXT NOT NULL);CREATE TABLE IF NOT EXISTS case_settings_audit(id INTEGER PRIMARY KEY AUTOINCREMENT,case_id TEXT NOT NULL,revision INTEGER NOT NULL,old_json TEXT NOT NULL,new_json TEXT NOT NULL,actor TEXT NOT NULL,created_at INTEGER NOT NULL);`);
  const fail=(message,status=400)=>{throw Object.assign(Error(message),{status});};
@@ -35,7 +35,7 @@ export function createCaseCatalog(db,transaction){
  if(!Object.hasOwn(casePriceUnits,priceUnit)||!Number.isSafeInteger(priceAmount)||priceAmount<0||priceAmount>10000000||!Number.isSafeInteger(revision)||revision<0)fail('Проверь цену и единицу стоимости.');
  const rewards=[];for(const key of form.keys())if(key.startsWith('reward_enabled_')){const rewardId=key.slice(15);if(!Object.hasOwn(caseRewardOptions,rewardId)||rewards.some(r=>r.id===rewardId))fail('Неизвестная или повторяющаяся награда.');const weight=Number(form.get('reward_weight_'+rewardId));if(!Number.isFinite(weight)||weight<=0||weight>100||Math.abs(weight-round(weight))>1e-9)fail('Шанс награды должен быть больше 0 и не больше 100%.');rewards.push({id:rewardId,weight});}
  if(!rewards.length||Math.abs(rewards.reduce((sum,r)=>sum+r.weight,0)-100)>1e-6)fail('Сумма шансов включённых наград должна быть 100%.');
- const value={title,description,category,priceUnit,priceAmount:['free','subscriber','vip'].includes(priceUnit)?0:priceAmount,rewards};
+ const value={title,description,category,priceUnit,priceAmount:['free','donation','subscriber','vip'].includes(priceUnit)?0:priceAmount,rewards};
  return transaction(()=>{const old=config(id);if(old.revision!==revision)fail('Кейс уже изменён другим администратором. Обнови страницу.',409);const next=revision+1,now=Date.now();db.prepare('INSERT INTO case_settings VALUES(?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET config_json=excluded.config_json,revision=excluded.revision,updated_at=excluded.updated_at,updated_by=excluded.updated_by').run(id,JSON.stringify(value),next,now,String(actor));db.prepare('INSERT INTO case_settings_audit(case_id,revision,old_json,new_json,actor,created_at) VALUES(?,?,?,?,?,?)').run(id,next,JSON.stringify(old),JSON.stringify(value),String(actor),now);return {ok:true,revision:next};});
  }
  return {list,save,rewardOptions:caseRewardOptions,priceUnits:casePriceUnits};

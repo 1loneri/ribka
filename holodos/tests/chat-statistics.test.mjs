@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';import {DatabaseSync} from 'node:sqlite';import {shouldCountChatMessage} from '../src/chat-statistics.js';import {createSite} from '../src/site-server.js';
+const excluded=['!холодос',' !баланс','\u200b!top','!command argument','/me привет','！холодос',')))',' ( ( ( ',':(',':-)', ';)',': ))','[]','（）', '', ' \t ', undefined];
+for(const message of excluded)assert.equal(shouldCountChatMessage(message),false,String(message));
+for(const message of ['Привет','привет)))','(я тут)','123','8','hey !command','你好','💙','👨‍👩‍👧'])assert.equal(shouldCountChatMessage(message),true,message);
+const db=new DatabaseSync(':memory:');const transaction=fn=>{db.exec('BEGIN');try{const r=fn();db.exec('COMMIT');return r}catch(e){db.exec('ROLLBACK');throw e}};
+db.exec('CREATE TABLE players(id TEXT PRIMARY KEY,login TEXT,balance INTEGER DEFAULT 0,opens INTEGER DEFAULT 0,wins INTEGER DEFAULT 0,jackpots INTEGER DEFAULT 0,last_opened INTEGER DEFAULT 0);CREATE TABLE shop_orders(id INTEGER,player_id TEXT,vp INTEGER,price INTEGER,status TEXT,created_at INTEGER);');
+const site=createSite({db,transaction,publicUrl:'https://example.test',app:()=>null,secret:'test',player:()=>null});
+for(const text of excluded)assert.equal(site.trackChat('1','alice',100,{badges:{vip:'1'}},text),false);
+assert.equal(db.prepare('SELECT count(*) n FROM chat_stats').get().n,0);
+site.trackChat('1','alice',200,{badges:{vip:'1'}},'Привет');site.trackChat('1','alice',300,{},'привет)))');
+for(const text of excluded)site.trackChat('1','alice',400,{},text);
+const row=db.prepare('SELECT * FROM chat_stats WHERE player_id=?').get('1');assert.equal(row.message_count,2);assert.equal(row.last_seen,300);
+console.log('PASS: commands and bracket faces excluded; normal text, text with brackets and emoji counted; stored profile/top counter unchanged by excluded messages');
