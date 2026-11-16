@@ -118,6 +118,9 @@ function renderCoinCase(){
  b.disabled=!logged||!p?.enabled||(!recover&&(!p.available||!me.spin_allowed));
  b.textContent=!logged?'Войди через Twitch':recover?'Проверить открытие':!p?.enabled?'Временно недоступен':!p.available?'Недостаточно W':'Открыть · '+fmt(p.cost)+' W';
  b.title=!logged?'Войди через Twitch':!me.spin_allowed?'Открытия доступны во время стрима':!p?.available?'На балансе '+fmt(me.player.balance)+' W':'При открытии спишется '+fmt(p.cost)+' W';
+ let info=$('coin-case-progress');if(!info){info=document.createElement('p');info.id='coin-case-progress';info.className='muted chat-case-progress';b.before(info);}
+ const balance=me?.player?.balance||0,missing=Math.max(0,(p?.cost||0)-balance);
+ info.textContent=!logged?'Войди через Twitch, чтобы увидеть баланс.':!p?.enabled?'Кейс временно недоступен.':fmt(balance)+' / '+fmt(p.cost)+' W · '+(missing?'Не хватает '+fmt(missing)+' W':'Доступно: '+fmt(p.available));
 }
 
 function renderPublic(){
