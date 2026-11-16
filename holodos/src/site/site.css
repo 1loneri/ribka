@@ -1646,9 +1646,9 @@ img[src*="/frame-thorn."]{filter:invert(1)}.equipped-avatar[data-equipped-frame=
 @media(max-width:1050px){.monster-frame-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:700px){.monster-frame-grid{grid-template-columns:1fr}}
 /* Preview triggers never submit an opening or spend a balance. */
-.case-open-button[data-case-preview]:not(:disabled){cursor:pointer;color:var(--case-accent);border-color:color-mix(in srgb,var(--case-accent) 40%,transparent);background:#ffffff05}
-.case-open-button[data-case-preview]:not(:disabled):hover{background:#ffffff0b}
-.case-open-button[data-case-preview]:focus-visible{outline:2px solid var(--case-accent);outline-offset:3px}
+.case-open-button:is([data-case-preview],[data-case-open],[data-case-purchase]):not(:disabled){cursor:pointer;color:var(--case-accent);border-color:color-mix(in srgb,var(--case-accent) 40%,transparent);background:#ffffff05}
+.case-open-button:is([data-case-preview],[data-case-open],[data-case-purchase]):not(:disabled):hover{background:#ffffff0b}
+.case-open-button:is([data-case-preview],[data-case-open],[data-case-purchase]):focus-visible{outline:2px solid var(--case-accent);outline-offset:3px}
 .case-demo[data-case-type]:not([data-case-type="subscriber"]) .case-demo-chest>.case-demo-open-body,.case-demo[data-case-type]:not([data-case-type="subscriber"]) .case-demo-chest>.case-demo-open-lid{left:0;top:0;bottom:auto;width:100%;height:100%;transform:none}
 .case-demo[data-case-type]:not([data-case-type="subscriber"]) .case-demo-open-body{clip-path:inset(53% 0 0)}
 .case-demo[data-case-type]:not([data-case-type="subscriber"]) .case-demo-chest>.case-demo-open-lid{clip-path:inset(0 0 47%);transform-origin:50% 53%}
@@ -1671,3 +1671,5 @@ img[src*="/frame-thorn."]{filter:invert(1)}.equipped-avatar[data-equipped-frame=
 .duel-stage-footer{display:flex;align-items:flex-start;gap:16px;margin-top:18px;padding-top:15px;border-top:1px solid #ffffff12}.duel-stage-footer>.duel-collection{flex:1;min-width:0;margin:0;padding:0;border:0}.duel-stage-footer>.duel-collection>summary{padding:14px 0}.duel-stage-footer>.game-sound-toggle{margin-left:auto}
 
 #chat-list .player-avatar{width:36px;height:36px;font-size:13px}@media(max-width:540px){#chat-list .player-avatar{width:32px;height:32px}}
+
+.player-extras{display:inline-flex;align-items:center;flex-wrap:wrap;gap:6px;min-width:0;margin-left:6px}.player-extras:empty{display:none}.player-extras :is(.chat-badge,.chat-title,.player-cosmetic-title){margin:0}.player-line:has(.player-extras){flex-wrap:wrap;column-gap:10px;row-gap:6px}.profile-name-line{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px}.profile-name-line .profile-equipped-title{display:inline-flex;align-items:center;margin:0}.profile-name-line+.profile-muted{display:block;margin-top:6px}a.case-open-button[data-case-purchase]{box-sizing:border-box;text-decoration:none;cursor:pointer}

@@ -1,3 +1,4 @@
+import {createDuelFees} from './duel-fees.js';
 import {renderBotCommands} from './bot-command-list.js';
 import {renderCaseEditor} from './case-admin.js';
 import {createChannelConnections} from './channel-connections.js';
@@ -53,6 +54,7 @@ async function refresh(){const old=current();if(!old)return null;const data=awai
 async function access(){const r=current();if(!r)return null;return r.expires_at<Date.now()+30*60*1000?refresh():r.access;}
 function transaction(fn){db.exec('BEGIN IMMEDIATE');try{const result=fn();db.exec('COMMIT');return result;}catch(e){db.exec('ROLLBACK');throw e;}}
 function seen(msg,now){return db.prepare('INSERT OR IGNORE INTO seen(message_id,created_at) VALUES(?,?)').run(msg,now).changes===1;}
+const duelFees=createDuelFees(db,transaction);
 function player(id,login){db.prepare('INSERT OR IGNORE INTO players(id,login) VALUES(?,?)').run(id,login);db.prepare('UPDATE players SET login=? WHERE id=? AND login<>?').run(login,id,login);return db.prepare('SELECT * FROM players WHERE id=?').get(id);}
 const regularCans=['⚪','🟢','🥭','🌸','🔵','⚫','🍉','🟡'];
 const cans=[...regularCans,'👑'];
@@ -149,6 +151,7 @@ function duelRespond(login,id,answer,mid,now){
   db.prepare('UPDATE players SET balance=balance-? WHERE id=?').run(d.wager,id);
   db.prepare('UPDATE players SET balance=balance+? WHERE id=?').run(pot-fee,winner);
   db.prepare("UPDATE duels SET status='accepted',resolved_at=?,opponent_id=?,winner_id=?,fee=? WHERE id=? AND status='pending'").run(now,id,winner,fee,d.id);
+  duelFees.record(d.id,now);
   return '💥 Банка @'+loserName+' взорвалась, он проиграл! Победил @'+winnerName+' — выигрыш '+(pot-fee).toLocaleString('ru-RU')+' W (банк '+pot.toLocaleString('ru-RU')+' W, комиссия '+fee.toLocaleString('ru-RU')+' W).';
  });
 }
@@ -450,7 +453,7 @@ const server=http.createServer(async(req,res)=>{
 });
 server.listen(port,'0.0.0.0',()=>console.log('Holodos panel listening on '+port+' for #'+channel));
 if(current()&&app())void start();
-const duelTimer=setInterval(()=>{try{expireDuels(Date.now(),true);}catch(e){console.error('Duel expiration:',e.message);}},5000);
+const duelTimer=setInterval(()=>{try{expireDuels(Date.now(),true);duelFees.settle(Date.now());}catch(e){console.error('Duel expiration:',e.message);}},5000);
 const heartbeat=setInterval(async()=>{if(ending||starting)return;try{if(!current()||!app())return;if(current().expires_at<Date.now()+30*60*1000){await refresh();await start();}else if(!connected)await start();db.prepare('DELETE FROM seen WHERE created_at<?').run(Date.now()-7*86400000);}catch(e){console.error('Twitch heartbeat:',e.message);}},60000);
 async function shutdown(){ending=true;clearInterval(heartbeat);clearInterval(duelTimer);await stop();server.close();db.close();}
 process.once('SIGINT',()=>void shutdown().then(()=>process.exit(0)));
