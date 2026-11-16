@@ -1673,3 +1673,5 @@ img[src*="/frame-thorn."]{filter:invert(1)}.equipped-avatar[data-equipped-frame=
 #chat-list .player-avatar{width:36px;height:36px;font-size:13px}@media(max-width:540px){#chat-list .player-avatar{width:32px;height:32px}}
 
 .player-extras{display:inline-flex;align-items:center;flex-wrap:wrap;gap:6px;min-width:0;margin-left:6px}.player-extras:empty{display:none}.player-extras :is(.chat-badge,.chat-title,.player-cosmetic-title){margin:0}.player-line:has(.player-extras){flex-wrap:wrap;column-gap:10px;row-gap:6px}.profile-name-line{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px}.profile-name-line .profile-equipped-title{display:inline-flex;align-items:center;margin:0}.profile-name-line+.profile-muted{display:block;margin-top:6px}a.case-open-button[data-case-purchase]{box-sizing:border-box;text-decoration:none;cursor:pointer}
+
+.case-purchase-actions{display:flex;gap:10px;align-items:stretch}.case-purchase-actions>.case-open-button{flex:1;min-width:0}.case-purchase-actions>[hidden]{display:none}
