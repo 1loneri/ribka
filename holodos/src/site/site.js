@@ -402,7 +402,7 @@ function renderNotificationBadges(){
  const accountUnread=Number(state.me?.notification_unread||0);
  const text=[unread?unread+' ответов поддержки':'',accountUnread?accountUnread+' уведомлений аккаунта':''].filter(Boolean).join('. ');
  for(const el of document.querySelectorAll('#avatar-link,.side-link[href="/profile"]')){el.classList.toggle('has-notice',!!text);el.dataset.notice=text?'•':'';if(text)el.title=text;else el.removeAttribute('title');}
- for(const el of document.querySelectorAll('.side-link[href="/casino"]')){el.classList.toggle('has-notice',ready);el.dataset.notice=ready?'•':'';el.title=ready?'Холодос готов':'Казино';}
+ for(const el of document.querySelectorAll('.side-link[href="/casino"]')){el.classList.toggle('has-notice',ready);el.dataset.notice=ready?'•':'';el.title=ready?'Холодос готов':'Холодос';}
  for(const el of document.querySelectorAll('.support-count'))el.textContent=unread?'('+unread+')':'';
 }
 async function refreshRequests(){
