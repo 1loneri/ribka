@@ -94,6 +94,7 @@ function duelCooldownTime(ms){
  return Math.floor(seconds/60)+' мин '+(seconds%60)+' сек.';
 }
 function duelFee(wager){
+ if(wager<30)return 0;
  const rate=wager<100?2:wager<500?5:wager<2000?8:12;
  return Math.floor(wager*2*rate/100);
 }
