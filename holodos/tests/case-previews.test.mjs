@@ -2,8 +2,8 @@ import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:asser
 const source=fs.readFileSync('holodos/src/site/site.js','utf8'),html=fs.readFileSync('holodos/src/site/index.html','utf8');
 const block=source.slice(source.indexOf('const caseDemo='),source.indexOf('function applyPlayerCosmetics'));
 const names=['donation','twitch','chat','vip','coins','subscriber'];
-assert.equal((html.match(/data-case-preview="/g)||[]).length,5);for(const name of names)assert.ok(html.includes((name==='chat'?'data-case-open="':'data-case-preview="')+name+'"'));
-assert.ok(block.includes("api('/api/cases/chat/open'"));
+assert.equal((html.match(/data-case-preview="/g)||[]).length,4);for(const name of names)assert.ok(html.includes((['chat','coins'].includes(name)?'data-case-open="':'data-case-preview="')+name+'"'));
+assert.ok(block.includes("api('/api/cases/'+caseDemoType+'/open'"));
 const nodes=new Map(),listeners={};function node(id){if(nodes.has(id))return nodes.get(id);const n={id,dataset:{},style:{},hidden:false,textContent:'',children:[],attrs:{},focus(){this.focused=true},setAttribute(k,v){this.attrs[k]=v},removeAttribute(k){delete this.attrs[k]},addEventListener(event,fn){listeners[id+':'+event]=fn},replaceChildren(){},querySelector(s){return node(s)},querySelectorAll(s){return s.split(',').map(x=>node(x))},showModal(){this.open=true},close(){this.open=false;listeners[id+':close']?.()}};nodes.set(id,n);return n;}
 const buttons=names.map(name=>{const b=node(name);b.dataset.casePreview=name;return b});node('case-demo-track').children=Array.from({length:30},(_,i)=>({offsetLeft:i*134,offsetWidth:124}));
 let admin=false,stops=0;const context={$:node,canUseAdminDemo:()=>admin,state:{me:{player:{avatar:''}}},safeAvatar:()=>'',esc:String,stopAllGameSound(){stops++},stopCaseIceSound(){},playIceStop(){},startCaseIceSound(){},clearTimeout,setTimeout,matchMedia:()=>({matches:true}),document:{querySelector:()=>node('chat-open'),querySelectorAll:()=>buttons,createElement:()=>node('new-image')},fmt:String,window:{addEventListener(){}}};vm.createContext(context);vm.runInContext(block,context);

@@ -414,7 +414,7 @@ const server=http.createServer(async(req,res)=>{
  }
  content+='</section><div class="admin-grid"><section class="admin-panel" id="economy"><h2>Экономика</h2><p class="admin-note">Текущие цены магазина. Уже созданные заявки сохраняют свою стоимость.</p>';
  for(const [vp,price] of Object.entries(SHOP_PRICES))content+='<div class="admin-row"><span>'+vp+' VP</span><b>'+number(price)+' W</b></div>';
- content+='<div class="admin-row"><span>Версия настроек</span><b>'+escape(ECONOMY.version)+'</b></div><div class="admin-row"><span>Кейсы</span><b>Кейс за сообщения активен</b></div><p><a class="link" href="/cases">Посмотреть коллекцию ↗</a></p></section>';
+ content+='<div class="admin-row"><span>Версия настроек</span><b>'+escape(ECONOMY.version)+'</b></div><div class="admin-row"><span>Кейсы</span><b>Кейсы за сообщения и W активны</b></div><p><a class="link" href="/cases">Посмотреть коллекцию ↗</a></p></section>';
  content+='<section class="admin-panel"><h2>Twitch-канал</h2><div class="admin-row"><span>Канал</span><b>#'+escape(channel)+'</b></div><div class="admin-row"><span>Аккаунт бота</span><b>@'+escape(linked?.login||botLogin)+'</b></div><div class="admin-row"><span>Подключение</span><b>'+(linked?'Авторизован':'Требуется вход')+'</b></div><p class="admin-note">Команды: !холодос · !баланс · !магазин · !заказ</p></section></div>';
  content+=renderCaseEditor(site.cases,csrf('case-settings'),escape);
  content+=site.chatCases.renderAdmin(escape,csrf('case-prizes'));

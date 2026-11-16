@@ -99,18 +99,25 @@ function applyCaseCatalog(catalog){for(const c of catalog){const card=document.q
 }
 async function refreshCases(){try{const r=await api('/api/cases');if(Array.isArray(r.cases))applyCaseCatalog(r.cases);}catch(error){console.warn('Не удалось обновить каталог кейсов:',error.message);}}
 
-function pendingChatKey(){return 'war1ouss-chat-case-request:'+state.me?.player?.id;}
-function pendingChatRequest(){try{return sessionStorage.getItem(pendingChatKey())||'';}catch{return '';}}
+function pendingCaseKey(type='chat'){return 'war1ouss-'+type+'-case-request:'+state.me?.player?.id;}
+function pendingCaseRequest(type='chat'){try{return sessionStorage.getItem(pendingCaseKey(type))||'';}catch{return '';}}
 function renderChatCase(){
  const button=document.querySelector('[data-case-open="chat"]');if(!button)return;
  const me=state.me,p=me?.chatCase,logged=me?.authenticated;
- const recover=logged&&!!pendingChatRequest();button.disabled=!logged||!p?.enabled||(!recover&&(!p.available||!me.spin_allowed));
+ const recover=logged&&!!pendingCaseRequest('chat');button.disabled=!logged||!p?.enabled||(!recover&&(!p.available||!me.spin_allowed));
  button.textContent=!logged?'Войди через Twitch':recover?'Проверить открытие':p?.available?'Открыть · '+fmt(p.available)+' доступно':'Копи сообщения';
  button.title=!logged?'Войди, чтобы увидеть свой прогресс':!p?.enabled?'Для этого кейса нужна стоимость в сообщениях':!me.spin_allowed?'Открытия доступны во время стрима':'Каждое открытие расходует '+fmt(p.threshold)+' учтённых сообщений';
  let info=$('chat-case-progress');if(!info){info=document.createElement('p');info.id='chat-case-progress';info.className='muted chat-case-progress';button.before(info);}
  info.textContent=!logged?'Прогресс сохраняется за твоим Twitch-аккаунтом.':!p?.enabled?'Кейс временно недоступен.':fmt(p.progress)+' / '+fmt(p.threshold)+' до следующего кейса · Доступно: '+fmt(p.available);
- let history=$('chat-case-history');if(!history){history=document.createElement('section');history.id='chat-case-history';history.className='panel chat-case-history';document.querySelector('.cases-collection').after(history);}
- history.hidden=!logged;history.innerHTML='<h2>Мои открытия кейса за сообщения</h2><div>'+((me?.caseHistory||[]).map(o=>'<p><strong>'+esc(o.reward.label)+'</strong><span>'+esc(o.claim_status==='fulfilled'?'Выдано':o.claim_status==='pending'?'Ожидает выдачи':'Начислено')+'</span><time>'+ruTime(o.created_at)+'</time></p>').join('')||'<p class="muted">Открытий пока нет.</p>')+'</div>';
+
+}
+
+
+function renderCoinCase(){
+ const b=document.querySelector('[data-case-open="coins"]');if(!b)return;const me=state.me,p=me?.coinCase,logged=me?.authenticated,recover=logged&&!!pendingCaseRequest('coins');
+ b.disabled=!logged||!p?.enabled||(!recover&&(!p.available||!me.spin_allowed));
+ b.textContent=!logged?'Войди через Twitch':recover?'Проверить открытие':!p?.enabled?'Временно недоступен':!p.available?'Недостаточно W':'Открыть · '+fmt(p.cost)+' W';
+ b.title=!logged?'Войди через Twitch':!me.spin_allowed?'Открытия доступны во время стрима':!p?.available?'На балансе '+fmt(me.player.balance)+' W':'При открытии спишется '+fmt(p.cost)+' W';
 }
 
 function renderPublic(){
@@ -141,6 +148,7 @@ function renderMe(){
  }
  for(const center of document.querySelectorAll('.frame-preview-center')){const url=logged?safeAvatar(me.player.avatar):'';if(url){const img=document.createElement('img');img.src=url;img.alt='';center.replaceChildren(img);}else center.textContent='W';}
  renderChatCase();
+ renderCoinCase();
  updateCooldown();
  renderProfile();
  const activeTitle=logged?me.cosmetics?.catalog?.title?.[me.cosmetics?.active?.title]:'';const profileName=document.querySelector('.profile-name');if(activeTitle&&profileName){const title=document.createElement('span');title.className='profile-equipped-title';title.textContent=activeTitle;profileName.after(title);}
@@ -166,6 +174,7 @@ function renderProfile(){
  $('profile-content').innerHTML='<div class="profile-bell-container"><a class="button button-ghost profile-requests-button" href="/requests" data-route="/requests">Запросы <span class="support-count"></span></a><button class="profile-notifications-button" type="button" data-account-notifications aria-label="Уведомления аккаунта">'+bellSvg+'<span class="account-unread-count">'+(me.notification_unread||'')+'</span></button></div><div class="profile-card">'+'<span class="profile-equipped-avatar">'+avatarHtml(p.login)+'</span>'+'<div><div class="profile-name">@'+esc(p.display_name||p.login)+'</div><span class="profile-muted">Аккаунт Twitch · W-монеты синхронизированы с чатом</span></div></div>'
   +'<div class="stats-grid"><div class="stat"><strong>'+fmt(p.balance)+'</strong><span>Баланс W</span></div><div class="stat"><strong>'+fmt(p.opens)+'</strong><span>Открытий</span></div><div class="stat"><strong>'+fmt(p.wins)+'</strong><span>Выигрышей</span></div><div class="stat"><strong>'+fmt(p.jackpots)+'</strong><span>Суперджекпотов</span></div></div>'
   +'<div class="stat"><strong>'+fmt(p.message_count)+'</strong><span>Сообщений в чате с начала учёта</span></div>'+ '<div class="profile-orders"><h3>Заявки магазина</h3>'+(orders.length?orders.map(o=>'<div class="history-item"><strong>№'+o.id+' · '+o.vp+' VP</strong><span>'+esc(o.status==='pending'?'Ожидает выдачи':o.status==='fulfilled'?'Выдано':'Отменено')+'</span><em>'+fmt(o.price)+' W</em><time>'+ruTime(o.created_at)+'</time></div>').join(''):'<p class="muted">Пока нет заявок. Оформить можно через команду !купить в чате.</p>')+'</div>'
+  +'<section class="chat-case-history" id="chat-case-history" aria-labelledby="case-history-heading"><h3 id="case-history-heading">Мои открытия</h3><div>'+((me.caseHistory||[]).map(o=>'<p><strong>'+esc(o.reward.label)+'</strong><small>'+esc(o.caseId==='coins'?'W-кейс':'За сообщения')+'</small><span>'+esc(o.claim_status==='fulfilled'?'Выдано':o.claim_status==='pending'?'Ожидает выдачи':'Начислено')+'</span><time>'+ruTime(o.created_at)+'</time></p>').join('')||'<p class="muted">Открытий пока нет.</p>')+'</div></section>'
   +frameInventoryHtml(me.frames,me.cosmetics)+'<button type="button" class="logout-btn" id="logout-btn">Выйти из профиля</button>';
  $('logout-btn').addEventListener('click',logout);
 }
@@ -528,7 +537,7 @@ function demoPrizeArt(p){
 function demoPrizeHtml(p){return '<div class="demo-prize demo-prize--'+(p.symbol||p.id)+'">'+demoPrizeArt(p)+'<strong>'+esc(p.label)+'</strong><small>'+esc(p.kind)+'</small></div>';}
 function renderDemoResult(){const p=caseDemoResult||casePreviewPools[caseDemoType][0],frame=p.frame||(['ultra','original','mango'].includes(p.id)?p.id:''),src=safeAvatar(state.me?.player?.avatar);caseDemoStage.querySelector('.case-demo-reward').innerHTML=(frame?'<div class="case-demo-avatar" data-demo-frame="'+esc(frame)+'"><span>'+(src?'<img src="'+esc(src)+'" alt="Твоя аватарка">':'W')+'</span><picture><img src="/assets/frame-'+esc(frame)+'.png?v=85" alt="'+esc(p.label)+'" width="176" height="176"></picture></div>':'<div class="case-demo-sample">'+demoPrizeArt(p)+'</div>')+'<h3>'+esc(p.label)+'</h3><p>'+esc(p.kind)+'</p>';}
 function buildDemoReel(){const pool=casePreviewPools[caseDemoType];caseDemoTrack.innerHTML=Array.from({length:30},(_,i)=>demoPrizeHtml(i===24?(caseDemoResult||pool[0]):pool[i%pool.length])).join('');renderDemoResult();}
-function resetCaseDemo(){stopAllGameSound();$('case-demo-odds').hidden=true;$('case-demo-odds-toggle').setAttribute('aria-expanded','false');clearTimeout(caseDemoLidTimer);caseDemoRun++;caseDemoAnimation?.cancel();caseDemoAnimation=null;caseDemoStage.dataset.phase='ready';caseDemoStage.querySelector('.case-demo-reward').setAttribute('aria-hidden','true');$('case-demo-start').hidden=false;for(const id of ['case-demo-skip','case-demo-again','case-demo-done'])$(id).hidden=true;$('case-demo-title').textContent='Прокрутка: '+casePreviewNames[caseDemoType];$('case-demo-caption').textContent=caseRealMode?'Открытие за '+fmt(state.me?.chatCase?.threshold)+' учтённых сообщений. W начисляются сразу; VP и VIP выдаёт администрация.':'Предпросмотр состава кейса. Награды не начисляются.';$('case-demo-start').textContent=caseRealMode?'Открыть кейс':'Открыть · демо';$('case-demo-status').textContent='';buildDemoReel();caseDemoTrack.style.transform='translateX(-732px)';}
+function resetCaseDemo(){stopAllGameSound();$('case-demo-odds').hidden=true;$('case-demo-odds-toggle').setAttribute('aria-expanded','false');clearTimeout(caseDemoLidTimer);caseDemoRun++;caseDemoAnimation?.cancel();caseDemoAnimation=null;caseDemoStage.dataset.phase='ready';caseDemoStage.querySelector('.case-demo-reward').setAttribute('aria-hidden','true');$('case-demo-start').hidden=false;for(const id of ['case-demo-skip','case-demo-again','case-demo-done'])$(id).hidden=true;$('case-demo-title').textContent='Прокрутка: '+casePreviewNames[caseDemoType];$('case-demo-caption').textContent=caseRealMode?(caseDemoType==='coins'?'Открытие за '+fmt(state.me?.coinCase?.cost)+' W. Повторная косметика — компенсация 1 000 W.':'Открытие за '+fmt(state.me?.chatCase?.threshold)+' учтённых сообщений. W начисляются сразу; VP и VIP выдаёт администрация.'):'Предпросмотр состава кейса. Награды не начисляются.';$('case-demo-start').textContent=caseRealMode?'Открыть кейс':'Открыть · демо';$('case-demo-status').textContent='';buildDemoReel();caseDemoTrack.style.transform='translateX(-732px)';}
 function revealCaseDemo(skip=false){stopCaseIceSound();clearTimeout(caseDemoLidTimer);caseDemoRun++;const run=caseDemoRun;caseDemoAnimation?.cancel();caseDemoAnimation=null;caseDemoTrack.style.transform='translateX('+caseDemoEnd+'px)';$('case-demo-skip').hidden=true;caseDemoStage.dataset.phase='unsealing';playIceStop(0);$('case-demo-caption').textContent='Кейс раскрывается…';const finish=()=>{if(run!==caseDemoRun||!caseDemo.open)return;caseDemoStage.dataset.phase='revealed';caseDemoStage.querySelector('.case-demo-reward').removeAttribute('aria-hidden');$('case-demo-title').textContent=caseDemoResult.label;$('case-demo-caption').textContent=caseRealMode?(caseDemoResult.note||(caseDemoResult.delivery==='manual'?'Приз сохранён. Заявка ожидает ручной выдачи администрацией.':'Награда начислена на твой аккаунт.')):'Пример результата анимации. Награда не выдана.';$('case-demo-again').hidden=caseRealMode;$('case-demo-done').hidden=false;$('case-demo-status').textContent=caseRealMode?'Получено: '+caseDemoResult.label: 'Демонстрация: '+caseDemoResult.label+'. Приз не выдаётся.';};if(skip||matchMedia('(prefers-reduced-motion: reduce)').matches)finish();else caseDemoLidTimer=setTimeout(finish,850);}
 
 async function startCaseDemo(){
@@ -536,18 +545,18 @@ async function startCaseDemo(){
  if(caseRealMode){
   if(!state.me?.authenticated)return;caseOpenPending=true;$('case-demo-start').disabled=true;$('case-demo-caption').textContent='Сохраняем открытие…';
   try{
-   const requestId=pendingChatRequest()||crypto.randomUUID();try{sessionStorage.setItem(pendingChatKey(),requestId);}catch{}
-   const result=await api('/api/cases/chat/open',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':state.me.csrf},body:JSON.stringify({requestId})});
-   caseDemoResult=result.reward;try{sessionStorage.removeItem(pendingChatKey());}catch{}
+   const requestId=pendingCaseRequest(caseDemoType)||crypto.randomUUID();try{sessionStorage.setItem(pendingCaseKey(caseDemoType),requestId);}catch{}
+   const result=await api('/api/cases/'+caseDemoType+'/open',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':state.me.csrf},body:JSON.stringify({requestId,...(caseDemoType==='coins'?{expectedCost:state.me.coinCase.cost}:{})})});
+   caseDemoResult=result.reward;try{sessionStorage.removeItem(pendingCaseKey(caseDemoType));}catch{}
    await refreshMe();if(!caseDemo.open)return;
-  }catch(error){if(error.status===400||error.status===409){try{sessionStorage.removeItem(pendingChatKey());}catch{}}notice(error.message);$('case-demo-caption').textContent=error.message;await refreshMe();return;}
+  }catch(error){if(error.status===400||error.status===409){try{sessionStorage.removeItem(pendingCaseKey(caseDemoType));}catch{}}notice(error.message);$('case-demo-caption').textContent=error.message;await refreshMe();return;}
   finally{caseOpenPending=false;$('case-demo-start').disabled=false;}
  }else{if(!canUseAdminDemo())return;const pool=casePreviewPools[caseDemoType];caseDemoResult=pool[Math.floor(Math.random()*pool.length)];}
  resetCaseDemo();const run=caseDemoRun;const cards=caseDemoTrack.children,start=-(cards[5].offsetLeft+cards[5].offsetWidth/2);caseDemoEnd=-(cards[24].offsetLeft+cards[24].offsetWidth/2);$('case-demo-start').hidden=true;$('case-demo-skip').hidden=false;$('case-demo-skip').focus();caseDemoStage.dataset.phase='opening';$('case-demo-caption').textContent='Лента замедляется. Награда остановится под указателем.';if(matchMedia('(prefers-reduced-motion: reduce)').matches){revealCaseDemo();return;}caseDemoAnimation=caseDemoTrack.animate([{transform:'translateX('+start+'px)'},{transform:'translateX('+caseDemoEnd+'px)'}],{duration:8000,easing:'cubic-bezier(.08,.55,.12,1)',fill:'forwards'});startCaseIceSound(caseDemoAnimation,Math.abs(caseDemoEnd-start),cards[0].offsetWidth+10);caseDemoAnimation.finished.then(()=>{if(run===caseDemoRun&&caseDemo.open)revealCaseDemo();}).catch(()=>{});}
 const casePreviewNames={donation:'Подарочный',twitch:'Баллы Twitch',chat:'За сообщения',vip:'VIP',coins:'За W-монеты',subscriber:'За подписку'};
 function openCasePreview(type='subscriber',trigger=$('case-demo-launch'),real=false){
  if(caseOpenPending||!Object.hasOwn(casePreviewNames,type))return;
- if(real){if(type!=='chat'||!state.me?.authenticated)return;}else if(!canUseAdminDemo())return;
+ if(real){if(!['chat','coins'].includes(type)||!state.me?.authenticated)return;}else if(!canUseAdminDemo())return;
  caseRealMode=real;
  caseDemoType=type;caseDemoResult=casePreviewPools[type][0];caseDemoTrigger=trigger;caseDemo.dataset.caseType=type;
  const art='/assets/case-'+type+'.webp';caseDemo.querySelector('.case-demo-closed').src=art;
@@ -559,7 +568,7 @@ function openCasePreview(type='subscriber',trigger=$('case-demo-launch'),real=fa
 }
 $('case-demo-launch').addEventListener('click',()=>openCasePreview());
 for(const button of document.querySelectorAll('[data-case-preview]'))button.addEventListener('click',()=>openCasePreview(button.dataset.casePreview,button));
-document.querySelector('[data-case-open="chat"]').addEventListener('click',event=>openCasePreview('chat',event.currentTarget,true));
+for(const button of document.querySelectorAll('[data-case-open]'))button.addEventListener('click',event=>openCasePreview(button.dataset.caseOpen,event.currentTarget,true));
 $('case-demo-start').addEventListener('click',startCaseDemo);$('case-demo-again').addEventListener('click',startCaseDemo);$('case-demo-skip').addEventListener('click',()=>revealCaseDemo(true));for(const id of ['case-demo-close','case-demo-done'])$(id).addEventListener('click',()=>caseDemo.close());caseDemo.addEventListener('close',()=>{resetCaseDemo();if(canUseAdminDemo())(caseDemoTrigger||$('case-demo-launch')).focus();});window.addEventListener('resize',()=>{if(caseDemo.open&&caseDemoStage.dataset.phase==='opening'){const card=caseDemoTrack.children[24];caseDemoEnd=-(card.offsetLeft+card.offsetWidth/2);revealCaseDemo();}});
 
 function applyPlayerCosmetics(avatar,look){const line=avatar.closest('.player-line');if(!line)return;line.dataset.nameStyle=['ice','rose','amber','white','aurora'].includes(look?.name_color)?look.name_color:'';let badge=line.querySelector('.player-cosmetic-title');if(look?.title){if(!badge){badge=document.createElement('span');badge.className='player-cosmetic-title';line.append(badge);}badge.textContent=look.title;}else badge?.remove();}
