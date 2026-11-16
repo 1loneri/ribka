@@ -1,3 +1,4 @@
+import {createCaseManagement} from './case-management.js';
 import {createVpShop} from './vp-shop.js';
 import {createManualVp} from './manual-vp.js';
 import {createVipShop} from './vip-shop.js';
@@ -69,6 +70,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  const manualVp=createManualVp(db,transaction,adminWallet.lookup);
  const vipShop=createVipShop(db,transaction);
  const chatCases=createChatCases({db,transaction,cases,player,vipStatus:id=>vipShop.status(id)});
+ const caseManagement=createCaseManagement(db,transaction,adminWallet.lookup,chatCases);
  const avatars=createAvatars(db,app,tokenRequest);
  db.prepare("DELETE FROM web_sessions WHERE expires_at<?").run(Date.now());
 
@@ -325,5 +327,5 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   }
   return false;
  }
- return {handle,oauthCallback,recordSpin,trackChat,isAdminRequest,cases,chatCases,adminWallet,vipShop,manualVp,vpShop,support,reviews,duelVisuals,frames,cosmetics,isAdminIdentity:isAdminSession,adminIdentity:req=>{const s=getSession(req);return s&&isAdminSession(s)?s:{player_id:'admin-panel',login:'Администратор'};}};
+ return {handle,oauthCallback,recordSpin,trackChat,isAdminRequest,cases,chatCases,adminWallet,vipShop,manualVp,vpShop,caseManagement,support,reviews,duelVisuals,frames,cosmetics,isAdminIdentity:isAdminSession,adminIdentity:req=>{const s=getSession(req);return s&&isAdminSession(s)?s:{player_id:'admin-panel',login:'Администратор'};}};
 }
