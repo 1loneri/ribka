@@ -332,6 +332,9 @@ const server=http.createServer(async(req,res)=>{
   res.writeHead(303,{Location:'/',"Cache-Control":"no-store",'Set-Cookie':cookieName+'=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0'});res.end();return;
  }
  if(req.method==='POST'){
+  if(url.pathname==='/case-prize-fulfill'){
+   try{const f=await formData(req);if(!validCsrf(f,'case-prizes')){html(403,'Форма устарела. Обнови страницу.');return;}site.chatCases.fulfill(f.get('claim_id'),site.adminIdentity(req).player_id);res.writeHead(303,{Location:'/admin#case-prizes','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Приз не отмечен</h2><p>'+escape(e.status?e.message:'Повтори попытку.')+'</p>');}return;
+  }
   if(url.pathname==='/case-save'){
    try{const form=await formData(req);if(!validCsrf(form,'case-settings')){html(403,'Форма устарела. Обнови страницу.');return;}site.cases.save(form,site.adminIdentity(req).player_id);res.writeHead(303,{Location:'/admin#cases-editor','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Кейс не сохранён</h2><p>'+escape(e.status?e.message:'Не удалось сохранить настройки. Повтори попытку.')+'</p><a href="/admin#cases-editor">Вернуться к редактору</a>');}return;
   }
@@ -411,9 +414,10 @@ const server=http.createServer(async(req,res)=>{
  }
  content+='</section><div class="admin-grid"><section class="admin-panel" id="economy"><h2>Экономика</h2><p class="admin-note">Текущие цены магазина. Уже созданные заявки сохраняют свою стоимость.</p>';
  for(const [vp,price] of Object.entries(SHOP_PRICES))content+='<div class="admin-row"><span>'+vp+' VP</span><b>'+number(price)+' W</b></div>';
- content+='<div class="admin-row"><span>Версия настроек</span><b>'+escape(ECONOMY.version)+'</b></div><div class="admin-row"><span>Кейсы</span><b>Открытия отключены</b></div><p><a class="link" href="/cases">Посмотреть коллекцию ↗</a></p></section>';
+ content+='<div class="admin-row"><span>Версия настроек</span><b>'+escape(ECONOMY.version)+'</b></div><div class="admin-row"><span>Кейсы</span><b>Кейс за сообщения активен</b></div><p><a class="link" href="/cases">Посмотреть коллекцию ↗</a></p></section>';
  content+='<section class="admin-panel"><h2>Twitch-канал</h2><div class="admin-row"><span>Канал</span><b>#'+escape(channel)+'</b></div><div class="admin-row"><span>Аккаунт бота</span><b>@'+escape(linked?.login||botLogin)+'</b></div><div class="admin-row"><span>Подключение</span><b>'+(linked?'Авторизован':'Требуется вход')+'</b></div><p class="admin-note">Команды: !холодос · !баланс · !магазин · !заказ</p></section></div>';
  content+=renderCaseEditor(site.cases,csrf('case-settings'),escape);
+ content+=site.chatCases.renderAdmin(escape,csrf('case-prizes'));
  content+=renderBotCommands(escape,duelsEnabled);
  const connections=channelConnections.list(),hasConnection=connections.some(c=>c.status!=='disconnected');
  content+='<section class="admin-panel" id="channel-connections"><h2>Баллы, подписки и VIP</h2><p class="admin-note">Одно подключение для трёх разделов. Подтверждает владелец канала @'+escape(channel)+'. Бот подключается отдельно.</p><div class="channel-unified-actions"><form method="post" action="/channel-connect"><input type="hidden" name="csrf" value="'+csrf('channel-connections')+'"><input type="hidden" name="feature" value="all"><button type="submit" '+(!a?'disabled':'')+'>'+(hasConnection?'Переподключить Twitch':'Подключить Twitch')+'</button></form>';

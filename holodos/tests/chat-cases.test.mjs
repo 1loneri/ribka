@@ -1,0 +1,46 @@
+import assert from 'node:assert/strict';
+import {DatabaseSync} from 'node:sqlite';
+import {createChatCases} from '../src/chat-cases.js';
+import {createCaseCatalog} from '../src/case-catalog.js';
+import {createSite} from '../src/site-server.js';
+import {createHash,randomUUID} from 'node:crypto';
+import {Readable} from 'node:stream';
+const db=new DatabaseSync(':memory:');
+db.exec(`CREATE TABLE players(id TEXT PRIMARY KEY,login TEXT,balance INTEGER DEFAULT 0,opens INTEGER DEFAULT 0,wins INTEGER DEFAULT 0,jackpots INTEGER DEFAULT 0,last_opened INTEGER DEFAULT 0);CREATE TABLE shop_orders(id INTEGER,player_id TEXT,vp INTEGER,price INTEGER,status TEXT,created_at INTEGER);`);
+const transaction=fn=>{db.exec('BEGIN IMMEDIATE');try{const r=fn();db.exec('COMMIT');return r;}catch(e){db.exec('ROLLBACK');throw e;}};
+const player=(id,login)=>{db.prepare('INSERT OR IGNORE INTO players(id,login) VALUES(?,?)').run(id,login);return db.prepare('SELECT * FROM players WHERE id=?').get(id);};
+let live=true;const site=createSite({db,transaction,player,publicUrl:'https://test.local',app:()=>null,secret:'fixture',streamStatus:{get:async()=>({live,known:true})}});
+const cases=createCaseCatalog(db,transaction);let ticket=0;
+const service=createChatCases({db,transaction,cases,player,random:n=>{assert.ok(ticket<n);return ticket;}});
+const alice={player_id:'1',login:'alice'},bob={player_id:'2',login:'bob'};
+for(let i=0;i<1501;i++)site.trackChat('1','alice',Date.now(),{id:'msg-'+i},'Привет');
+assert.equal(site.trackChat('1','alice',Date.now(),{id:'msg-1'},'Привет'),false);
+for(const msg of ['!холодос',')))','!баланс'])site.trackChat('1','alice',Date.now(),{id:msg},msg);
+assert.equal(service.progress('1').total,1501);assert.equal(service.progress('1').available,1);
+const first=service.open(alice,'first',true);assert.equal(first.reward.id,'w-100');assert.equal(player('1','alice').balance,100);assert.equal(service.progress('1').progress,1);
+assert.deepEqual(service.open(alice,'first',false).reward,first.reward);assert.equal(player('1','alice').balance,100);
+assert.throws(()=>service.open(bob,'first',true),/другому/);assert.throws(()=>service.open(alice,'second',true),/недостаточно/);
+function configure(reward,unit='messages',cost=1500){const c=cases.list().find(c=>c.id==='chat'),f=new URLSearchParams({case_id:'chat',revision:c.revision,title:c.title,description:c.description,category:c.category,price_unit:unit,price_amount:cost,['reward_enabled_'+reward]:'1',['reward_weight_'+reward]:'100'});cases.save(f,'test-admin');}
+const fund=()=>db.prepare('UPDATE chat_stats SET message_count=message_count+1500 WHERE player_id=?').run('1');
+configure('vp-240');fund();const vp=service.open(alice,'vp',true);assert.equal(vp.reward.delivery,'manual');assert.equal(db.prepare('SELECT COUNT(*) n FROM case_prize_claims').get().n,1);
+service.open(alice,'vp',true);assert.equal(db.prepare('SELECT COUNT(*) n FROM case_prize_claims').get().n,1);
+service.fulfill(1,'admin');service.fulfill(1,'admin');assert.equal(service.history('1')[0].claim_status,'fulfilled');
+configure('vip-month');fund();db.prepare("UPDATE chat_stats SET badges_json='{"+'"vip":"1"'+"}' WHERE player_id='1'").run();assert.equal(service.open(alice,'vip-existing',true).reward.id,'w-3000');
+db.prepare("UPDATE chat_stats SET badges_json='{}' WHERE player_id='1'").run();fund();assert.equal(service.open(alice,'vip-new',true).reward.id,'vip-month');fund();assert.equal(service.open(alice,'vip-pending',true).reward.id,'w-3000');
+configure('frame-thorn');fund();assert.equal(service.open(alice,'frame',true).reward.id,'frame-thorn');fund();assert.equal(service.open(alice,'duplicate-frame',true).reward.id,'w-1000');
+configure('w-50');fund();const balance=player('1','alice').balance,spent=service.progress('1').spent;
+db.exec("CREATE TRIGGER fail_case BEFORE INSERT ON case_openings BEGIN SELECT RAISE(ABORT,'test rollback'); END;");assert.throws(()=>service.open(alice,'rollback',true),/rollback/);assert.equal(player('1','alice').balance,balance);assert.equal(service.progress('1').spent,spent);db.exec('DROP TRIGGER fail_case');
+assert.throws(()=>service.open(alice,'offline',false),/во время стрима/);
+configure('w-50','free',0);assert.throws(()=>service.open(alice,'disabled',true),/недоступен/);configure('w-50');
+const restored=createChatCases({db,transaction,cases,player});assert.equal(restored.progress('1').spent,spent);assert.equal(restored.history('1').length,7);
+// Exercise the production HTTP handler: login, origin, CSRF, request ownership and replay.
+const token='a'.repeat(43),hash=createHash('sha256').update(token).digest('hex');db.prepare('INSERT INTO web_sessions VALUES(?,?,?,?,?,?,?)').run(hash,'1','alice','Alice','',Date.now()+60000,Date.now());
+async function call(path,body,headers={}){const req=Readable.from(body?[JSON.stringify(body)]:[]);req.method=body?'POST':'GET';req.headers={cookie:'war_session='+token,origin:'https://test.local','content-type':'application/json',...headers};let status,result;const res={writeHead(s){status=s;},end(s){result=JSON.parse(s);}};await site.handle(req,res,new URL(path,'https://test.local'));return {status,result};}
+const me=await call('/api/me');assert.equal(me.status,200);assert.equal(me.result.chatCase.available,1);
+const requestId=randomUUID();assert.equal((await call('/api/cases/chat/open',{requestId})).status,403);
+const headers={'x-csrf-token':me.result.csrf};assert.equal((await call('/api/cases/chat/open',{requestId},{...headers,origin:'https://evil.test'})).status,403);
+assert.equal((await call('/api/cases/chat/open',{requestId},{...headers,cookie:''})).status,401);
+let r=await call('/api/cases/chat/open',{requestId},headers);assert.equal(r.status,200);assert.equal(r.result.reward.id,'w-50');live=false;r=await call('/api/cases/chat/open',{requestId},headers);assert.equal(r.status,200);assert.equal(r.result.replayed,true);
+assert.equal((await call('/api/cases/chat/open',{requestId:randomUUID()},headers)).status,403);
+fund();db.prepare('INSERT INTO twitch_admin_accounts VALUES(?,?,?)').run('alice','1',Date.now());assert.equal((await call('/api/cases/chat/open',{requestId:randomUUID()},headers)).status,200);
+console.log('PASS: 1500 messages, exclusions/dedup, carry-over, server draw, W/cosmetic credits, duplicates, VP/VIP claims, VIP replacement, persistence, atomic rollback, offline restriction, authentication, CSRF and exactly-once replay');

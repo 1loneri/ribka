@@ -1,3 +1,4 @@
+import {createChatCases} from './chat-cases.js';
 import {shouldCountChatMessage} from './chat-statistics.js';
 import {createCaseCatalog} from './case-catalog.js';
 import {createCosmetics} from './cosmetics.js';
@@ -55,6 +56,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  db.exec("CREATE TABLE IF NOT EXISTS chat_stats(player_id TEXT PRIMARY KEY,login TEXT NOT NULL,message_count INTEGER NOT NULL DEFAULT 0,last_seen INTEGER NOT NULL DEFAULT 0);");
  if(!db.prepare('PRAGMA table_info(chat_stats)').all().some(c=>c.name==='badges_json'))db.exec("ALTER TABLE chat_stats ADD COLUMN badges_json TEXT NOT NULL DEFAULT '{}'");
  const notifications=createNotifications(db);
+ const chatCases=createChatCases({db,transaction,cases,player});
  const avatars=createAvatars(db,app,tokenRequest);
  db.prepare("DELETE FROM web_sessions WHERE expires_at<?").run(Date.now());
 
@@ -130,7 +132,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   if(!session)return {authenticated:false};
   const p=player(session.player_id,session.login);
   const orders=db.prepare('SELECT id,vp,price,status,created_at FROM shop_orders WHERE player_id=? ORDER BY id DESC LIMIT 10').all(session.player_id);
-  return {authenticated:true,is_admin:isAdminSession(session),stream,spin_allowed:isAdminSession(session)||stream?.live===true,support_unread:support.unread(session),notification_unread:notifications.unread(session),csrf:csrf(session),cosmetics:{...cosmetics.summary(p.id),duel_cans:db.prepare('SELECT can_id FROM duel_can_inventory WHERE player_id=? ORDER BY can_id').all(p.id).map(r=>({id:r.can_id,label:duelVisuals.catalog[r.can_id]})).filter(r=>r.label)},frames:{catalog:frames.catalog,rarity:frames.rarity,owned:frames.owned(p.id),active:frames.active(p.id)},player:{id:p.id,login:p.login,display_name:session.display_name,avatar:session.avatar,balance:p.balance,opens:p.opens,wins:p.wins,jackpots:p.jackpots,last_opened:p.last_opened,message_count:db.prepare('SELECT message_count FROM chat_stats WHERE player_id=?').get(session.player_id)?.message_count||0},orders};
+  return {authenticated:true,is_admin:isAdminSession(session),stream,spin_allowed:isAdminSession(session)||stream?.live===true,support_unread:support.unread(session),notification_unread:notifications.unread(session),csrf:csrf(session),chatCase:chatCases.progress(p.id),caseHistory:chatCases.history(p.id),cosmetics:{...cosmetics.summary(p.id),duel_cans:db.prepare('SELECT can_id FROM duel_can_inventory WHERE player_id=? ORDER BY can_id').all(p.id).map(r=>({id:r.can_id,label:duelVisuals.catalog[r.can_id]})).filter(r=>r.label)},frames:{catalog:frames.catalog,rarity:frames.rarity,owned:frames.owned(p.id),active:frames.active(p.id)},player:{id:p.id,login:p.login,display_name:session.display_name,avatar:session.avatar,balance:p.balance,opens:p.opens,wins:p.wins,jackpots:p.jackpots,last_opened:p.last_opened,message_count:db.prepare('SELECT message_count FROM chat_stats WHERE player_id=?').get(session.player_id)?.message_count||0},orders};
  }
  function spinsQuery(sql,...params){
   return db.prepare(sql).all(...params).map(x=>({login:x.login,cans:JSON.parse(x.cans_json),gain:x.gain,description:x.description,source:x.source,created_at:x.created_at}));
@@ -141,10 +143,13 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  }
  function trackChat(id,login,now,tags={},message){
   if(!shouldCountChatMessage(message))return false;
+  return transaction(()=>{
+  if(tags.id&&!db.prepare('INSERT OR IGNORE INTO chat_counted_messages VALUES(?,?)').run(String(tags.id),now).changes)return false;
   db.prepare('INSERT INTO chat_stats(player_id,login,message_count,last_seen) VALUES(?,?,1,?) ON CONFLICT(player_id) DO UPDATE SET login=excluded.login,message_count=message_count+1,last_seen=excluded.last_seen').run(id,login,now);
   const badges=tags.badges||{};const safe={};for(const k of ['broadcaster','moderator','vip','subscriber','founder','premium'])if(badges[k])safe[k]=String(badges[k]).slice(0,12);
   db.prepare('UPDATE chat_stats SET badges_json=? WHERE player_id=?').run(JSON.stringify(safe),id);
   return true;
+  });
  }
  async function oauthCallback(req,res,url,stateKey,meta){
   if(!meta||meta.type!=='site'||meta.until<Date.now())return send(res,403,'Авторизация истекла.','text/plain; charset=utf-8');
@@ -203,7 +208,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   }
   if(path.startsWith('/api/')){
    if(method==='GET'){
-    if(path==='/api/cases'){json(res,200,{cases:cases.list(),previewOnly:true});return true;}
+    if(path==='/api/cases'){json(res,200,{cases:cases.list(),previewOnly:false,activeCaseIds:['chat']});return true;}
     if(path==='/api/reviews'){const session=getSession(req);json(res,200,{reviews:reviews.list(),eligibleOrders:reviews.eligible(session)});return true;}
     if(path==='/api/frames'){json(res,200,{frames:frames.publicFrames((url.searchParams.get('logins')||'').toLowerCase().split(',')),cosmetics:cosmetics.publicLooks((url.searchParams.get('logins')||'').toLowerCase().split(','))});return true;}
     if(path==='/api/avatars'){const names=(url.searchParams.get('logins')||'').split(',').slice(0,50);json(res,200,{avatars:await avatars.get(names)});return true;}
@@ -239,6 +244,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
    if(!constantTime(String(req.headers['x-csrf-token']||''),csrf(session))){json(res,403,{error:'Сессия устарела. Обнови страницу.'});return true;}
    try{
     const data=await readJson(req);
+    if(path==='/api/cases/chat/open'){const rid=actionId(data),status=await streamStatus.get();json(res,200,chatCases.open(session,rid,isAdminSession(session)||status.live===true));return true;}
     if(path==='/api/cosmetics/equip'){json(res,200,cosmetics.equip(session.player_id,String(data.kind||''),String(data.item||'')));return true;}
     if(path==='/api/frames/equip'){json(res,200,frames.equip(session.player_id,String(data.frame||'')));return true;}
     if(path==='/api/reviews'){json(res,200,reviews.create(session,data));return true;}
@@ -299,5 +305,5 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   }
   return false;
  }
- return {handle,oauthCallback,recordSpin,trackChat,isAdminRequest,cases,support,reviews,duelVisuals,frames,cosmetics,isAdminIdentity:isAdminSession,adminIdentity:req=>{const s=getSession(req);return s&&isAdminSession(s)?s:{player_id:'admin-panel',login:'Администратор'};}};
+ return {handle,oauthCallback,recordSpin,trackChat,isAdminRequest,cases,chatCases,support,reviews,duelVisuals,frames,cosmetics,isAdminIdentity:isAdminSession,adminIdentity:req=>{const s=getSession(req);return s&&isAdminSession(s)?s:{player_id:'admin-panel',login:'Администратор'};}};
 }

@@ -1663,3 +1663,5 @@ img[src*="/frame-thorn."]{filter:invert(1)}.equipped-avatar[data-equipped-frame=
 .case-demo-avatar[data-demo-frame="thorn"] picture,.case-demo-avatar[data-demo-frame="thorn"] picture img{inset:-8.12px;width:192.25px;height:192.25px}
 .case-demo-avatar[data-demo-frame="assault"] picture,.case-demo-avatar[data-demo-frame="assault"] picture img{left:-3.75px;top:-5.94px;width:187.88px;height:187.88px}
 .case-demo-avatar[data-demo-frame]:is([data-demo-frame="thorn"],[data-demo-frame="assault"]) picture img{inset:0}
+
+.chat-case-progress{font-size:12px;line-height:1.6;margin:14px 0}.chat-case-history{margin:20px 0}.chat-case-history h2{font-size:20px}.chat-case-history>div{max-height:260px;overflow:auto}.chat-case-history p{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid #b9dbef20;font-size:13px}.chat-case-history p span{color:#9fbacc}.chat-case-history time{margin-left:auto;color:#8b9ca9;font-size:11px}
