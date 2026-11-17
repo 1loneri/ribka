@@ -1,3 +1,4 @@
+import {spinCreditText} from './debts.js';
 import {titlePreview} from './title-preview.js';
 import {createAdminPlayer} from './admin-player.js';
 import {adminSections} from './admin-sections.js';
@@ -215,9 +216,10 @@ async function handle(login,id,msg,mid,now){
   const p=player(id,login);
   if(now-p.last_opened<120000)return '@'+login+', холодос можно открыть через '+Math.ceil((120000-now+p.last_opened)/1000)+' сек.';
   const d=draw();
-  db.prepare('UPDATE players SET last_opened=?,balance=balance+?,opens=opens+1,wins=wins+?,jackpots=jackpots+? WHERE id=?').run(now,d.gain,Number(d.gain>0),Number(d.gain===400),id);
+  const credit=site.debts.creditSpin(id,d.gain,'chat:'+mid);
+  db.prepare('UPDATE players SET last_opened=?,opens=opens+1,wins=wins+?,jackpots=jackpots+? WHERE id=?').run(now,Number(d.gain>0),Number(d.gain===400),id);
   site.recordSpin(id,login,d,now,'chat:'+mid,'chat');
-  return '@'+login+' открыл холодос: '+d.cans.map(i=>cans[i]).join(' ')+' - '+d.description+' +'+d.gain+' W';
+  return '@'+login+' открыл холодос: '+d.cans.map(i=>cans[i]).join(' ')+' - '+d.description+' '+spinCreditText(credit);
  });
  else if(cmd==='!баланс')output=transaction(()=>seen(mid,now)?'@'+login+', у тебя '+player(id,login).balance.toLocaleString('ru-RU')+' W-монет.':null);
  else if(cmd==='!топмонет')output=transaction(()=>{

@@ -1,4 +1,4 @@
-import {createDebts} from './debts.js';
+import {createDebts,spinCreditText} from './debts.js';
 import {createExtensionAuth} from './extension-auth.js';
 import {createGiveaways} from './giveaways.js';
 import {createCustomAssets} from './custom-assets.js';
@@ -65,6 +65,9 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  assetFiles['/assets/frost-edge.webp']={file:new URL('./site/frost-edge.webp',import.meta.url),type:'image/webp'};
  assetFiles['/assets/Monocraft-LICENSE.txt']={file:new URL('./site/Monocraft-LICENSE.txt',import.meta.url),type:'text/plain; charset=utf-8'};
  for(const id of ['fogcat','chinese'])assetFiles['/assets/profile-'+id+'.webp']={file:new URL('./site/profile-'+id+'.webp',import.meta.url),type:'image/webp'};
+ assetFiles['/assets/sims-red-filter.svg']={file:new URL('./site/sims-red-filter.svg',import.meta.url),type:'image/svg+xml'};
+ assetFiles['/assets/profile-redangel.webp']={file:new URL('./site/profile-redangel.webp',import.meta.url),type:'image/webp'};
+ assetFiles['/assets/profile-accordions.js']={file:new URL('./site/profile-accordions.js',import.meta.url),type:'text/javascript; charset=utf-8'};
  assetFiles['/assets/cosmetic-gallery.js']={file:new URL('./site/cosmetic-gallery.js',import.meta.url),type:'text/javascript; charset=utf-8'};
  assetFiles['/assets/monocraft.woff']={file:new URL('./site/monocraft.woff',import.meta.url),type:'font/woff'};
  assetFiles['/assets/cosmetic-titles.css']={file:new URL('./site/cosmetic-titles.css',import.meta.url),type:'text/css; charset=utf-8'};
@@ -370,15 +373,16 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
       const previous=db.prepare('SELECT * FROM fridge_spins WHERE request_id=?').get('web:'+rid);
       if(previous){
        if(previous.player_id!==session.player_id)throw Error('Этот запрос принадлежит другому игроку');
-       return {cans:JSON.parse(previous.cans_json),gain:previous.gain,description:previous.description,balance:player(session.player_id,session.login).balance,last_opened:previous.created_at};
+       const credit=debts.spinCredit('web:'+rid,session.player_id);return {cans:JSON.parse(previous.cans_json),gain:previous.gain,description:previous.description,...(credit?{credit,creditText:spinCreditText(credit)}:{}),balance:player(session.player_id,session.login).balance,last_opened:previous.created_at};
       }
       const p=player(session.player_id,session.login);
       const left=120000-(now-p.last_opened);
       if(left>0)return {cooldown:Math.ceil(left/1000)};
       const d=draw();
-      db.prepare('UPDATE players SET last_opened=?,balance=balance+?,opens=opens+1,wins=wins+?,jackpots=jackpots+? WHERE id=?').run(now,d.gain,Number(d.gain>0),Number(d.gain===400),session.player_id);
+      const credit=debts.creditSpin(session.player_id,d.gain,'web:'+rid);
+      db.prepare('UPDATE players SET last_opened=?,opens=opens+1,wins=wins+?,jackpots=jackpots+? WHERE id=?').run(now,Number(d.gain>0),Number(d.gain===400),session.player_id);
       recordSpin(session.player_id,session.login,d,now,'web:'+rid,'web');
-      return {cans:d.cans.map(i=>cans[i]),gain:d.gain,description:d.description,balance:p.balance+d.gain,last_opened:now};
+      return {cans:d.cans.map(i=>cans[i]),gain:d.gain,description:d.description,credit,creditText:spinCreditText(credit),balance:credit.balance,last_opened:now};
      });
      if(outcome.cooldown){json(res,429,{error:'Холодос ещё охлаждается. Подожди '+outcome.cooldown+' сек.',remaining:outcome.cooldown});return true;}
      json(res,200,{ok:true,...outcome});return true;

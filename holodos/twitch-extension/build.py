@@ -9,7 +9,7 @@ with zipfile.ZipFile(site/'twitch-panel.zip','w',zipfile.ZIP_DEFLATED) as z:
  z.writestr('panel.css',(root/'panel.css').read_text()+'\n'+(site/'cosmetic-titles.css').read_text().replace('/assets/monocraft.woff','media/monocraft.woff'))
  z.write(site/'monocraft.woff','media/monocraft.woff')
  z.write(site/'Monocraft-LICENSE.txt','media/Monocraft-LICENSE.txt')
- for name in ['profile-fogcat.webp','profile-chinese.webp']:z.write(site/name,'media/'+name)
+ for name in ['profile-fogcat.webp','profile-chinese.webp','profile-redangel.webp','sims-red-filter.svg']:z.write(site/name,'media/'+name)
  for name in names:
   im=Image.open(site/name);data=io.BytesIO()
   if name.startswith('case-'):im.thumbnail((512,384))

@@ -304,7 +304,7 @@ async function spin(){
    setTimeout(()=>container.classList.remove('container-freeze'),2100);
    setTimeout(()=>reelFrame.classList.remove('freeze-flash'),1450);
   }
-  $('spin-result').textContent=result.description+' +'+fmt(result.gain)+' W';
+  $('spin-result').textContent=result.description+' '+(result.creditText||'+'+fmt(result.gain)+' W');
   if(result.gain>0)$('spin-result').classList.add('win');
   state.me.player.balance=result.balance;state.me.player.last_opened=result.last_opened;state.me.player.opens++;state.me.player.wins+=result.gain>0?1:0;state.me.player.jackpots+=result.gain===400?1:0;
   renderMe();await Promise.all([refreshPublic(),refreshSpins()]);
