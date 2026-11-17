@@ -1976,3 +1976,10 @@ dialog.player-popover[data-profile="cat"]{overflow:visible;max-height:calc(100dv
 @keyframes caseRewardSpark{0%,100%{opacity:0;transform:translateY(3px) scale(.4)}35%{opacity:1;transform:translateY(-3px) scale(1)}75%{opacity:0;transform:translateY(-8px) scale(.5)}}
 @media(max-width:540px){.duel-fighters{width:100%;grid-template-columns:minmax(0,1fr) 30px minmax(0,1fr);gap:8px}.duel-stage-panel .duel-can-catalog{grid-template-columns:repeat(auto-fill,minmax(78px,1fr))}}
 @media(prefers-reduced-motion:reduce){.reward-glow--case::before,.reward-glow--case::after{animation:none;opacity:.65}}
+
+/* The same wallet capsule as home, placed above Twitch points. */
+.side-wallet-row:has(#side-balance){display:none}
+.side-navigation.expanded .side-wallets>.side-wallet-pill{display:inline-flex;width:max-content;max-width:100%;align-self:start;justify-self:start;margin:0;min-height:0;padding:8px 13px;border-radius:24px;font-size:14px;border-color:#555b61;background:rgba(19,21,24,.72);color:#eceef0}
+.side-navigation.expanded .side-wallet-pill .side-wallet-amount{font:inherit}
+.side-navigation:not(.expanded):not(.fully-hidden)>.side-wallet-pill{margin-top:-8px;align-self:center;flex:none}
+.side-navigation.fully-hidden>.side-wallet-pill{top:64px}
