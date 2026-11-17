@@ -1709,7 +1709,7 @@ img[src*="/frame-thorn."]{filter:invert(1)}.equipped-avatar[data-equipped-frame=
 .equipped-avatar[data-equipped-frame="clove"]::after{background-image:url('/assets/frame-clove.png?v=106')}
 .duel-fighter[data-can="white"] img{filter:drop-shadow(0 0 8px #fff9) drop-shadow(0 0 18px #d8f7ff66)}
 .player-popover{color:#e9f2f7;background:#10161c;border:1px solid #a4cee94d;border-radius:18px;padding:24px;width:min(420px,calc(100vw - 36px));box-shadow:0 20px 80px #000a}.player-popover::backdrop{background:#03070dbb;backdrop-filter:blur(4px)}.player-popover>[data-close-player]{float:right;min-height:32px;padding:4px 11px}.player-popover .profile-card{clear:both;gap:18px;margin-top:15px}.player-popover h2{font-size:23px}.mini-player-stats p{display:flex;justify-content:space-between;gap:20px}.player-popover .profile-equipped-avatar .player-avatar{width:64px;height:64px}
-:is(#profile-content,.player-popover)[data-profile]{position:relative;isolation:isolate;overflow:hidden;transition:background .3s}
+#profile-content[data-profile]{position:relative;isolation:isolate;overflow:hidden;transition:background .3s}
 :is(#profile-content,.player-popover)[data-profile="ice"]{background:#0a1a26}
 :is(#profile-content,.player-popover)[data-profile="rose"]{background:linear-gradient(130deg,#2b1a26,#11151a)}
 :is(#profile-content,.player-popover)[data-profile="aurora"],.profile-card[data-profile="aurora"]{background:linear-gradient(125deg,#142e37,#30263b,#17302c)}
@@ -1927,3 +1927,8 @@ main{view-transition-name:none}
 .frame-preview:has(img[src*="/frame-clove."]) picture img{width:202.8px;height:202.8px}
 :is(#profile-content,.player-popover)[data-profile="cat"]::after{left:-48px;top:-48px}
 @media(max-width:540px){.player-popover{padding:20px 16px}.player-popover .profile-card{gap:14px;padding:18px 0 14px}.player-popover .profile-equipped-avatar{margin:8px 12px}.player-popover .profile-card h2{font-size:22px}}
+
+/* Public profiles live in the viewport, not at the end of the document. */
+dialog.player-popover{position:fixed;inset:0;margin:auto;max-height:calc(100dvh - 48px);overflow-y:auto;overscroll-behavior:contain}
+dialog.player-popover[data-profile="cat"]{overflow:visible;max-height:calc(100dvh - 80px)}
+:is(.case-history-row,.rank-item,.win-item,.history-item) .player-line{cursor:pointer}
