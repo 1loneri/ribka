@@ -50,7 +50,7 @@ function renderRoute(path,replace=false){
  document.body.classList.toggle('inner-page',path!=='/');
  document.querySelectorAll('.side-link[data-route]').forEach(el=>{el.classList.toggle('active',el.getAttribute('href')===path);if(el.getAttribute('href')===path)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});
  applySidebarMode(sidebarMode);
- const titles={'/':'Главная','/casino':'Холодос','/cases':'Кейсы','/duels':'Дуэли','/top':'Топ игроков','/chat':'Топ чата','/profile':'Профиль','/shop':'Магазин','/help':'Помощь','/requests':'Запросы'};
+ const titles={'/':'Главная','/casino':'Холодос','/cases':'Кейсы','/duels':'Дуэли','/top':'Топ игроков','/chat':'Топ чата','/profile':'Профиль','/shop':'Магазин','/help':'Помощь','/requests':'Запросы','/giveaways':'Розыгрыши','/giveaways/manage':'Пульт розыгрышей'};
  document.title=(titles[path]||'Главная')+' — War1ouss';
  if(path==='/top')refreshTop();
  if(path==='/chat')refreshChatTop();
@@ -100,7 +100,7 @@ function renderChatCase(){
  const button=document.querySelector('[data-case-open="chat"]');if(!button)return;
  const me=state.me,p=me?.chatCase,logged=me?.authenticated;
  const recover=logged&&!!pendingCaseRequest('chat');button.disabled=!logged||!p?.enabled||(!recover&&(!p.available||!me.spin_allowed));
- button.textContent=!logged?'Войди через Twitch':recover?'Проверить открытие':p?.available?'Открыть · '+fmt(p.available)+' доступно':'Копи сообщения';
+ button.innerHTML=!logged?'Войди через Twitch':recover?'Проверить открытие':p?.available?'Открыть<span class="case-button-count">'+fmt(p.available)+'</span>':'Копи сообщения';
  button.title=!logged?'Войди, чтобы увидеть свой прогресс':!p?.enabled?'Для этого кейса нужна стоимость в сообщениях':!me.spin_allowed?'Открытия доступны во время стрима':'Каждое открытие расходует '+fmt(p.threshold)+' учтённых сообщений';
  let info=$('chat-case-progress');if(!info){info=document.createElement('p');info.id='chat-case-progress';info.className='muted chat-case-progress';button.before(info);}
  info.textContent=!logged?'Прогресс сохраняется за твоим Twitch-аккаунтом.':!p?.enabled?'Кейс временно недоступен.':fmt(p.progress)+' / '+fmt(p.threshold)+' до следующего кейса · Доступно: '+fmt(p.available);
@@ -122,7 +122,7 @@ function renderCoinCase(){
 function renderDonationCase(){
  const b=$('donation-case-spin');if(!b)return;const me=state.me,p=me?.donationCase,recover=me?.authenticated&&!!pendingCaseRequest('donation');
  b.hidden=!me?.authenticated||(!p?.available&&!recover);b.disabled=!me?.authenticated||(!recover&&(!p?.available||!me.spin_allowed));
- b.textContent=recover?'Проверить открытие':'Крутить · '+fmt(p?.available);
+ b.innerHTML=recover?'Проверить открытие':'Крутить<span class="case-button-count">'+fmt(p?.available)+'</span>';
  b.title=!me?.spin_allowed?'Открытия доступны во время стрима':'Доступно подтверждённых кейсов: '+fmt(p?.available);
 }
 
