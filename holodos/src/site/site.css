@@ -1795,3 +1795,7 @@ main{view-transition-name:none}
 .notify-toggle,.profile-notifications-button{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;padding:0;line-height:1;vertical-align:middle}
 .notify-toggle svg,.profile-notifications-button svg{display:block;flex:none;margin:0;align-self:center}
 .casino-header-tools .notify-toggle{display:inline-flex;align-items:center;justify-content:center;padding:0}
+
+/* Title particles must be anchored to the title, including inventory previews. */
+[data-title]{position:relative;isolation:isolate;display:inline-flex;align-items:center}
+[data-title="chmonya"]{clip-path:inset(-24px -8px -4px)}
