@@ -1877,16 +1877,10 @@ main{view-transition-name:none}
 #side-navigation.expanded .side-utilities>:is(.snow-toggle,.watch-stream-side){width:96px}
 #side-navigation .side-utilities>[hidden],.side-navigation.fully-hidden .side-utilities{display:none!important}
 .side-navigation:not(.expanded) .side-utilities .watch-stream-side span{display:none}
-body[data-snow-effect="on"] :is(.wallet,.side-wallet-row:has(#side-balance)){border:1px solid #c3eaff77;border-radius:12px;background:linear-gradient(135deg,#bcecff20,#102638b3);box-shadow:0 0 14px #c2eaff22,inset 0 2px 0 #e5f7ff77;color:#e7f7ff}
-body[data-snow-effect="on"] .side-wallet-row:has(#side-balance){padding:10px}
-body[data-snow-effect="on"] :is(.wallet,.side-wallet-row:has(#side-balance))::before{content:'❄';color:#d7f2ff;font-size:12px;pointer-events:none}
-body[data-snow-effect="on"] .side-wallet-row:has(#side-balance)>span{color:#cee6f4}
 @media(prefers-reduced-motion:reduce){:is(#profile-content,.player-popover)[data-profile="rain"]{animation:none}}
 
 :is(#profile-content,.player-popover)[data-profile="rain"]{background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22130%22%20height%3D%22120%22%20viewBox%3D%220%200%20130%20120%22%3E%3Cg%20stroke%3D%22%238bcaff%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M15%203l-3%2011%20M60%2024l-4%2015%20M104%207l-2%208%20M36%2076l-3%2012%20M116%2083l-4%2016%22%20opacity%3D%22.35%22%2F%3E%3Cpath%20d%3D%22M81%2067l-3%2012%20M7%20102l-2%208%20M123%2047l-3%2010%22%20opacity%3D%22.18%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");background-size:130px 120px;animation:profileRainStrokes 2s linear infinite}
 @keyframes profileRainStrokes{from{background-position:0 -120px}to{background-position:-30px 120px}}
-body[data-snow-effect="on"] .side-wallet-row:has(#side-balance){position:relative;padding-left:29px}
-body[data-snow-effect="on"] .side-wallet-row:has(#side-balance)::before{position:absolute;left:9px;top:50%;transform:translateY(-50%)}
 @media(prefers-reduced-motion:reduce){:is(#profile-content,.player-popover)[data-profile="rain"]{animation:none}}
 
 /* Public cosmetic row highlights, shared by rankings and opening history. */
@@ -1903,3 +1897,19 @@ body[data-snow-effect="on"] .side-wallet-row:has(#side-balance)::before{position
 
 .equipped-avatar[data-equipped-frame=""]::after{content:none}
 .snow-toggle[hidden]{display:none!important}
+
+/* The compact header avatar must never inherit intrinsic image dimensions. */
+.topbar .top-equipped-avatar{width:32px;height:32px;min-width:32px;max-width:32px;flex:0 0 32px;line-height:0}
+.topbar .top-equipped-avatar>img{display:block;width:32px;height:32px;max-width:32px;object-fit:cover;border-radius:50%}
+.topbar .avatar-link{min-width:0;flex-shrink:0;max-width:220px}
+.topbar .avatar-link:has([data-equipped-frame]:not([data-equipped-frame=""])){gap:15px;padding-left:12px;min-height:46px}
+/* Leave a small clear gap between Clove's wings and the circular avatar. */
+.equipped-avatar[data-equipped-frame="clove"]::after{inset:auto;left:-35%;top:-35%;width:170%;height:170%;background-size:contain}
+.frame-preview:has(img[src*="/frame-clove."]) picture{left:-30.5px;top:-30.5px;width:221px;height:221px}
+.frame-preview:has(img[src*="/frame-clove."]) picture img{width:221px;height:221px}
+/* The pet sits above the top-left edge; its mouth meets the profile border. */
+:is(#profile-content,.player-popover)[data-profile="cat"]{overflow:visible}
+:is(#profile-content,.player-popover)[data-profile="cat"]::after{top:-48px;left:-8px;right:auto;bottom:auto;width:100px;height:100px;z-index:4}
+/* Slower rain on a translucent, blue glass panel. */
+:is(#profile-content,.player-popover)[data-profile="rain"]{background-color:#10283b78;border-color:#8ebbd64d;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:inset 0 1px 0 #e2f4ff12,0 16px 45px #0003;--profile-surface:#18354b66;--profile-border:#5d89a16b;animation-duration:6s}
+@media(prefers-reduced-motion:reduce){:is(#profile-content,.player-popover)[data-profile="rain"]{animation:none}}
