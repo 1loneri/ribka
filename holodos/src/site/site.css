@@ -2018,10 +2018,10 @@ body.inner-page:has(.view.active[data-view^="/giveaways"]) main{max-width:1760px
 .frame-preview-card:has(img[src*="/frame-cats."]){padding-top:80px}.frame-preview-card:has(img[src*="/frame-cats."]) h3{margin-top:68px}
 
 /* All preview frames now use the same avatar coordinate system as equipped frames. */
-.equipped-avatar[data-equipped-frame="cats"]::after{inset:-22.5%;width:145%;height:145%}
+.equipped-avatar[data-equipped-frame="cats"]::after{inset:-18%;width:136%;height:136%}
 .equipped-avatar[data-equipped-frame="hat"]::after{inset:auto;left:-55%;top:-104%;width:210%;height:210%}
 .equipped-avatar[data-equipped-frame="angel"]::after{inset:-25%;width:150%;height:150%;background-image:url('/assets/frame-angel.png');background-size:contain;z-index:3}
-.equipped-avatar[data-equipped-frame="sims-green"]::after,.equipped-avatar[data-equipped-frame="sims-red"]::after{inset:auto;left:24%;top:-41%;width:52%;height:52%;background-image:url('/assets/frame-sims-green.png');background-size:contain;z-index:3}
+.equipped-avatar[data-equipped-frame="sims-green"]::after,.equipped-avatar[data-equipped-frame="sims-red"]::after{inset:auto;left:24%;top:-33%;width:52%;height:52%;background-image:url('/assets/frame-sims-green.png');background-size:contain;z-index:3}
 .equipped-avatar[data-equipped-frame="sims-red"]::after,img[src*="frame-sims-red."]{filter:url('/assets/sims-red-filter.svg#red')}
 :is(#profile-content,.player-popover,.cosmetic-profile-preview)[data-profile="fogcat"]{--profile-accent:#303c58;--profile-surface:#ffffffb8;--profile-border:#7f8aa04d;--profile-muted:#57647c;background-color:#e6e7ef;background-image:url('/assets/profile-fogcat.webp');background-repeat:no-repeat;background-position:right bottom;background-size:100% auto;color:#303c58}
 :is(#profile-content,.player-popover,.cosmetic-profile-preview)[data-profile="chinese"]{--profile-accent:#ffe6d6;--profile-surface:#240708d4;--profile-border:#dc7b6c66;--profile-muted:#e5b7ac;background:#941c1d url('/assets/profile-chinese.webp') center/cover no-repeat;color:#ffebe2}
