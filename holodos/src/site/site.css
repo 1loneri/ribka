@@ -1704,9 +1704,9 @@ img[src*="/frame-thorn."]{filter:invert(1)}.equipped-avatar[data-equipped-frame=
 @keyframes boarShimmer{to{background-position:350% 0}}
 [data-title="tester"]{color:#d7d0f1;border-color:#aea0da55}
 .equipped-avatar[data-equipped-frame="ears"]::after,.equipped-avatar[data-equipped-frame="jett"]::after,.equipped-avatar[data-equipped-frame="clove"]::after{inset:-18%;width:136%;height:136%;background-size:contain;background-position:center;background-repeat:no-repeat;z-index:3}
-.equipped-avatar[data-equipped-frame="ears"]::after{background-image:url('/assets/frame-ears.svg')}
-.equipped-avatar[data-equipped-frame="jett"]::after{background-image:url('/assets/frame-jett.svg')}
-.equipped-avatar[data-equipped-frame="clove"]::after{background-image:url('/assets/frame-clove.svg')}
+.equipped-avatar[data-equipped-frame="ears"]::after{background-image:url('/assets/frame-ears.png?v=106')}
+.equipped-avatar[data-equipped-frame="jett"]::after{background-image:url('/assets/frame-jett.png?v=106')}
+.equipped-avatar[data-equipped-frame="clove"]::after{background-image:url('/assets/frame-clove.png?v=106')}
 .duel-fighter[data-can="white"] img{filter:drop-shadow(0 0 8px #fff9) drop-shadow(0 0 18px #d8f7ff66)}
 .player-popover{color:#e9f2f7;background:#10161c;border:1px solid #a4cee94d;border-radius:18px;padding:24px;width:min(420px,calc(100vw - 36px));box-shadow:0 20px 80px #000a}.player-popover::backdrop{background:#03070dbb;backdrop-filter:blur(4px)}.player-popover>[data-close-player]{float:right;min-height:32px;padding:4px 11px}.player-popover .profile-card{clear:both;gap:18px;margin-top:15px}.player-popover h2{font-size:23px}.mini-player-stats p{display:flex;justify-content:space-between;gap:20px}.player-popover .profile-equipped-avatar .player-avatar{width:64px;height:64px}
 #profile-content[data-profile]{position:relative;isolation:isolate;overflow:hidden;transition:background .3s}

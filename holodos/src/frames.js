@@ -1,4 +1,4 @@
-export const frameCatalog={ultra:'Ultra Frost',original:'Original Splash',mango:'Mango Loco',thorn:'White Thorns',assault:'Assault Tribal',ears:'Ушки',jett:'Jett Knives',clove:'Clove Smoke'};
+export const frameCatalog={ultra:'Ultra Frost',original:'Original Splash',mango:'Mango Loco',thorn:'White Thorns',assault:'Assault Tribal',ears:'Кошачья с колокольчиком',jett:'Готические глаза',clove:'Перламутровые бабочки'};
 export const frameRarity={original:{label:'Обычная',weight:50},mango:{label:'Редкая',weight:25},assault:{label:'Эпическая',weight:15},ultra:{label:'Легендарная',weight:9},thorn:{label:'Самая редкая',weight:1},ears:{label:'Редкая',weight:8},jett:{label:'Эпическая',weight:5},clove:{label:'Эпическая',weight:5}};
 export function createFrames(db,transaction){
  db.exec("CREATE TABLE IF NOT EXISTS frame_inventory(player_id TEXT NOT NULL,frame_id TEXT NOT NULL,granted_by TEXT NOT NULL,created_at INTEGER NOT NULL,PRIMARY KEY(player_id,frame_id));");
