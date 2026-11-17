@@ -41,6 +41,9 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  const sitePages=new Set(['/','/casino','/cases','/duels','/top','/chat','/shop','/profile','/help','/requests','/widget','/giveaways','/giveaways/manage']);
  const assetFiles={
  '/assets/privacy.css':{file:new URL('./site/privacy.css',import.meta.url),type:'text/css; charset=utf-8'},
+ '/assets/giveaway-operator-atlas.webp':{file:new URL('./site/giveaway-operator-atlas.webp',import.meta.url),type:'image/webp'},
+ '/assets/giveaway-operator.webm':{file:new URL('./site/giveaway-operator.webm',import.meta.url),type:'video/webm'},
+ '/assets/giveaway-operator-preview.mp4':{file:new URL('./site/giveaway-operator-preview.mp4',import.meta.url),type:'video/mp4'},
  '/assets/giveaway-fridge-fixed.webp':{file:new URL('./site/giveaway-fridge-fixed.webp',import.meta.url),type:'image/webp'},
  '/assets/giveaway-fridge.webp':{file:new URL('./site/giveaway-fridge.webp',import.meta.url),type:'image/webp'},
  '/assets/giveaways.js':{file:new URL('./site/giveaways.js',import.meta.url),type:'text/javascript; charset=utf-8'},
