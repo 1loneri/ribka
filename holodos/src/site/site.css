@@ -1957,3 +1957,22 @@ dialog.player-popover[data-profile="cat"]{overflow:visible;max-height:calc(100dv
 .monster-frame-grid .frame-preview-card{padding:30px 12px 20px;display:flex;flex-direction:column;align-items:center;gap:0}
 .monster-frame-grid .frame-preview-card h3{margin:28px 0 0;min-height:36px;display:flex;align-items:center;justify-content:center;font-size:13px}
 .monster-frame-grid .frame-preview-card .frame-rarity{margin-top:4px}
+
+/* Compact collection and symmetric arena positions. */
+.duel-fighters{width:min(720px,100%);margin:0 auto;justify-items:center;grid-template-columns:minmax(0,1fr) 48px minmax(0,1fr)}
+.duel-fighters>.duel-fighter{justify-self:center;width:100%;max-width:240px;align-items:center}
+.duel-fighter>.player-line{justify-content:center;flex-wrap:wrap;gap:8px;font-size:11px}
+.duel-stage-panel .duel-can-catalog{grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:8px;margin:12px 0}
+.duel-stage-panel .duel-can-catalog figure{padding:9px 5px;gap:6px;border-radius:10px}
+.duel-stage-panel .duel-can-catalog img{height:72px;width:38px}
+.duel-stage-panel .duel-can-catalog figcaption{font-size:9px;line-height:1.4;min-height:25px;margin-top:2px}
+.duel-stage-panel .duel-can-catalog button{font-size:10px;min-height:28px;padding:5px 8px;border-radius:7px}
+.duel-stage-panel .duel-collection>.muted{font-size:11px;line-height:1.5}
+:is(#profile-content,.player-popover)[data-profile="cat"]::after{left:-52px;top:-44px}
+/* Purchased-case opening reward: bright white glow with local sparks. */
+.reward-glow--case{position:relative;isolation:isolate;display:inline-block;color:#fff!important;border-color:#effaff99!important;background:#f0f8ff0c!important;text-shadow:0 0 5px #fff,0 0 13px #dcefffbb;box-shadow:0 0 13px #f0f8ff30}
+.reward-glow--case::before,.reward-glow--case::after{content:'✧';position:absolute;color:#fff;pointer-events:none;font-size:10px;line-height:1;filter:drop-shadow(0 0 3px #fff);animation:caseRewardSpark 2.8s ease-in-out infinite}
+.reward-glow--case::before{left:5%;top:-5px}.reward-glow--case::after{right:7%;bottom:-4px;animation-delay:1.3s}
+@keyframes caseRewardSpark{0%,100%{opacity:0;transform:translateY(3px) scale(.4)}35%{opacity:1;transform:translateY(-3px) scale(1)}75%{opacity:0;transform:translateY(-8px) scale(.5)}}
+@media(max-width:540px){.duel-fighters{width:100%;grid-template-columns:minmax(0,1fr) 30px minmax(0,1fr);gap:8px}.duel-stage-panel .duel-can-catalog{grid-template-columns:repeat(auto-fill,minmax(78px,1fr))}}
+@media(prefers-reduced-motion:reduce){.reward-glow--case::before,.reward-glow--case::after{animation:none;opacity:.65}}
