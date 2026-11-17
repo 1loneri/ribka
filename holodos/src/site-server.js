@@ -39,6 +39,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  const siteKey=createHash('sha256').update('war1ouss-web:'+secret).digest();
  const sitePages=new Set(['/','/casino','/cases','/duels','/top','/chat','/shop','/profile','/help','/requests','/widget','/giveaways','/giveaways/manage']);
  const assetFiles={
+ '/assets/giveaway-fridge.webp':{file:new URL('./site/giveaway-fridge.webp',import.meta.url),type:'image/webp'},
  '/assets/giveaways.js':{file:new URL('./site/giveaways.js',import.meta.url),type:'text/javascript; charset=utf-8'},
  '/assets/twitch-panel.zip':{file:new URL('./site/twitch-panel.zip',import.meta.url),type:'application/zip'},
   '/assets/site.css':{file:new URL('./site/site.css',import.meta.url),type:'text/css; charset=utf-8'},
