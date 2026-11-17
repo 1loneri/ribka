@@ -1,3 +1,4 @@
+import {createExtensionAuth} from './extension-auth.js';
 import {createGiveaways} from './giveaways.js';
 import {createCustomAssets} from './custom-assets.js';
 import {createFeatureControl} from './feature-control.js';
@@ -89,11 +90,14 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  const twitchRewards=createTwitchRewards({db,transaction,connections:channelConnections,tickets,controls});
  const vpShop=createVpShop(db,transaction,secret);
  let giveawayToken='',giveawayTokenUntil=0;
- const giveaways=createGiveaways({db,transaction,duelVisuals,verifyUsers:async ids=>{
-  if(!app())throw Error('Twitch не подключён');
+ async function lookupTwitchUsers(ids=[],login=''){
+  if(!app())throw Object.assign(Error('Twitch пока не подключён.'),{status:503});
   if(!giveawayToken||Date.now()>giveawayTokenUntil){const t=await tokenRequest({grant_type:'client_credentials'});giveawayToken=t.access_token;giveawayTokenUntil=Date.now()+(Number(t.expires_in)-60)*1000;}
-  const users=[];for(let i=0;i<ids.length;i+=100){const q=new URLSearchParams();ids.slice(i,i+100).forEach(id=>q.append('id',id));const r=await fetch('https://api.twitch.tv/helix/users?'+q,{headers:{Authorization:'Bearer '+giveawayToken,'Client-Id':app().id},signal:AbortSignal.timeout(8000)});if(!r.ok){giveawayTokenUntil=0;throw Error('Twitch недоступен');}users.push(...(await r.json()).data);}return users;
- }});
+  const users=[];for(let i=0;i<Math.max(1,ids.length);i+=100){const q=new URLSearchParams();ids.slice(i,i+100).forEach(id=>q.append('id',id));if(login)q.set('login',login);if(!q.size)return [];const r=await fetch('https://api.twitch.tv/helix/users?'+q,{headers:{Authorization:'Bearer '+giveawayToken,'Client-Id':app().id},signal:AbortSignal.timeout(8000)});if(!r.ok){giveawayTokenUntil=0;throw Object.assign(Error('Twitch временно недоступен.'),{status:503});}users.push(...(await r.json()).data);}return users;
+ }
+ const giveaways=createGiveaways({db,transaction,duelVisuals,profileUrl:new URL('/profile',publicUrl).href,verifyUsers:lookupTwitchUsers});
+ const extensionAuth=createExtensionAuth({db,key:siteKey,lookupUsers:lookupTwitchUsers,channel});
+ const responseCors=new WeakMap();
  const manualVp=createManualVp(db,transaction,adminWallet.lookup);
  const vipShop=createVipShop(db,transaction);
  const chatCases=createChatCases({db,transaction,cases,player,vipStatus:id=>vipShop.status(id),tickets,controls});
@@ -112,7 +116,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   'Content-Security-Policy':"default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://static-cdn.jtvnw.net; connect-src 'self'; media-src 'self'; form-action 'self'; base-uri 'none'; frame-src 'self' https://player.twitch.tv; frame-ancestors 'none'"
  };
  function send(res,status,body,type='application/json; charset=utf-8',headers={}){
-  res.writeHead(status,{...securityHeaders,'Content-Type':type,'Cache-Control':'no-store',...headers});
+  res.writeHead(status,{...securityHeaders,...responseCors.get(res),'Content-Type':type,'Cache-Control':'no-store',...headers});
   res.end(body);
  }
  function json(res,status,data,headers={}){
@@ -129,6 +133,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   return x.length===y.length&&timingSafeEqual(x,y);
  }
  function getSession(req){
+  if(extensionAuth.has(req))return extensionAuth.session(req);
   const token=cookie(req,'war_session');
   if(!/^[A-Za-z0-9_-]{40,60}$/.test(token))return null;
   const row=db.prepare("SELECT * FROM web_sessions WHERE token_hash=? AND expires_at>?").get(hash(token),Date.now());
@@ -138,6 +143,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   return createHmac('sha256',siteKey).update('csrf:site:'+session.token_hash).digest('base64url');
  }
  function sameOrigin(req){
+  if(extensionAuth.has(req))return true;
   const origin=String(req.headers.origin||'');
   const expected=new URL(publicUrl).origin;
   return origin===expected&&(!req.headers['sec-fetch-site']||req.headers['sec-fetch-site']==='same-origin');
@@ -174,7 +180,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   if(!session)return {authenticated:false};
   const p=player(session.player_id,session.login);
   const orders=db.prepare('SELECT id,vp,price,status,created_at FROM shop_orders WHERE player_id=? ORDER BY id DESC LIMIT 10').all(session.player_id);
-  return {authenticated:true,is_admin:isAdminSession(session),stream,spin_allowed:isAdminSession(session)||stream?.live===true,support_unread:support.unread(session),notification_unread:notifications.unread(session),csrf:csrf(session),chatCase:chatCases.progress(p.id),coinCase:chatCases.coinStatus(p.id),donationCase:chatCases.purchases.status(p.id),entitlements:tickets.status(p.id),memberships:twitchRewards.eligibility(p.id),features:Object.fromEntries(controls.list().map(f=>[f.key,f.enabled])),vipShop:vipShop.status(p.id),vipOrders:vipShop.orders(p.id),manualVp:manualVp.list(p.id),vpCodes:vpShop.list(p.id),caseHistory:chatCases.history(p.id),cosmetics:{...cosmetics.summary(p.id),duel_can:duelVisuals.current(p.id,p.login),duel_cans:db.prepare('SELECT can_id FROM duel_can_inventory WHERE player_id=? ORDER BY can_id').all(p.id).map(r=>({id:r.can_id,label:duelVisuals.catalog[r.can_id],src:canArt(r.can_id)})).filter(r=>r.label)},frames:{catalog:frames.catalog,rarity:frames.rarity,owned:frames.owned(p.id),active:frames.active(p.id)},player:{id:p.id,login:p.login,display_name:session.display_name,avatar:session.avatar,balance:p.balance,opens:p.opens,wins:p.wins,jackpots:p.jackpots,last_opened:p.last_opened,message_count:db.prepare('SELECT message_count FROM chat_stats WHERE player_id=?').get(session.player_id)?.message_count||0},orders};
+  return {authenticated:true,is_admin:isAdminSession(session),stream,spin_allowed:isAdminSession(session)||stream?.live===true,support_unread:support.unread(session),notification_unread:notifications.unread(session),csrf:csrf(session),chatCase:chatCases.progress(p.id),coinCase:chatCases.coinStatus(p.id),donationCase:chatCases.purchases.status(p.id),entitlements:tickets.status(p.id),memberships:twitchRewards.eligibility(p.id),features:Object.fromEntries(controls.list().map(f=>[f.key,f.enabled])),vipShop:vipShop.status(p.id),vipOrders:vipShop.orders(p.id),manualVp:manualVp.list(p.id),vpCodes:vpShop.list(p.id),caseHistory:chatCases.history(p.id),giveawayPrizes:giveaways.claims.forPlayer(p.id),cosmetics:{...cosmetics.summary(p.id),duel_can:duelVisuals.current(p.id,p.login),duel_cans:db.prepare('SELECT can_id FROM duel_can_inventory WHERE player_id=? ORDER BY can_id').all(p.id).map(r=>({id:r.can_id,label:duelVisuals.catalog[r.can_id],src:canArt(r.can_id)})).filter(r=>r.label)},frames:{catalog:frames.catalog,rarity:frames.rarity,owned:frames.owned(p.id),active:frames.active(p.id)},player:{id:p.id,login:p.login,display_name:session.display_name,avatar:session.avatar,balance:p.balance,opens:p.opens,wins:p.wins,jackpots:p.jackpots,last_opened:p.last_opened,message_count:db.prepare('SELECT message_count FROM chat_stats WHERE player_id=?').get(session.player_id)?.message_count||0},orders};
  }
  function spinsQuery(sql,...params){
   return db.prepare(sql).all(...params).map(x=>({login:x.login,cans:JSON.parse(x.cans_json),gain:x.gain,description:x.description,source:x.source,created_at:x.created_at}));
@@ -184,6 +190,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   db.prepare('INSERT OR IGNORE INTO fridge_spins(request_id,player_id,login,cans_json,gain,description,source,created_at) VALUES(?,?,?,?,?,?,?,?)').run(requestId,id,login,JSON.stringify(display),d.gain,d.description,source,now);
  }
  function trackChat(id,login,now,tags={},message){
+  if(String(message||'').trim())giveaways.claims.confirm(id,Number(tags['tmi-sent-ts'])||now);
   if(giveaways.matchesCommand(message))try{giveaways.join(id,login);}catch{}
   if(!shouldCountChatMessage(message))return false;
   return transaction(()=>{
@@ -232,6 +239,16 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  }
  async function handle(req,res,url){
   const path=url.pathname,method=req.method||'GET';
+  if(path==='/api/extension/catalog'&&method==='GET'){json(res,200,{cases:publicCases(),extensionReady:extensionAuth.settings().configured},{'Access-Control-Allow-Origin':'*'});return true;}
+  const origin=String(req.headers.origin||'');
+  if(path.startsWith('/api/')&&(/^https:\/\/[a-z0-9]+\.ext-twitch\.tv$/.test(origin)||req.headers['x-extension-jwt'])){
+   const cors=extensionAuth.cors(origin);if(!cors){json(res,extensionAuth.settings().configured?403:503,{error:extensionAuth.settings().configured?'Недопустимый источник расширения.':'Вход в панель пока настраивается владельцем.'},/^https:\/\/[a-z0-9]+\.ext-twitch\.tv$/.test(origin)?{'Access-Control-Allow-Origin':origin,'Vary':'Origin'}:{});return true;}responseCors.set(res,cors);
+   const allowedGet=new Set(['/api/me','/api/cases','/api/spins','/api/notifications','/api/frames','/api/giveaways']);
+   const allowedPost=new Set(['/api/holodos','/api/cases/chat/open','/api/cases/coins/open','/api/cases/donation/open','/api/cases/twitch/open','/api/cases/vip/open','/api/cases/subscriber/open','/api/cosmetics/equip','/api/frames/equip','/api/duels/equip','/api/notifications/read']);
+   if(method==='OPTIONS'){send(res,204,'');return true;}
+   if(!(method==='GET'&&allowedGet.has(path)||method==='POST'&&allowedPost.has(path))){json(res,403,{error:'Действие недоступно в панели.'});return true;}
+   try{await extensionAuth.attach(req);}catch(e){json(res,e.status||503,{error:e.status?e.message:'Не удалось проверить сессию Twitch.'});return true;}
+  }
   if(path.startsWith('/api/cosmetic-assets/')&&(method==='GET'||method==='HEAD')){const id=path.split('/').pop();if(!/^custom_[a-f0-9]{16}$/.test(id))return false;const media=uploads.media(id);if(!media){send(res,404,'Файл недоступен.','text/plain; charset=utf-8');return true;}send(res,200,method==='HEAD'?'':media.data,media.mime,media.mime.startsWith('text/html')?{'X-Frame-Options':'SAMEORIGIN','Content-Security-Policy':"sandbox; default-src 'none'; style-src 'unsafe-inline'; img-src data:; frame-ancestors 'self'; base-uri 'none'; form-action 'none'"}:{});return true;}
   if(path in staticAssets){
    if(method!=='GET'&&method!=='HEAD')return json(res,405,{error:'Метод не поддерживается'}),true;
@@ -381,5 +398,5 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   }
   return false;
  }
- return {handle,oauthCallback,recordSpin,trackChat,isAdminRequest,cases,chatCases,adminWallet,vipShop,manualVp,vpShop,caseManagement,uploads,controls,twitchRewards,support,reviews,duelVisuals,frames,cosmetics,isAdminIdentity:isAdminSession,adminIdentity:req=>{const s=getSession(req);return s&&isAdminSession(s)?s:{player_id:'admin-panel',login:'Администратор'};}};
+ return {handle,oauthCallback,recordSpin,trackChat,isAdminRequest,cases,chatCases,adminWallet,vipShop,manualVp,vpShop,caseManagement,uploads,controls,twitchRewards,support,reviews,duelVisuals,giveaways,extensionAuth,frames,cosmetics,isAdminIdentity:isAdminSession,adminIdentity:req=>{const s=getSession(req);return s&&isAdminSession(s)?s:{player_id:'admin-panel',login:'Администратор'};}};
 }

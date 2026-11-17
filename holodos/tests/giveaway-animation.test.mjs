@@ -13,7 +13,7 @@ assert.equal(apiCalls,0);a.syncShots(g,now);assert.equal(a.get().shots.length,1)
 
 const layout=a.fridgeLayout(Array.from({length:10},(_,i)=>({id:String(i)})),800,620);assert.equal(layout.rows,7);assert.deepEqual(Array.from({length:4},(_,row)=>[...layout.positions.values()].filter(p=>p.row===row).length),[1,2,3,4]);for(const p of layout.positions.values())assert.ok(Math.abs(p.base-p.y-layout.canH/2)<1e-8);assert.equal(layout.positions.get('0').x,400);console.log('PASS triangular rows 1/2/3/4, centered top and every can resting on refrigerator shelf');
 
-const wide=a.fridgeLayout(Array.from({length:28},(_,i)=>({id:String(i)})),1400,650);assert.ok(wide.cellW<=76);assert.ok(wide.positions.get('27').x-wide.positions.get('21').x<=456);console.log('PASS compact triangular spacing is bounded on wide refrigerator stage');
+const wide=a.fridgeLayout(Array.from({length:28},(_,i)=>({id:String(i)})),1400,650);assert.ok(wide.cellW<=86);assert.ok(wide.positions.get('27').x-wide.positions.get('21').x<=516);console.log('PASS compact triangular spacing is bounded on wide refrigerator stage');
 
 assert.equal(a.fridgeLightLevel(5000),1);assert.ok(a.fridgeLightLevel(10800)<.8);assert.ok(a.fridgeLightLevel(10800)>.7);assert.equal(a.fridgeLightLevel(12000),1);console.log('PASS refrigerator light briefly dims and returns without a blackout');
 

@@ -8,7 +8,7 @@ renderMe=function(){originalRenderMe();paintEntitlements();paintCaseSwitches();p
 const originalHydrate=hydrateAvatars;
 hydrateAvatars=async function(root){await originalHydrate(root);paintOwnRows();paintTitles();};
 const originalProfile=renderProfile;
-renderProfile=function(){originalProfile();paintCosmeticEffects();paintTitles();};
+renderProfile=function(){originalProfile();paintCosmeticEffects();paintTitles();paintGiveawayPrizes();};
 const originalLooks=applyPlayerCosmetics;
 applyPlayerCosmetics=function(avatar,look){originalLooks(avatar,look);const row=avatar.closest('.rank-item,.win-item,.history-item,.case-history-row');if(row)row.dataset.highlight=look?.highlight||'';paintTitles();};
 function paintTitles(){const titles={'чмоня':'chmonya','дуэльный':'duelist','нищий':'poor','скрытопульный':'sneaky','кабанчик':'boar','тестер':'tester'};for(const n of document.querySelectorAll('.player-cosmetic-title,.profile-equipped-title,.cosmetic-choice span'))n.dataset.title=titles[n.textContent.trim().toLocaleLowerCase('ru-RU')]||'';}
@@ -96,3 +96,5 @@ $('duel-target')?.addEventListener('input',()=>{
  clearTimeout(duelEnemyTimer);duelEnemyAbort?.abort();const sequence=++duelEnemyRequest,login=$('duel-target').value.trim().replace(/^@/,'').toLowerCase();
  duelEnemyTimer=setTimeout(async()=>{if(!/^[a-z0-9_]{1,25}$/.test(login)){duelEnemyCan=null;duelEnemyLogin='';paintDuelCanArena();return;}const cached=duelEnemyCanCache.get(login);if(cached&&Date.now()-cached.at<30000){duelEnemyCan=cached.can;duelEnemyLogin=login;paintDuelCanArena();return;}const controller=new AbortController();duelEnemyAbort=controller;try{const result=await api('/api/duels/can?login='+encodeURIComponent(login),{signal:controller.signal});if(sequence!==duelEnemyRequest||controller.signal.aborted)return;duelEnemyCanCache.set(login,{can:result.can,at:Date.now()});if(duelEnemyCanCache.size>50)duelEnemyCanCache.delete(duelEnemyCanCache.keys().next().value);duelEnemyCan=result.can;duelEnemyLogin=login;paintDuelCanArena();}catch{}},450);
 });
+
+function paintGiveawayPrizes(){const host=$('profile-content'),rows=state.me?.giveawayPrizes||[];if(!host||!state.me?.authenticated||!rows.length)return;const section=document.createElement('section');section.className='panel profile-giveaway-prizes';section.innerHTML='<h3>Мои розыгрыши</h3>'+rows.map(g=>{const status=g.status==='expired'?'Время подтверждения истекло':g.status==='rejected'?'Аккаунту Twitch меньше недели':g.resolution==='issued'?'Выдано':g.resolution==='denied'?'Не выдано':g.status==='confirmed'?'Победа подтверждена, ожидает выдачи':g.status==='announced'?'Подтверди победу любым сообщением в Twitch-чате в течение 60 секунд':'Ожидаем сообщение бота';return '<p class="history-item"><strong>'+fmt(g.vp)+' VP</strong><span>'+esc(status)+'</span></p>'}).join('');host.append(section);}
