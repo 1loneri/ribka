@@ -2000,3 +2000,6 @@ body.inner-page:has(.view.active[data-view^="/giveaways"]) main{max-width:1760px
 .giveaway-canvas{width:80%;max-width:980px;margin-inline:auto;height:480px}.giveaway-canvas.giveaway-canvas--tall{height:760px}.giveaway-canvas.giveaway-canvas--extra-tall{height:1080px}@media(max-width:660px){.giveaway-canvas{width:100%;height:420px}}
 
 .giveaway-canvas,.giveaway-canvas.giveaway-canvas--tall,.giveaway-canvas.giveaway-canvas--extra-tall{height:auto;aspect-ratio:3/2;object-fit:contain;background:#080f14}
+
+/* Compact the actual stage and its grid, keeping the refrigerator at its chosen size. */
+.giveaway-layout{width:calc(80% + 60px);max-width:1310px;margin-inline:auto}.giveaway-stage{padding:18px}.giveaway-stage .giveaway-canvas{width:100%;max-width:980px}.giveaway-stage .panel-header{margin-bottom:18px}.giveaway-result{margin-top:22px}@media(max-width:850px){.giveaway-layout{width:calc(80% + 52px)}.giveaway-stage{padding:16px}}@media(max-width:660px){.giveaway-layout{width:100%}.giveaway-stage .giveaway-canvas{width:100%}}
