@@ -1,0 +1,11 @@
+/* Monocraft: Copyright (c) 2022 Idrees Hassan. SIL OFL 1.1; /assets/Monocraft-LICENSE.txt */
+@font-face{font-family:HolodosPixel;src:url('/assets/monocraft.woff') format('woff');font-style:normal;font-weight:100 900;font-display:swap}
+[data-title="dirty"],[data-title-name="dirty"]{font-family:HolodosPixel,monospace!important;font-synthesis:none;font-variant-ligatures:none;background:none!important;color:#060608!important;-webkit-text-fill-color:#060608!important;-webkit-text-stroke:.55px #ffffffdf;paint-order:stroke fill;text-shadow:1px 0 #ffffff99,-1px 0 #ffffff99,0 1px #ffffff99,0 -1px #ffffff99!important}
+[data-title="dirty"]{border-color:#dedee477!important;background-color:#090b10!important;font-size:12px!important}
+[data-title="nyashka"],[data-title-name="nyashka"]{background-image:linear-gradient(100deg,#ff91cf 5%,#ed9afa 35%,#ae7df8 65%,#ff91cf 95%)!important;background-size:230% 100%!important;background-clip:text!important;-webkit-background-clip:text!important;color:transparent!important;-webkit-text-fill-color:transparent!important;text-shadow:none!important;animation:nyashkaGlow 4.5s ease-in-out infinite!important}
+[data-title="nyashka"]{position:relative;isolation:isolate;border-color:#e4a2eb88!important;box-shadow:0 0 12px #e29ae921;overflow:visible!important}
+[data-title="nyashka"]::before,[data-title="nyashka"]::after{position:absolute;pointer-events:none;color:#f6b0ef;-webkit-text-fill-color:#f6b0ef;font-family:Arial,sans-serif;font-size:10px;line-height:1;white-space:pre;bottom:72%;opacity:0;z-index:2;text-shadow:0 0 5px #e591ff80;animation:nyashkaParticles 3.2s ease-out infinite}
+[data-title="nyashka"]::before{content:'✦  ♥';left:8%}[data-title="nyashka"]::after{content:'🐾  ✧';right:4%;font-size:9px;animation-delay:1.6s}
+@keyframes nyashkaGlow{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes nyashkaParticles{0%{opacity:0;transform:translate(0,4px) scale(.7)}18%{opacity:.85}100%{opacity:0;transform:translate(5px,-20px) scale(1.05)}}
+@media(prefers-reduced-motion:reduce){[data-title="nyashka"],[data-title-name="nyashka"]{animation:none!important;background-position:50% 50%!important}[data-title="nyashka"]::before,[data-title="nyashka"]::after{display:none;animation:none!important}}

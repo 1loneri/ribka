@@ -1,5 +1,5 @@
 export const cosmeticCatalog={
- title:{frost:'Ледяной',night:'Ночная смена',keeper:'На чилле',spark:'Без суеты',ultra:'Ultra',zero:'Нулевой сахар',offline:'Вне сети',afterhours:'После полуночи',tester:'Тестер',chmonya:'чмоня',duelist:'дуэльный',poor:'нищий',sneaky:'скрытопульный',boar:'кабанчик'},
+ title:{dirty:'грязнулька',nyashka:'няшка',frost:'Ледяной',night:'Ночная смена',keeper:'На чилле',spark:'Без суеты',ultra:'Ultra',zero:'Нулевой сахар',offline:'Вне сети',afterhours:'После полуночи',tester:'Тестер',chmonya:'чмоня',duelist:'дуэльный',poor:'нищий',sneaky:'скрытопульный',boar:'кабанчик'},
  name_color:{ice:'Ледяной голубой',rose:'Светло-розовый',amber:'Тёплый янтарь',white:'Белое сияние',aurora:'Северное сияние'},
  theme:{arctic:'Arctic Blue',violet:'Midnight Violet',mint:'Frozen Mint'},
  profile:{ice:'Ледяной',rose:'Розовый',aurora:'Градиент',chess:'Шахматы',wood:'Дерево',glass:'Стекло',cube:'Кубический',roses:'Розочки',rain:'Дождик',snow:'Снег',cat:'Котик в углу'},

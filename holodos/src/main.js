@@ -278,7 +278,7 @@ function setupForm(token){
 }
 const server=http.createServer(async(req,res)=>{
  const url=new URL(req.url,'http://localhost');
- const html=(status,body,headers={})=>{res.writeHead(status,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','X-Frame-Options':'DENY','Referrer-Policy':'no-referrer','Content-Security-Policy':"default-src 'none'; style-src 'unsafe-inline'; img-src 'self' https://static-cdn.jtvnw.net; form-action 'self'; base-uri 'none'",...headers});res.end(page(body,url.pathname));};
+ const html=(status,body,headers={})=>{res.writeHead(status,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','X-Frame-Options':'DENY','Referrer-Policy':'no-referrer','Content-Security-Policy':"default-src 'none'; style-src 'unsafe-inline'; font-src 'self'; img-src 'self' https://static-cdn.jtvnw.net; form-action 'self'; base-uri 'none'",...headers});res.end(page(body,url.pathname));};
  const redirect=(target='/admin')=>{res.writeHead(303,{Location:target,"Cache-Control":"no-store"});res.end();};
  if(url.pathname==='/health'){res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify({ok:true,twitch_connected:connected}));return;}
  if(url.pathname==='/oauth/callback'){

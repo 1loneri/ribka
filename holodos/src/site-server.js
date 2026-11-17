@@ -63,6 +63,9 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  }
  for(const id of ['donation','twitch','chat','vip','coins','subscriber'])assetFiles['/assets/case-'+id+'.webp']={file:new URL('./site/case-'+id+'.webp',import.meta.url),type:'image/webp'};
  assetFiles['/assets/frost-edge.webp']={file:new URL('./site/frost-edge.webp',import.meta.url),type:'image/webp'};
+ assetFiles['/assets/Monocraft-LICENSE.txt']={file:new URL('./site/Monocraft-LICENSE.txt',import.meta.url),type:'text/plain; charset=utf-8'};
+ assetFiles['/assets/monocraft.woff']={file:new URL('./site/monocraft.woff',import.meta.url),type:'font/woff'};
+ assetFiles['/assets/cosmetic-titles.css']={file:new URL('./site/cosmetic-titles.css',import.meta.url),type:'text/css; charset=utf-8'};
  for(const id of ['ultra','original','mango','thorn'])for(const ext of ['png','gif'])assetFiles['/assets/frame-'+id+'.'+ext]={file:new URL('./site/frame-'+id+'.'+ext,import.meta.url),type:'image/'+ext};
  assetFiles['/assets/frame-assault.png']={file:new URL('./site/frame-assault.png',import.meta.url),type:'image/png'};
  assetFiles['/assets/case-subscriber-open.webp']={file:new URL('./site/case-subscriber-open.webp',import.meta.url),type:'image/webp'};
@@ -70,7 +73,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  for(const id of ['pipeline','pacific','khaotic','violet','badapple'])assetFiles['/assets/duel-can-'+id+'.webp']={file:new URL('./site/duel-can-'+id+'.webp',import.meta.url),type:'image/webp'};
  assetFiles['/assets/dela-gothic-one.woff']={file:new URL('./site/dela-gothic-one.woff',import.meta.url),type:'font/woff'};
  assetFiles['/assets/dela-gothic-one.ttf']={file:new URL('./site/dela-gothic-one.ttf',import.meta.url),type:'font/ttf'};
- for(const id of ['ears','jett','clove','shy','fish'])assetFiles['/assets/frame-'+id+'.png']={file:new URL('./site/frame-'+id+'.png',import.meta.url),type:'image/png'};
+ for(const id of ['ears','jett','clove','shy','fish','cats','hat'])assetFiles['/assets/frame-'+id+'.png']={file:new URL('./site/frame-'+id+'.png',import.meta.url),type:'image/png'};
  assetFiles['/assets/site-features.js']={file:new URL('./site/site-features.js',import.meta.url),type:'text/javascript; charset=utf-8'};
  assetFiles['/assets/profile-cat.png']={file:new URL('./site/profile-cat.png',import.meta.url),type:'image/png'};
  for(const id of ['cat','roses'])assetFiles['/assets/profile-'+id+'.svg']={file:new URL('./site/profile-'+id+'.svg',import.meta.url),type:'image/svg+xml'};
