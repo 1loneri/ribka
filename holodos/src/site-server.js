@@ -40,6 +40,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  const siteKey=createHash('sha256').update('war1ouss-web:'+secret).digest();
  const sitePages=new Set(['/','/casino','/cases','/duels','/top','/chat','/shop','/profile','/help','/requests','/widget','/giveaways','/giveaways/manage']);
  const assetFiles={
+ '/assets/privacy.css':{file:new URL('./site/privacy.css',import.meta.url),type:'text/css; charset=utf-8'},
  '/assets/giveaway-fridge-fixed.webp':{file:new URL('./site/giveaway-fridge-fixed.webp',import.meta.url),type:'image/webp'},
  '/assets/giveaway-fridge.webp':{file:new URL('./site/giveaway-fridge.webp',import.meta.url),type:'image/webp'},
  '/assets/giveaways.js':{file:new URL('./site/giveaways.js',import.meta.url),type:'text/javascript; charset=utf-8'},
@@ -70,6 +71,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  assetFiles['/assets/profile-cat.png']={file:new URL('./site/profile-cat.png',import.meta.url),type:'image/png'};
  for(const id of ['cat','roses'])assetFiles['/assets/profile-'+id+'.svg']={file:new URL('./site/profile-'+id+'.svg',import.meta.url),type:'image/svg+xml'};
  const shell=readFileSync(new URL('./site/index.html',import.meta.url));
+ const privacyPage=readFileSync(new URL('./site/privacy.html',import.meta.url));
  const staticAssets={};
  for(const [name,info] of Object.entries(assetFiles)){
   try{staticAssets[name]={bytes:readFileSync(info.file),type:info.type};}catch(error){console.warn('War1ouss asset missing:',name,error.message);}
@@ -239,6 +241,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  }
  async function handle(req,res,url){
   const path=url.pathname,method=req.method||'GET';
+  if(path==='/privacy'&&(method==='GET'||method==='HEAD')){send(res,200,method==='HEAD'?'':privacyPage,'text/html; charset=utf-8',{'X-Robots-Tag':'noindex'});return true;}
   if(path==='/api/extension/catalog'&&method==='GET'){json(res,200,{cases:publicCases(),extensionReady:extensionAuth.settings().configured},{'Access-Control-Allow-Origin':'*'});return true;}
   const origin=String(req.headers.origin||'');
   if(path.startsWith('/api/')&&(/^https:\/\/[a-z0-9]+\.ext-twitch\.tv$/.test(origin)||req.headers['x-extension-jwt'])){

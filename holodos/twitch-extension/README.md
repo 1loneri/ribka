@@ -15,3 +15,11 @@
 ## Сборка
 
 `python holodos/twitch-extension/build.py` (Pillow) собирает архив в `holodos/src/site/twitch-panel.zip`, оптимизируя картинки из существующих assets.
+
+## Ширина
+
+Twitch задаёт ширину панели под плеером: 318 px. Высоту установи в Asset Hosting → Panel Height: 496 (по умолчанию 300). Через штатную кнопку отдельного окна Twitch панель может стать шире; верстка адаптируется к ширине нового окна, кейсы располагаются в несколько колонок. CSS внутри ZIP не может расширить внешнюю панель канала.
+
+## Privacy Policy URL
+
+В Version Details расширения укажи `https://holodos-bot-production.up.railway.app/privacy`. Политика доступна без входа.
