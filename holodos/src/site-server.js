@@ -17,7 +17,7 @@ import {createLeaderboard,createChatLeaderboard} from './leaderboard.js';
 import {createChatCases} from './chat-cases.js';
 import {shouldCountChatMessage} from './chat-statistics.js';
 import {createCaseCatalog} from './case-catalog.js';
-import {createCosmetics} from './cosmetics.js';
+import {createCosmetics,cosmeticCatalog} from './cosmetics.js';
 import {createFrames} from './frames.js';
 import {createReviews} from './reviews.js';
 import {createDuelVisuals} from './duel-visuals.js';
@@ -64,6 +64,8 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  for(const id of ['donation','twitch','chat','vip','coins','subscriber'])assetFiles['/assets/case-'+id+'.webp']={file:new URL('./site/case-'+id+'.webp',import.meta.url),type:'image/webp'};
  assetFiles['/assets/frost-edge.webp']={file:new URL('./site/frost-edge.webp',import.meta.url),type:'image/webp'};
  assetFiles['/assets/Monocraft-LICENSE.txt']={file:new URL('./site/Monocraft-LICENSE.txt',import.meta.url),type:'text/plain; charset=utf-8'};
+ for(const id of ['fogcat','chinese'])assetFiles['/assets/profile-'+id+'.webp']={file:new URL('./site/profile-'+id+'.webp',import.meta.url),type:'image/webp'};
+ assetFiles['/assets/cosmetic-gallery.js']={file:new URL('./site/cosmetic-gallery.js',import.meta.url),type:'text/javascript; charset=utf-8'};
  assetFiles['/assets/monocraft.woff']={file:new URL('./site/monocraft.woff',import.meta.url),type:'font/woff'};
  assetFiles['/assets/cosmetic-titles.css']={file:new URL('./site/cosmetic-titles.css',import.meta.url),type:'text/css; charset=utf-8'};
  for(const id of ['ultra','original','mango','thorn'])for(const ext of ['png','gif'])assetFiles['/assets/frame-'+id+'.'+ext]={file:new URL('./site/frame-'+id+'.'+ext,import.meta.url),type:'image/'+ext};
@@ -73,7 +75,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  for(const id of ['pipeline','pacific','khaotic','violet','badapple'])assetFiles['/assets/duel-can-'+id+'.webp']={file:new URL('./site/duel-can-'+id+'.webp',import.meta.url),type:'image/webp'};
  assetFiles['/assets/dela-gothic-one.woff']={file:new URL('./site/dela-gothic-one.woff',import.meta.url),type:'font/woff'};
  assetFiles['/assets/dela-gothic-one.ttf']={file:new URL('./site/dela-gothic-one.ttf',import.meta.url),type:'font/ttf'};
- for(const id of ['ears','jett','clove','shy','fish','cats','hat'])assetFiles['/assets/frame-'+id+'.png']={file:new URL('./site/frame-'+id+'.png',import.meta.url),type:'image/png'};
+ for(const id of ['ears','jett','clove','shy','fish','cats','hat','angel','sims-green','sims-red'])assetFiles['/assets/frame-'+id+'.png']={file:new URL('./site/frame-'+id+'.png',import.meta.url),type:'image/png'};
  assetFiles['/assets/site-features.js']={file:new URL('./site/site-features.js',import.meta.url),type:'text/javascript; charset=utf-8'};
  assetFiles['/assets/profile-cat.png']={file:new URL('./site/profile-cat.png',import.meta.url),type:'image/png'};
  for(const id of ['cat','roses'])assetFiles['/assets/profile-'+id+'.svg']={file:new URL('./site/profile-'+id+'.svg',import.meta.url),type:'image/svg+xml'};
@@ -280,8 +282,8 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   }
   if(path.startsWith('/api/')){
    if(method==='GET'){
-    if(path==='/api/site-features'){json(res,200,{features:Object.fromEntries(controls.list().map(f=>[f.key,f.enabled])),assets:uploads.list().filter(a=>a.enabled),cans:Object.fromEntries(Object.entries(duelVisuals.catalog).map(([id,label])=>[id,{label,src:canArt(id)}]))});return true;}
-    if(path==='/api/case-history'){const page=Math.max(1,Math.min(100000,parseInt(url.searchParams.get('page'))||1)),rows=db.prepare('SELECT id,login,case_id,reward_json,created_at FROM case_openings ORDER BY id DESC LIMIT 10 OFFSET ?').all((page-1)*10),total=db.prepare('SELECT COUNT(*) n FROM case_openings').get().n;json(res,200,{page,pages:Math.max(1,Math.ceil(total/10)),openings:rows.map(r=>({id:r.id,login:r.login,caseId:r.case_id,reward:JSON.parse(r.reward_json),created_at:r.created_at}))});return true;}
+    if(path==='/api/site-features'){json(res,200,{cosmetics:cosmeticCatalog,frames:frames.catalog,frameRarity:frames.rarity,features:Object.fromEntries(controls.list().map(f=>[f.key,f.enabled])),assets:uploads.list().filter(a=>a.enabled),cans:Object.fromEntries(Object.entries(duelVisuals.catalog).map(([id,label])=>[id,{label,src:canArt(id)}]))});return true;}
+    if(path==='/api/case-history'){const pageSize=5,total=db.prepare('SELECT COUNT(*) n FROM case_openings').get().n,pages=Math.max(1,Math.ceil(total/pageSize)),page=Math.min(pages,Math.max(1,parseInt(url.searchParams.get('page'))||1)),rows=db.prepare('SELECT id,login,case_id,reward_json,created_at FROM case_openings ORDER BY id DESC LIMIT ? OFFSET ?').all(pageSize,(page-1)*pageSize);json(res,200,{page,pageSize,pages,total,openings:rows.map(r=>({id:r.id,login:r.login,caseId:r.case_id,reward:JSON.parse(r.reward_json),created_at:r.created_at}))});return true;}
     if(path==='/api/player'){const login=String(url.searchParams.get('login')||'').toLowerCase();if(!/^[a-z0-9_]{1,25}$/.test(login)){json(res,400,{error:'Неверный ник'});return true;}const p=db.prepare('SELECT id,login,balance,opens,wins FROM players WHERE lower(login)=?').get(login);if(!p){json(res,404,{error:'Игрок не найден'});return true;}const {id,...profile}=p;json(res,200,{player:profile,messages:db.prepare('SELECT message_count FROM chat_stats WHERE player_id=?').get(id)?.message_count||0,frame:frames.active(id),look:cosmetics.publicLooks([login])[login]||{}});return true;}
     if(path==='/api/shop/vp'){json(res,200,{packages:vpShop.catalog()});return true;}
     if(path==='/api/shop/vip'){json(res,200,vipShop.settings());return true;}
