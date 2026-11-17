@@ -362,12 +362,12 @@ async function refreshDuels(){
  try{
   const data=await api('/api/duels');state.duels=data;
   const pending=data.pending||[],recent=data.recent||[],logged=state.me?.authenticated;
-  $('pending-duels').innerHTML=pending.length?pending.map(d=>{
+  const pendingKey=JSON.stringify(pending);if($('pending-duels').dataset.content!==pendingKey){$('pending-duels').dataset.content=pendingKey;$('pending-duels').innerHTML=pending.length?pending.map(d=>{
    const mine=logged&&d.opponent_login===state.me.player.login.toLowerCase();
    return '<div class="duel-item"><div class="duel-mini-cans">'+duelCanImage(d.leftCan)+duelCanImage(d.rightCan)+'</div><div><strong>@'+esc(d.initiator_login)+' → @'+esc(d.opponent_login)+'</strong><p>Банк '+fmt(d.wager*2)+' W · ставка '+fmt(d.wager)+' W · до '+new Date(d.expires_at).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})+'</p></div>'+(mine?'<div class="duel-actions"><button data-duel-answer="accept">Принять</button><button class="decline" data-duel-answer="decline">Отказ</button></div>':'')+'</div>';
-  }).join(''):'<p class="muted">Активных вызовов пока нет. Создай первый!</p>';
+  }).join(''):'<p class="muted">Активных вызовов пока нет. Создай первый!</p>';} 
   await maybeAnimateDuel(recent);
-  $('duel-history').innerHTML=recent.length?recent.map(d=>'<div class="history-item"><strong>@'+esc(d.initiator_login)+' ↔ @'+esc(d.opponent_login)+'</strong><span>'+esc(d.winner_login?'Победил @'+d.winner_login:d.status)+'</span><em>'+fmt(d.wager*2-d.fee)+' W</em><time>'+ruTime(d.resolved_at||d.created_at)+'</time></div>').join(''):'<p class="muted">Завершённых дуэлей пока нет.</p>';hydrateAvatars();
+  const historyKey=JSON.stringify(recent);if($('duel-history').dataset.content!==historyKey){$('duel-history').dataset.content=historyKey;$('duel-history').innerHTML=recent.length?recent.map(d=>'<div class="history-item"><strong>@'+esc(d.initiator_login)+' ↔ @'+esc(d.opponent_login)+'</strong><span>'+esc(d.winner_login?'Победил @'+d.winner_login:d.status)+'</span><em>'+fmt(d.wager*2-d.fee)+' W</em><time>'+ruTime(d.resolved_at||d.created_at)+'</time></div>').join(''):'<p class="muted">Завершённых дуэлей пока нет.</p>';} 
  }catch(e){$('pending-duels').textContent=e.message;$('duel-history').textContent=e.message;}finally{duelRefreshBusy=false;}
 }
 async function duelAction(answer){
@@ -494,10 +494,10 @@ $('notification-sound-toggle').textContent=noticeSoundEnabled?'Выключит�
 $('notification-sound-toggle').addEventListener('click',()=>{noticeSoundEnabled=!noticeSoundEnabled;try{localStorage.setItem('war1ouss-notification-sound',noticeSoundEnabled?'on':'off')}catch{}$('notification-sound-toggle').textContent=noticeSoundEnabled?'Выключить звук':'Включить звук';if(noticeSoundEnabled){unlockNoticeAudio();playNoticeTone();}});
 function avatarHtml(login){const name=String(login||'').toLowerCase();if(!/^[a-z0-9_]{1,25}$/.test(name))return '';const own=state.me?.authenticated&&String(state.me.player.login).toLowerCase()===name;const src=own?safeAvatar(state.me.player.avatar):(avatarClientCache.get(name)||'');return '<span class="player-avatar equipped-avatar" data-player-avatar="'+esc(name)+'" data-equipped-frame="'+esc(own?(state.me.frames?.active||''):(avatarFrameCache.get(name)||''))+'" aria-hidden="true">'+(src?'<img src="'+esc(src)+'" alt="" decoding="async">':esc(name[0].toUpperCase()))+'</span>';}
 let avatarHydrationBusy=false,avatarHydrationAgain=false;const avatarClientCache=new Map(),avatarFrameCache=new Map();
-async function hydrateAvatars(){
+async function hydrateAvatars(root=document){
  if(avatarHydrationBusy){avatarHydrationAgain=true;return;}avatarHydrationBusy=true;
  try{
- const nodes=[...document.querySelectorAll('[data-player-avatar]')],names=[...new Set(nodes.map(n=>n.dataset.playerAvatar))];
+ const nodes=[...root.querySelectorAll('[data-player-avatar]')],names=[...new Set(nodes.map(n=>n.dataset.playerAvatar))];
  const me=state.me;if(me?.authenticated){const src=safeAvatar(me.player.avatar);if(src)avatarClientCache.set(String(me.player.login).toLowerCase(),src);}
  const paint=()=>{for(const node of nodes){const src=avatarClientCache.get(node.dataset.playerAvatar);if(src&&!node.querySelector('img')){const img=document.createElement('img');img.src=src;img.alt='';img.decoding='async';img.addEventListener('error',()=>{avatarClientCache.delete(node.dataset.playerAvatar);node.replaceChildren(document.createTextNode(node.dataset.playerAvatar[0].toUpperCase()));},{once:true});node.replaceChildren(img);}}};
  paint();

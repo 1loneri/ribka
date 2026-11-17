@@ -1983,3 +1983,6 @@ dialog.player-popover[data-profile="cat"]{overflow:visible;max-height:calc(100dv
 .side-navigation.expanded .side-wallet-pill .side-wallet-amount{font:inherit}
 .side-navigation:not(.expanded):not(.fully-hidden)>.side-wallet-pill{margin-top:-8px;align-self:center;flex:none}
 .side-navigation.fully-hidden>.side-wallet-pill{top:64px}
+
+#profile-content .profile-equipped-avatar .player-avatar{width:90px;height:90px;font-size:32px}
+.side-navigation.fully-hidden>.side-wallet-pill{display:none!important}
