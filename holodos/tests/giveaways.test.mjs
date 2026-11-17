@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {DatabaseSync} from 'node:sqlite';
+import {randomUUID} from 'node:crypto';
+import {createGiveaways} from '../src/giveaways.js';
+const db=new DatabaseSync(':memory:');db.exec(`CREATE TABLE players(id TEXT PRIMARY KEY,login TEXT);CREATE TABLE account_notifications(event_key TEXT UNIQUE,owner_id TEXT,kind TEXT,title TEXT,body TEXT,url TEXT,created_at INTEGER);`);
+const transaction=f=>{db.exec('BEGIN IMMEDIATE');try{const r=f();db.exec('COMMIT');return r}catch(e){db.exec('ROLLBACK');throw e}};
+let now=1800000000000,age=30,unavailable=false;
+const params={db,transaction,clock:()=>now,duelVisuals:{current:id=>({id:id==='1'?'mango':'black',src:'/assets/slot-black.webp'})},verifyUsers:async ids=>unavailable?[]:ids.map(id=>({id,created_at:new Date(now-age*86400000).toISOString()}))};
+let service=createGiveaways(params);const make=()=>service.create({vp:475,duration:15,requestId:randomUUID()},'admin');
+let id=make().id;assert.throws(make,/текущий/);service.join('1','alice',id);service.join('1','alice',id);assert.equal(service.state().round.participants.length,1);await assert.rejects(service.start(id,'admin'),/два/);service.join('2','bob',id);await service.start(id,'admin');assert.throws(()=>service.join('3','eve',id),/закрыта/);assert.equal(service.state().round.winner,null);assert.ok(!JSON.stringify(service.state()).includes('order_json'));assert.ok(!('resolution' in service.state().round));assert.ok(!('eligible' in service.state().round.participants[0]));assert.equal(service.state().round.participants[0].can.id,'mango');assert.throws(()=>service.resolve(id,'issued','admin'),/завершён/);
+now+=15001;service=createGiveaways(params);let g=service.state(true).round;assert.equal(g.remaining,1);assert.ok(g.winner.id);assert.equal(g.resolution,'pending');assert.throws(make,/текущий/);service.resolve(id,'issued','admin');service.resolve(id,'issued','admin');assert.equal(db.prepare('SELECT COUNT(*) n FROM account_notifications').get().n,1);const prior=g.layout;
+age=7;id=make().id;assert.notEqual(service.state().round.layout,prior);service.join('1','alice',id);service.join('2','bob',id);await service.start(id,'admin');now+=15000;assert.equal(service.state(true).round.resolution,'pending'); // Exactly 7 days at verification becomes older during the draw.
+service.resolve(id,'denied','admin');age=1;id=make().id;service.join('1','alice',id);service.join('2','bob',id);await service.start(id,'admin');now+=15000;assert.equal(service.state(true).round.resolution,'denied');assert.throws(()=>service.resolve(id,'issued','admin'),/закрыта/);
+unavailable=true;id=make().id;service.join('1','alice',id);service.join('2','bob',id);await service.start(id,'admin');now+=15000;assert.equal(service.state(true).round.resolution,'blocked');assert.throws(()=>service.resolve(id,'issued','admin'),/подтверждён/);unavailable=false;age=30;await service.recheck(id,'admin');assert.equal(service.state(true).round.resolution,'pending');service.resolve(id,'denied','admin');
+id=make().id;service.join('1','alice',id);service.cancel(id,'admin');assert.equal(service.state().round.status,'cancelled');
+console.log('PASS giveaway persistence, privacy, deduplication, ownership artwork, eligibility, fail-closed verification, idempotent issuance and cancellation');

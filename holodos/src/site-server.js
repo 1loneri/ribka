@@ -1,3 +1,4 @@
+import {createGiveaways} from './giveaways.js';
 import {createCustomAssets} from './custom-assets.js';
 import {createFeatureControl} from './feature-control.js';
 import {freezeEarlyTesters} from './early-testers.js';
@@ -36,8 +37,9 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  const frames=createFrames(db,transaction);
  const cosmetics=createCosmetics(db,transaction);
  const siteKey=createHash('sha256').update('war1ouss-web:'+secret).digest();
- const sitePages=new Set(['/','/casino','/cases','/duels','/top','/chat','/shop','/profile','/help','/requests','/widget']);
+ const sitePages=new Set(['/','/casino','/cases','/duels','/top','/chat','/shop','/profile','/help','/requests','/widget','/giveaways','/giveaways/manage']);
  const assetFiles={
+ '/assets/giveaways.js':{file:new URL('./site/giveaways.js',import.meta.url),type:'text/javascript; charset=utf-8'},
  '/assets/twitch-panel.zip':{file:new URL('./site/twitch-panel.zip',import.meta.url),type:'application/zip'},
   '/assets/site.css':{file:new URL('./site/site.css',import.meta.url),type:'text/css; charset=utf-8'},
   '/assets/site.js':{file:new URL('./site/site.js',import.meta.url),type:'text/javascript; charset=utf-8'},
@@ -84,6 +86,12 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  const tickets=createCaseTickets(db,transaction);
  const twitchRewards=createTwitchRewards({db,transaction,connections:channelConnections,tickets,controls});
  const vpShop=createVpShop(db,transaction,secret);
+ let giveawayToken='',giveawayTokenUntil=0;
+ const giveaways=createGiveaways({db,transaction,duelVisuals,verifyUsers:async ids=>{
+  if(!app())throw Error('Twitch не подключён');
+  if(!giveawayToken||Date.now()>giveawayTokenUntil){const t=await tokenRequest({grant_type:'client_credentials'});giveawayToken=t.access_token;giveawayTokenUntil=Date.now()+(Number(t.expires_in)-60)*1000;}
+  const users=[];for(let i=0;i<ids.length;i+=100){const q=new URLSearchParams();ids.slice(i,i+100).forEach(id=>q.append('id',id));const r=await fetch('https://api.twitch.tv/helix/users?'+q,{headers:{Authorization:'Bearer '+giveawayToken,'Client-Id':app().id},signal:AbortSignal.timeout(8000)});if(!r.ok){giveawayTokenUntil=0;throw Error('Twitch недоступен');}users.push(...(await r.json()).data);}return users;
+ }});
  const manualVp=createManualVp(db,transaction,adminWallet.lookup);
  const vipShop=createVipShop(db,transaction);
  const chatCases=createChatCases({db,transaction,cases,player,vipStatus:id=>vipShop.status(id),tickets,controls});
@@ -174,6 +182,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   db.prepare('INSERT OR IGNORE INTO fridge_spins(request_id,player_id,login,cans_json,gain,description,source,created_at) VALUES(?,?,?,?,?,?,?,?)').run(requestId,id,login,JSON.stringify(display),d.gain,d.description,source,now);
  }
  function trackChat(id,login,now,tags={},message){
+  if(/^!розыгрыш\s*$/iu.test(String(message||'')))try{giveaways.join(id,login);}catch{}
   if(!shouldCountChatMessage(message))return false;
   return transaction(()=>{
   if(tags.id&&!db.prepare('INSERT OR IGNORE INTO chat_counted_messages VALUES(?,?)').run(String(tags.id),now).changes)return false;
@@ -270,6 +279,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
      const spins=mine?spinsQuery('SELECT login,cans_json,gain,description,source,created_at FROM fridge_spins WHERE player_id=? ORDER BY id DESC LIMIT 50',session.player_id):spinsQuery('SELECT login,cans_json,gain,description,source,created_at FROM fridge_spins'+jackpotFilter+' ORDER BY id DESC LIMIT '+(jackpotFilter?'50':'10'));
      json(res,200,{spins,scope:mine?'mine':'recent'});return true;
     }
+    if(path==='/api/giveaways'||path==='/api/extension/giveaway'){json(res,200,giveaways.state(path==='/api/giveaways'&&isAdminRequest(req)),path.startsWith('/api/extension/')?{'Access-Control-Allow-Origin':'*'}:{});return true;}
     if(path==='/api/duels/can'){const login=String(url.searchParams.get('login')||'').replace(/^@/,'').toLowerCase();if(!/^[a-z0-9_]{1,25}$/.test(login)){json(res,400,{error:'Неверный ник'});return true;}json(res,200,{can:duelVisuals.current(null,login)});return true;}
     if(path==='/api/duels'){
      const now=Date.now();
@@ -286,6 +296,19 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
    if(!constantTime(String(req.headers['x-csrf-token']||''),csrf(session))){json(res,403,{error:'Сессия устарела. Обнови страницу.'});return true;}
    try{
     const data=await readJson(req);
+    if(path.startsWith('/api/giveaways/')){
+     const action=path.split('/').pop();if(action==='join'){json(res,200,giveaways.join(session.player_id,session.login,data.id));return true;}
+     if(!isAdminSession(session)){json(res,403,{error:'Только для стримера и администраторов'});return true;}
+     if(['create','start'].includes(action)&&!(await streamStatus.get()).live){json(res,403,{error:'Запуск розыгрыша доступен во время эфира Twitch.'});return true;}
+     const actor=session.player_id;let result;
+     if(action==='create')result=giveaways.create({...data,requestId:actionId(data)},actor);
+     else if(action==='start')result=await giveaways.start(data.id,actor);
+     else if(action==='cancel')result=giveaways.cancel(data.id,actor);
+     else if(action==='recheck')result=await giveaways.recheck(data.id,actor);
+     else if(['issued','denied'].includes(action))result=giveaways.resolve(data.id,action,actor);
+     else{json(res,404,{error:'Действие не найдено'});return true;}
+     json(res,200,result);return true;
+    }
     if(path==='/api/twitch/refresh'){const result=await twitchRewards.syncAll(false);json(res,200,{...result,memberships:twitchRewards.eligibility(session.player_id)});return true;}
     if(path==='/api/twitch/claim'){json(res,200,await twitchRewards.claim(session,String(data.kind||'')));return true;}
     if(/^\/api\/cases\/(twitch|vip|subscriber)\/open$/.test(path)){const id=path.split('/')[3],rid=actionId(data),status=await streamStatus.get();json(res,200,chatCases.open(session,rid,isAdminSession(session)||status.live===true,id));return true;}

@@ -1,6 +1,6 @@
 'use strict';
 const $=id=>document.getElementById(id);
-const routes=new Set(['/','/casino','/cases','/duels','/top','/chat','/profile','/shop','/help','/requests','/widget']);
+const routes=new Set(['/','/casino','/cases','/duels','/top','/chat','/profile','/shop','/help','/requests','/widget','/giveaways','/giveaways/manage']);
 const state={me:null,public:null,history:null,duels:null,busy:false,timer:null};
 const fmt=n=>Number(n||0).toLocaleString('ru-RU');
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
@@ -365,9 +365,9 @@ async function refreshDuels(){
   const pendingKey=JSON.stringify(pending);if($('pending-duels').dataset.content!==pendingKey){$('pending-duels').dataset.content=pendingKey;$('pending-duels').innerHTML=pending.length?pending.map(d=>{
    const mine=logged&&d.opponent_login===state.me.player.login.toLowerCase();
    return '<div class="duel-item"><div class="duel-mini-cans">'+duelCanImage(d.leftCan)+duelCanImage(d.rightCan)+'</div><div><strong>@'+esc(d.initiator_login)+' → @'+esc(d.opponent_login)+'</strong><p>Банк '+fmt(d.wager*2)+' W · ставка '+fmt(d.wager)+' W · до '+new Date(d.expires_at).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})+'</p></div>'+(mine?'<div class="duel-actions"><button data-duel-answer="accept">Принять</button><button class="decline" data-duel-answer="decline">Отказ</button></div>':'')+'</div>';
-  }).join(''):'<p class="muted">Активных вызовов пока нет. Создай первый!</p>';} 
+  }).join(''):'<p class="muted">Активных вызовов пока нет. Создай первый!</p>';}
   await maybeAnimateDuel(recent);
-  const historyKey=JSON.stringify(recent);if($('duel-history').dataset.content!==historyKey){$('duel-history').dataset.content=historyKey;$('duel-history').innerHTML=recent.length?recent.map(d=>'<div class="history-item"><strong>@'+esc(d.initiator_login)+' ↔ @'+esc(d.opponent_login)+'</strong><span>'+esc(d.winner_login?'Победил @'+d.winner_login:d.status)+'</span><em>'+fmt(d.wager*2-d.fee)+' W</em><time>'+ruTime(d.resolved_at||d.created_at)+'</time></div>').join(''):'<p class="muted">Завершённых дуэлей пока нет.</p>';} 
+  const historyKey=JSON.stringify(recent);if($('duel-history').dataset.content!==historyKey){$('duel-history').dataset.content=historyKey;$('duel-history').innerHTML=recent.length?recent.map(d=>'<div class="history-item"><strong>@'+esc(d.initiator_login)+' ↔ @'+esc(d.opponent_login)+'</strong><span>'+esc(d.winner_login?'Победил @'+d.winner_login:d.status)+'</span><em>'+fmt(d.wager*2-d.fee)+' W</em><time>'+ruTime(d.resolved_at||d.created_at)+'</time></div>').join(''):'<p class="muted">Завершённых дуэлей пока нет.</p>';}
  }catch(e){$('pending-duels').textContent=e.message;$('duel-history').textContent=e.message;}finally{duelRefreshBusy=false;}
 }
 async function duelAction(answer){
