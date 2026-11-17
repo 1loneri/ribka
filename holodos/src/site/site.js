@@ -40,14 +40,7 @@ applySidebarMode(sidebarMode);
 let sidebarClickTimer;
 function sidebarClick(event){clearTimeout(sidebarClickTimer);if(event.detail>1)return;sidebarClickTimer=setTimeout(toggleSidebar,230);}
 function sidebarDoubleClick(){clearTimeout(sidebarClickTimer);applySidebarMode(sidebarMode==='hidden'?'icons':'hidden');}
-let routeTransition;
-function navigate(path,replace=false){
- if(!routes.has(path))path='/';
- const update=()=>renderRoute(path,replace);
- if(!replace&&location.pathname!==path&&document.startViewTransition&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){
-  routeTransition?.skipTransition();routeTransition=document.startViewTransition(update);
- }else update();
-}
+function navigate(path,replace=false){renderRoute(routes.has(path)?path:'/',replace);}
 function renderRoute(path,replace=false){
  if(!routes.has(path))path='/';
  if(replace)history.replaceState({warDepth:history.state?.warDepth||0},'',path);else if(location.pathname!==path)history.pushState({warDepth:(history.state?.warDepth||0)+1},'',path);
@@ -176,8 +169,9 @@ function renderMe(){
  if($('side-balance'))$('side-balance').textContent=logged?fmt(me.player.balance)+' W':'W —';
  if($('side-login'))$('side-login').hidden=logged;
  if($('side-admin'))$('side-admin').hidden=!(logged&&me.is_admin);
- for(const demo of document.querySelectorAll('.case-demo-entry,#duel-preview'))demo.hidden=!canUseAdminDemo();
- for(const button of document.querySelectorAll('[data-case-preview]')){if(!button.dataset.originalLabel)button.dataset.originalLabel=button.textContent;button.disabled=!canUseAdminDemo();button.textContent=canUseAdminDemo()?'Прокрутка · демо':button.dataset.originalLabel;button.title=canUseAdminDemo()?'Предпросмотр анимации: баланс не списывается, награда не выдаётся':'';}
+ for(const demo of document.querySelectorAll('.case-demo-entry'))demo.hidden=true;
+ for(const demo of document.querySelectorAll('#duel-preview'))demo.hidden=!canUseAdminDemo();
+ for(const button of document.querySelectorAll('[data-case-preview]')){button.hidden=true;button.disabled=true;}
  if(!canUseAdminDemo()&&!caseRealMode&&document.querySelector('.case-demo')?.open)document.querySelector('.case-demo').close();
  if(logged){
   $('top-name').textContent=me.player.display_name||me.player.login;

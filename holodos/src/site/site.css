@@ -1761,3 +1761,15 @@ img[src*="/frame-thorn."]{filter:invert(1)}.equipped-avatar[data-equipped-frame=
 @media(hover:hover){.collection-case:hover .case-hover-rewards.has-reward-overflow .case-hover-track{animation-play-state:running}}
 @keyframes caseRewardsPan{0%,10%,100%{transform:translateY(0)}45%,55%{transform:translateY(calc(-1 * var(--reward-pan-distance,0px)))}90%{transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.case-hover-rewards.has-reward-overflow .case-hover-track{animation:none;will-change:auto}}
+
+/* Stable navigation and matching purchase/open actions. */
+body.inner-page .shell{transition:none}
+main{view-transition-name:none}
+.case-demo-entry,[data-case-preview]{display:none!important}
+.login-twitch-icon{width:17px;height:17px;flex:none}.login-mobile{display:none}
+.login-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap}
+.login-btn[hidden]{display:none}
+@media(max-width:780px){.login-desktop{display:none}.login-mobile{display:inline}.login-btn{padding:8px 11px}}
+.collection-case .case-open-button:not(:disabled){box-sizing:border-box;min-height:44px;padding:14px 16px;font-size:11px;font-weight:700;color:#cfd6ed;border:1px solid #cfd6ed66;background:#ffffff05;opacity:1;cursor:pointer}
+.collection-case .case-open-button:not(:disabled):hover{background:#ffffff0b}
+.collection-case .case-open-button:not(:disabled):focus-visible{outline:2px solid #cfd6ed;outline-offset:3px}
