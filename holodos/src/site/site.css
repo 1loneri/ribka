@@ -1773,3 +1773,20 @@ main{view-transition-name:none}
 .collection-case .case-open-button:not(:disabled){box-sizing:border-box;min-height:44px;padding:14px 16px;font-size:11px;font-weight:700;color:#cfd6ed;border:1px solid #cfd6ed66;background:#ffffff05;opacity:1;cursor:pointer}
 .collection-case .case-open-button:not(:disabled):hover{background:#ffffff0b}
 .collection-case .case-open-button:not(:disabled):focus-visible{outline:2px solid #cfd6ed;outline-offset:3px}
+
+/* Mobile home navigation uses the same cold-metal palette as the inner rail. */
+@media(max-width:820px){
+ body:not(.inner-page) .topbar{background:linear-gradient(145deg,rgba(30,33,37,.98),rgba(9,10,12,.99));border-bottom:1px solid #44484e;backdrop-filter:none;box-shadow:0 8px 24px #0003;gap:10px;font-family:inherit}
+ body:not(.inner-page) .topbar .brand{font-size:31px;line-height:1;font-weight:900;font-style:italic;letter-spacing:-.13em;color:#f4f5f5}
+ body:not(.inner-page) .topbar .brand-dot{color:#b6bcbf}
+ body:not(.inner-page) .topbar .user-actions{gap:7px}
+ body:not(.inner-page) .topbar :is(.mobile-menu,.login-btn,.notify-toggle,.snow-toggle,.watch-stream-toggle){border:1px solid #4c5359;background:rgba(31,33,37,.6);color:#e0e3e6;border-radius:9px;box-shadow:none;font-family:inherit}
+ body:not(.inner-page) .topbar .mobile-menu{display:flex;align-items:center;justify-content:center;width:38px;height:38px;min-height:38px;padding:0;flex:none}
+ body:not(.inner-page) .topbar .login-btn{font-size:12px;font-weight:700;min-height:37px}
+ body:not(.inner-page) .topbar .login-btn[hidden]{display:none}
+ body:not(.inner-page) .topbar .wallet{color:#e1e8f1;border-color:#4c5359;background:#ffffff05;font-size:12px}
+ body:not(.inner-page) .topbar .nav{background:linear-gradient(145deg,#1e2125,#090a0c);border-bottom:1px solid #44484e;gap:4px;padding:12px 14px}
+ body:not(.inner-page) .topbar .nav-link{padding:12px 14px;border-radius:9px;color:#c1c5c9;font-size:13px;font-weight:700;letter-spacing:normal}
+ body:not(.inner-page) .topbar .nav-link:is(.active,:hover){background:rgba(198,206,214,.10);color:#fff;box-shadow:inset 2px 0 0 #cad0d5}
+ body:not(.inner-page) .topbar .nav-link.active::after{display:none}
+}
