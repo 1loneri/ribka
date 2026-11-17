@@ -1,3 +1,4 @@
+import {createDebts} from './debts.js';
 import {createExtensionAuth} from './extension-auth.js';
 import {createGiveaways} from './giveaways.js';
 import {createCustomAssets} from './custom-assets.js';
@@ -91,6 +92,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  const adminWallet=createAdminWallet(db,transaction);
  freezeEarlyTesters(db);
  const notifications=createNotifications(db);
+ const debts=createDebts({db,transaction,lookup:adminWallet.lookup});
  const tickets=createCaseTickets(db,transaction);
  const twitchRewards=createTwitchRewards({db,transaction,connections:channelConnections,tickets,controls});
  const vpShop=createVpShop(db,transaction,secret);
@@ -185,7 +187,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   if(!session)return {authenticated:false};
   const p=player(session.player_id,session.login);
   const orders=db.prepare('SELECT id,vp,price,status,created_at FROM shop_orders WHERE player_id=? ORDER BY id DESC LIMIT 10').all(session.player_id);
-  return {authenticated:true,is_admin:isAdminSession(session),stream,spin_allowed:isAdminSession(session)||stream?.live===true,support_unread:support.unread(session),notification_unread:notifications.unread(session),csrf:csrf(session),chatCase:chatCases.progress(p.id),coinCase:chatCases.coinStatus(p.id),donationCase:chatCases.purchases.status(p.id),entitlements:tickets.status(p.id),memberships:twitchRewards.eligibility(p.id),features:Object.fromEntries(controls.list().map(f=>[f.key,f.enabled])),vipShop:vipShop.status(p.id),vipOrders:vipShop.orders(p.id),manualVp:manualVp.list(p.id),vpCodes:vpShop.list(p.id),caseHistory:chatCases.history(p.id),giveawayPrizes:giveaways.claims.forPlayer(p.id),cosmetics:{...cosmetics.summary(p.id),duel_can:duelVisuals.current(p.id,p.login),duel_cans:db.prepare('SELECT can_id FROM duel_can_inventory WHERE player_id=? ORDER BY can_id').all(p.id).map(r=>({id:r.can_id,label:duelVisuals.catalog[r.can_id],src:canArt(r.can_id)})).filter(r=>r.label)},frames:{catalog:frames.catalog,rarity:frames.rarity,owned:frames.owned(p.id),active:frames.active(p.id)},player:{id:p.id,login:p.login,display_name:session.display_name,avatar:session.avatar,balance:p.balance,opens:p.opens,wins:p.wins,jackpots:p.jackpots,last_opened:p.last_opened,message_count:db.prepare('SELECT message_count FROM chat_stats WHERE player_id=?').get(session.player_id)?.message_count||0},orders};
+  return {authenticated:true,is_admin:isAdminSession(session),stream,spin_allowed:isAdminSession(session)||stream?.live===true,support_unread:support.unread(session),notification_unread:notifications.unread(session),csrf:csrf(session),chatCase:chatCases.progress(p.id),coinCase:chatCases.coinStatus(p.id),donationCase:chatCases.purchases.status(p.id),entitlements:tickets.status(p.id),debts:debts.list(p.id),memberships:twitchRewards.eligibility(p.id),features:Object.fromEntries(controls.list().map(f=>[f.key,f.enabled])),vipShop:vipShop.status(p.id),vipOrders:vipShop.orders(p.id),manualVp:manualVp.list(p.id),vpCodes:vpShop.list(p.id),caseHistory:chatCases.history(p.id),giveawayPrizes:giveaways.claims.forPlayer(p.id),cosmetics:{...cosmetics.summary(p.id),duel_can:duelVisuals.current(p.id,p.login),duel_cans:db.prepare('SELECT can_id FROM duel_can_inventory WHERE player_id=? ORDER BY can_id').all(p.id).map(r=>({id:r.can_id,label:duelVisuals.catalog[r.can_id],src:canArt(r.can_id)})).filter(r=>r.label)},frames:{catalog:frames.catalog,rarity:frames.rarity,owned:frames.owned(p.id),active:frames.active(p.id)},player:{id:p.id,login:p.login,display_name:session.display_name,avatar:session.avatar,balance:p.balance,opens:p.opens,wins:p.wins,jackpots:p.jackpots,last_opened:p.last_opened,message_count:db.prepare('SELECT message_count FROM chat_stats WHERE player_id=?').get(session.player_id)?.message_count||0},orders};
  }
  function spinsQuery(sql,...params){
   return db.prepare(sql).all(...params).map(x=>({login:x.login,cans:JSON.parse(x.cans_json),gain:x.gain,description:x.description,source:x.source,created_at:x.created_at}));
@@ -335,6 +337,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
      else{json(res,404,{error:'Действие не найдено'});return true;}
      json(res,200,result);return true;
     }
+    if(path==='/api/debts/pay'){json(res,200,debts.pay(session,data));return true;}
     if(path==='/api/twitch/refresh'){const result=await twitchRewards.syncAll(false);json(res,200,{...result,memberships:twitchRewards.eligibility(session.player_id)});return true;}
     if(path==='/api/twitch/claim'){json(res,200,await twitchRewards.claim(session,String(data.kind||'')));return true;}
     if(/^\/api\/cases\/(twitch|vip|subscriber)\/open$/.test(path)){const id=path.split('/')[3],rid=actionId(data),status=await streamStatus.get();json(res,200,chatCases.open(session,rid,isAdminSession(session)||status.live===true,id));return true;}
@@ -404,5 +407,5 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   }
   return false;
  }
- return {handle,oauthCallback,recordSpin,trackChat,isAdminRequest,cases,chatCases,adminWallet,vipShop,manualVp,vpShop,caseManagement,uploads,controls,twitchRewards,support,reviews,duelVisuals,giveaways,extensionAuth,frames,cosmetics,isAdminIdentity:isAdminSession,adminIdentity:req=>{const s=getSession(req);return s&&isAdminSession(s)?s:{player_id:'admin-panel',login:'Администратор'};}};
+ return {handle,oauthCallback,recordSpin,trackChat,isAdminRequest,cases,chatCases,adminWallet,debts,vipShop,manualVp,vpShop,caseManagement,uploads,controls,twitchRewards,support,reviews,duelVisuals,giveaways,extensionAuth,frames,cosmetics,isAdminIdentity:isAdminSession,adminIdentity:req=>{const s=getSession(req);return s&&isAdminSession(s)?s:{player_id:'admin-panel',login:'Администратор'};}};
 }

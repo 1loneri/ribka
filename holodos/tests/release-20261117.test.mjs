@@ -51,3 +51,10 @@ resolveMe({...live,entitlements:{twitch:{available:1}}});await first;assert.equa
 const unchanged=polling.refreshMe({background:true});resolveMe({...polling.state.me});await unchanged;assert.equal(renders,1);
 polling.api=async()=>{throw Error('Temporary network error')};await polling.refreshMe({background:true});assert.equal(polling.state.me.authenticated,true);assert.equal(polling.state.me.entitlements.twitch.available,1);
 console.log('PASS live ticket refresh without reload, single flight, unchanged DOM and transient failure retention');
+
+const debtForm=new Map([['login','alice'],['player_id','1'],['amount','100'],['reason','Нарушение'],['request_id','f'.repeat(32)]]),debt=site.debts.create(debtForm,'admin');
+assert.equal((await call('/api/me')).data.debts[0].id,debt.id);
+assert.equal((await call('/api/debts/pay',{id:debt.id,amount:20,requestId:randomUUID()})).status,403);
+assert.equal((await call('/api/debts/pay',{id:debt.id,amount:20,requestId:randomUUID()},{...auth,origin:'https://evil.test'})).status,403);
+const debtPayment={id:debt.id,amount:20,requestId:randomUUID()};assert.equal((await call('/api/debts/pay',debtPayment,auth)).data.remaining,80);assert.equal((await call('/api/debts/pay',debtPayment,auth)).data.replayed,true);assert.equal((await call('/api/me')).data.debts[0].paid,20);
+console.log('PASS authenticated own debt API, CSRF/origin rejection, real W debit and idempotent retry');

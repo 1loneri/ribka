@@ -4,6 +4,7 @@ export const adminSections=[
  {key:'settings',path:'/admin/settings',label:'Включения и награды',description:'Управление доступностью разделов, кейсов и дропа.',ids:['feature-control']},
  {key:'vp',path:'/admin/vp',label:'VP, VIP и магазин',description:'Заявки VP и VIP, призы VP из кейсов, цены и отзывы.',ids:['vp-stock','vp-manual','orders','case-vp-prizes','vip-shop','economy','reviews']},
  {key:'cases',path:'/admin/cases',label:'Кейсы',description:'Покупки, редактор кейсов и остальные призы.',ids:['player-shortcut','case-management','case-purchases','case-prizes','cases-editor']},
+ {key:'violations',path:'/admin/violations',label:'Нарушения и долги',description:'Назначение долгов в W, причины нарушений и история оплаты.',ids:['violations']},
  {key:'balances',path:'/admin/balances',label:'W-монеты игроков',description:'Поиск баланса, начисление и списание W.',ids:['balances']},
  {key:'cosmetics',path:'/admin/cosmetics',label:'Косметика',description:'Рамки, титулы, оформление ников, темы и банки.',ids:['title-previews','asset-uploads','appearance','frames','cosmetics']},
  {key:'support',path:'/admin/support',label:'Обращения',description:'Вопросы игроков и ответы администрации.',ids:['support']},
