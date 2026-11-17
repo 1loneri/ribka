@@ -1699,8 +1699,8 @@ img[src*="/frame-thorn."]{filter:invert(1)}.equipped-avatar[data-equipped-frame=
 @keyframes titleHearts{0%{opacity:0;transform:translateY(6px) scale(.6)}20%{opacity:.9}100%{opacity:0;transform:translate(-4px,-20px) scale(.9)}}
 [data-title="duelist"]{background:#380b12!important;color:#f7b9bf!important;border-color:#6d2731!important}
 [data-title="poor"]{background:#050505!important;color:#fff!important;border-color:#4b4b4b!important}
-[data-title="sneaky"]{background:#65412c!important;color:#f1d5b9!important;border-color:#986b4b!important}
-[data-title="boar"]{background:linear-gradient(115deg,#050505,#5e5e5e,#d7d7d7,#fff,#505050,#050505)!important;background-size:350% 100%!important;color:#fff!important;border-color:#ddd8!important;text-shadow:0 1px 3px #000,0 0 3px #000;animation:boarShimmer 7s linear infinite}
+[data-title="sneaky"]{background-color:#65412c!important;color:#f1d5b9!important;border-color:#986b4b!important}
+[data-title="boar"]{background-image:linear-gradient(115deg,#050505,#5e5e5e,#d7d7d7,#fff,#505050,#050505)!important;background-size:350% 100%!important;color:#fff!important;border-color:#ddd8!important;text-shadow:0 1px 3px #000,0 0 3px #000;animation:boarShimmer 7s linear infinite}
 @keyframes boarShimmer{to{background-position:350% 0}}
 [data-title="tester"]{color:#d7d0f1;border-color:#aea0da55}
 .equipped-avatar[data-equipped-frame="ears"]::after,.equipped-avatar[data-equipped-frame="jett"]::after,.equipped-avatar[data-equipped-frame="clove"]::after{inset:-18%;width:136%;height:136%;background-size:contain;background-position:center;background-repeat:no-repeat;z-index:3}
@@ -1807,3 +1807,13 @@ main{view-transition-name:none}
 .frame-preview:has(img[src*="/frame-jett."]) picture img{width:217px;height:217px}
 .frame-preview-card:has(img[src*="/frame-jett."]){padding-top:32px;padding-bottom:23px}
 .frame-preview-card:has(img[src*="/frame-jett."]) h3{margin-top:32px}
+
+/* Consistent title badges in selectors, profiles and admin previews. */
+[data-title]:not([data-title=""]){position:relative;isolation:isolate;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-height:26px;padding:3px 9px;border:1px solid #c0b2d740;border-radius:7px;font-size:11px;font-weight:700;line-height:1.5;white-space:nowrap}
+.cosmetic-choice{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:9px 13px}
+.cosmetic-choice [data-title]{margin:0;max-width:100%}
+[data-title="poor"]{animation:titlePoorBlink 2.4s ease-in-out infinite}
+@keyframes titlePoorBlink{0%,100%{opacity:1;text-shadow:0 0 7px #ffffff55}50%{opacity:.35;text-shadow:none}}
+[data-title="sneaky"]{background-image:linear-gradient(0deg,#765037,#65412c)!important;background-position:bottom!important;background-repeat:no-repeat!important;background-color:#18130f!important;background-size:100% 100%;color:#f1d5b9!important;border-color:#986b4b!important;animation:titleSneakyFill 6s ease-in-out infinite}
+@keyframes titleSneakyFill{0%,12%{background-size:100% 100%;filter:brightness(1)}30%{background-size:100% 100%;filter:brightness(.3)}38%,44%{background-size:100% 0%;filter:brightness(.65)}80%,100%{background-size:100% 100%;filter:brightness(1)}}
+@media(prefers-reduced-motion:reduce){[data-title="poor"],[data-title="sneaky"]{animation:none!important;opacity:1;filter:none;background-size:100% 100%!important}}
