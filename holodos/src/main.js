@@ -505,7 +505,7 @@ server.listen(port,'0.0.0.0',()=>{console.log('Holodos panel listening on '+port
 if(current()&&app())void start();
 let giveawayTickBusy=false;const giveawayTimer=setInterval(async()=>{if(ending||giveawayTickBusy)return;giveawayTickBusy=true;try{await site.giveaways.tick((text,onSent)=>connected?say(text,onSent):false)}catch(e){console.error('Giveaway tick:',e.message)}finally{giveawayTickBusy=false}},1000);
 const duelTimer=setInterval(()=>{try{expireDuels(Date.now(),true);duelFees.settle(Date.now());}catch(e){console.error('Duel expiration:',e.message);}},5000);
-const twitchRewardsTimer=setInterval(()=>{void site.twitchRewards.syncAll(false).catch(e=>console.error('Twitch rewards sync failed'));},60000);
+const twitchRewardsTimer=setInterval(()=>{void site.twitchRewards.syncAll(false).catch(e=>console.error('Twitch rewards sync failed'));},10000);
 const heartbeat=setInterval(async()=>{if(ending||starting)return;try{if(!current()||!app())return;if(current().expires_at<Date.now()+30*60*1000){await refresh();await start();}else if(!connected)await start();db.prepare('DELETE FROM seen WHERE created_at<?').run(Date.now()-7*86400000);}catch(e){console.error('Twitch heartbeat:',e.message);}},60000);
 async function shutdown(){ending=true;clearInterval(giveawayTimer);clearInterval(heartbeat);clearInterval(twitchRewardsTimer);clearInterval(duelTimer);await stop();server.close();db.close();}
 process.once('SIGINT',()=>void shutdown().then(()=>process.exit(0)));

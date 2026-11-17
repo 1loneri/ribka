@@ -342,9 +342,14 @@ async function refreshPublic(){
  try{state.public=await api('/api/public');renderPublic();}
  catch(e){const text='<p class="muted">'+esc(e.message)+'</p>';['home-top','home-wins'].forEach(id=>$(id).innerHTML=text);}
 }
-async function refreshMe(){
- try{state.me=await api('/api/me');renderMe();}
- catch(e){state.me={authenticated:false};renderMe();notice(e.message);}
+let meRefreshPending=null;
+function refreshMe({background=false}={}){
+ if(meRefreshPending)return meRefreshPending;
+ meRefreshPending=(async()=>{
+  try{const me=await api('/api/me'),signature=value=>JSON.stringify(value,(key,value)=>key==='checked_at'?undefined:value),changed=signature(state.me)!==signature(me);state.me=me;if(!background||changed)renderMe();}
+  catch(e){if(!background)notice(e.message);if(!state.me){state.me={authenticated:false};renderMe();}}
+ })().finally(()=>{meRefreshPending=null;});
+ return meRefreshPending;
 }
 let historyScope='recent';
 function setHistoryScope(scope){historyScope=['recent','mine','jackpots','superjackpots'].includes(scope)?scope:'recent';for(const tab of document.querySelectorAll('[data-history-scope]')){const selected=tab.dataset.historyScope===historyScope;tab.setAttribute('aria-selected',String(selected));tab.tabIndex=selected?0:-1;} $('casino-history').setAttribute('aria-labelledby','history-tab-'+historyScope);$('casino-history').scrollTop=0;$('casino-history').textContent='Загружаем историю…';refreshSpins();}
@@ -407,10 +412,10 @@ Promise.all([refreshPublic(),refreshMe(),refreshSpins(),refreshCases(),refreshVi
 setInterval(updateCooldown,1000);
 // Keep W coins, cooldown and chat ranks in sync with the same live SQLite-backed API.
 // Poll only while the tab is visible; never invent a client-side balance.
-setInterval(()=>{if(document.visibilityState==='visible'&&!state.busy)refreshMe();},12000);
+setInterval(()=>{if(document.visibilityState==='visible'&&!state.busy)refreshMe({background:true});},5000);
 setInterval(()=>{if(document.visibilityState==='visible'){refreshPublic();if(currentRoute()==='/top')refreshTop();if(currentRoute()==='/chat')refreshChatTop();if(currentRoute()==='/cases')refreshCases();if(currentRoute()==='/duels')refreshDuels();}},20000);
 document.addEventListener('visibilitychange',()=>{
- if(document.visibilityState==='visible'&&!state.busy){refreshMe();refreshPublic();if(currentRoute()==='/top')refreshTop();if(currentRoute()==='/chat')refreshChatTop();if(currentRoute()==='/cases')refreshCases();if(currentRoute()==='/duels')refreshDuels();}
+ if(document.visibilityState==='visible'&&!state.busy){refreshMe({background:true});refreshPublic();if(currentRoute()==='/top')refreshTop();if(currentRoute()==='/chat')refreshChatTop();if(currentRoute()==='/cases')refreshCases();if(currentRoute()==='/duels')refreshDuels();}
 });
 
 // Decorative idle frost never captures input and clears on any activity.

@@ -40,3 +40,14 @@ assert.equal((await call('/api/giveaways')).status,200);assert.equal((await call
 assert.equal((await call('/api/giveaways/command',{command:'!foo'},auth)).status,403);assert.equal((await call('/api/giveaways')).data.command,'!вп');console.log('PASS viewer cannot change giveaway command');
 
 const privacy=await call('/privacy',null,{cookie:''});assert.equal(privacy.status,200);assert.match(privacy.headers['Content-Type'],/text\/html/);assert.equal(privacy.headers['X-Robots-Tag'],'noindex');assert.match(privacy.text,/Политика конфиденциальности/);assert.match(privacy.text,/Удаление данных/);assert.match((await call('/assets/privacy.css')).headers['Content-Type'],/text\/css/);const index=readFileSync(new URL('../src/site/index.html',import.meta.url),'utf8');const header=index.slice(0,index.indexOf('<footer'));assert.ok(!header.includes('href="/privacy"'));assert.ok(index.slice(index.indexOf('<footer')).includes('href="/privacy"'));console.log('PASS anonymous privacy page, styled response, no indexing and footer-only site link');
+
+// A reward granted while the page stays open is picked up without a navigation.
+const refreshSource=js.slice(js.indexOf('let meRefreshPending=null;'),js.indexOf("let historyScope='recent'"));
+let resolveMe,fetches=0,renders=0;const live={authenticated:true,entitlements:{twitch:{available:0}}};
+const polling={state:{me:live},api:()=>{fetches++;return new Promise(resolve=>{resolveMe=resolve})},renderMe:()=>{renders++},notice:()=>{throw Error('Unexpected background notification')}};
+vm.createContext(polling);vm.runInContext(refreshSource,polling);
+const first=polling.refreshMe({background:true}),overlap=polling.refreshMe({background:true});assert.equal(first,overlap);assert.equal(fetches,1);
+resolveMe({...live,entitlements:{twitch:{available:1}}});await first;assert.equal(polling.state.me.entitlements.twitch.available,1);assert.equal(renders,1);
+const unchanged=polling.refreshMe({background:true});resolveMe({...polling.state.me});await unchanged;assert.equal(renders,1);
+polling.api=async()=>{throw Error('Temporary network error')};await polling.refreshMe({background:true});assert.equal(polling.state.me.authenticated,true);assert.equal(polling.state.me.entitlements.twitch.available,1);
+console.log('PASS live ticket refresh without reload, single flight, unchanged DOM and transient failure retention');
