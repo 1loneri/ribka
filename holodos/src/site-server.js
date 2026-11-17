@@ -242,7 +242,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  async function handle(req,res,url){
   const path=url.pathname,method=req.method||'GET';
   if(path==='/privacy'&&(method==='GET'||method==='HEAD')){send(res,200,method==='HEAD'?'':privacyPage,'text/html; charset=utf-8',{'X-Robots-Tag':'noindex'});return true;}
-  if(path==='/api/extension/catalog'&&method==='GET'){json(res,200,{cases:publicCases(),extensionReady:extensionAuth.settings().configured},{'Access-Control-Allow-Origin':'*'});return true;}
+  if(path==='/api/extension/catalog'){const cors={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Methods':'GET, OPTIONS','Access-Control-Allow-Headers':'Content-Type, Cache-Control, Pragma','Access-Control-Max-Age':'300'};if(method==='OPTIONS'){send(res,204,'','text/plain; charset=utf-8',cors);return true;}if(method==='GET'){const ext=extensionAuth.settings();json(res,200,{cases:publicCases(),extensionReady:ext.configured,extensionOrigin:ext.clientId?'https://'+ext.clientId+'.ext-twitch.tv':null},cors);return true;}}
   const origin=String(req.headers.origin||'');
   if(path.startsWith('/api/')&&(/^https:\/\/[a-z0-9]+\.ext-twitch\.tv$/.test(origin)||req.headers['x-extension-jwt'])){
    const cors=extensionAuth.cors(origin);if(!cors){json(res,extensionAuth.settings().configured?403:503,{error:extensionAuth.settings().configured?'Недопустимый источник расширения.':'Вход в панель пока настраивается владельцем.'},/^https:\/\/[a-z0-9]+\.ext-twitch\.tv$/.test(origin)?{'Access-Control-Allow-Origin':origin,'Vary':'Origin'}:{});return true;}responseCors.set(res,cors);
