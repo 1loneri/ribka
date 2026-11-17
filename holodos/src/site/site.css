@@ -1517,7 +1517,7 @@ body:not(.inner-page) .topbar{border-bottom:0;box-shadow:none}
 /* Owned avatar frames overlay the avatar without cropping the artwork. */
 .equipped-avatar[data-equipped-frame]:not([data-equipped-frame=""]){position:relative;isolation:isolate;overflow:visible;border-color:transparent}
 .equipped-avatar>img{border-radius:50%}
-.equipped-avatar[data-equipped-frame]:not([data-equipped-frame=""])::after{content:"";position:absolute;inset:-12%;z-index:2;pointer-events:none;background-position:center;background-size:100% 100%;background-repeat:no-repeat}
+.equipped-avatar::after{content:"";position:absolute;inset:-12%;z-index:2;pointer-events:none;background-position:center;background-size:100% 100%;background-repeat:no-repeat}
 .equipped-avatar[data-equipped-frame="ultra"]::after{background-image:url('/assets/frame-ultra.gif?v=55')}
 .equipped-avatar[data-equipped-frame="original"]::after{background-image:url('/assets/frame-original.gif?v=53')}
 .equipped-avatar[data-equipped-frame="mango"]::after{background-image:url('/assets/frame-mango.gif?v=53')}
@@ -1900,3 +1900,6 @@ body[data-snow-effect="on"] .side-wallet-row:has(#side-balance)::before{position
 :is(.rank-item,.win-item,.history-item,.case-history-row)[data-highlight="paws"]::after{content:'🐾';position:absolute;right:28%;top:15%;font-size:18px;opacity:.25;pointer-events:none;animation:rowPaws 5s ease-in-out infinite}
 @keyframes rowPaws{0%,100%{transform:translateY(0) rotate(-15deg);opacity:.15}50%{transform:translateY(25px) rotate(15deg);opacity:.35}}
 @media(prefers-reduced-motion:reduce){:is(.rank-item,.win-item,.history-item,.case-history-row)[data-highlight],:is(.rank-item,.win-item,.history-item,.case-history-row)[data-highlight]::after{animation:none!important}}
+
+.equipped-avatar[data-equipped-frame=""]::after{content:none}
+.snow-toggle[hidden]{display:none!important}
