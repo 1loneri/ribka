@@ -38,6 +38,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  const siteKey=createHash('sha256').update('war1ouss-web:'+secret).digest();
  const sitePages=new Set(['/','/casino','/cases','/duels','/top','/chat','/shop','/profile','/help','/requests','/widget']);
  const assetFiles={
+ '/assets/twitch-panel.zip':{file:new URL('./site/twitch-panel.zip',import.meta.url),type:'application/zip'},
   '/assets/site.css':{file:new URL('./site/site.css',import.meta.url),type:'text/css; charset=utf-8'},
   '/assets/site.js':{file:new URL('./site/site.js',import.meta.url),type:'text/javascript; charset=utf-8'},
   '/assets/holodos-frame-2026.webp':{file:new URL('./site/holodos-frame-2026.webp',import.meta.url),type:'image/webp'},

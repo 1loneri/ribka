@@ -1,3 +1,4 @@
+import {createAdminPlayer} from './admin-player.js';
 import {adminSections} from './admin-sections.js';
 import {createDuelFees} from './duel-fees.js';
 import {renderBotCommands} from './bot-command-list.js';
@@ -267,6 +268,7 @@ const streamStatus=createStreamStatus({app,tokenRequest,channel});
 const site=createSite({db,publicUrl,app,tokenRequest,validate,player,transaction,draw,cans,duelChallenge,duelRespond,say,channel,duelsEnabled,states,secret,streamStatus,channelConnections});
 function equal(a,b){const x=Buffer.from(a),y=Buffer.from(b);return x.length===y.length&&timingSafeEqual(x,y);}
 function escape(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+const adminPlayer=createAdminPlayer(db,transaction,site);
 function page(body,path='/admin'){return renderAdminPage(body,{path});}
 async function formData(req){let text='';for await(const chunk of req){text+=chunk;if(text.length>16384)throw Error('Слишком большая форма');}return new URLSearchParams(text);}
 function setupForm(token){
@@ -275,7 +277,7 @@ function setupForm(token){
 }
 const server=http.createServer(async(req,res)=>{
  const url=new URL(req.url,'http://localhost');
- const html=(status,body,headers={})=>{res.writeHead(status,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','X-Frame-Options':'DENY','Referrer-Policy':'no-referrer','Content-Security-Policy':"default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'",...headers});res.end(page(body,url.pathname));};
+ const html=(status,body,headers={})=>{res.writeHead(status,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','X-Frame-Options':'DENY','Referrer-Policy':'no-referrer','Content-Security-Policy':"default-src 'none'; style-src 'unsafe-inline'; img-src 'self' https://static-cdn.jtvnw.net; form-action 'self'; base-uri 'none'",...headers});res.end(page(body,url.pathname));};
  const redirect=(target='/admin')=>{res.writeHead(303,{Location:target,"Cache-Control":"no-store"});res.end();};
  if(url.pathname==='/health'){res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify({ok:true,twitch_connected:connected}));return;}
  if(url.pathname==='/oauth/callback'){
@@ -336,6 +338,10 @@ const server=http.createServer(async(req,res)=>{
   if(!validCsrf(form,'disconnect')){html(403,'Форма устарела, обнови страницу.');return;}
   res.writeHead(303,{Location:'/',"Cache-Control":"no-store",'Set-Cookie':cookieName+'=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0'});res.end();return;
  }
+ if(req.method==='POST'&&url.pathname==='/admin/player-change'){
+  try{const f=await formData(req);if(!validCsrf(f,'player-manager')){html(403,'Форма устарела. Обнови страницу.');return;}adminPlayer.change(f,site.adminIdentity(req).player_id);redirect('/admin/players?player_login='+encodeURIComponent(f.get('login')));}catch(e){html(e.status||400,'<h2>Изменение не выполнено</h2><p>'+escape(e.status?e.message:'Проверь данные и повтори попытку.')+'</p><a href="/admin/players">Вернуться к игрокам</a>');}return;
+ }
+ if(req.method==='GET'&&url.pathname==='/admin/players'){html(200,adminPlayer.render(escape,csrf('player-manager'),url.searchParams.get('player_login')));return;}
  if(req.method==='POST'){
   if(['/feature-save','/twitch-sync','/twitch-create-reward','/asset-upload','/asset-toggle'].includes(url.pathname)){
    try{const parsed=url.pathname==='/asset-upload'?await site.uploads.parse(req):{form:await formData(req)},f=parsed.form;if(!validCsrf(f,'site-control')){html(403,'Форма устарела. Обнови страницу.');return;}const actor=site.adminIdentity(req).player_id;if(url.pathname==='/feature-save')site.controls.save(f,actor);else if(url.pathname==='/twitch-sync')await site.twitchRewards.syncAll(true);else if(url.pathname==='/twitch-create-reward')await site.twitchRewards.createReward();else if(url.pathname==='/asset-upload')site.uploads.upload(f,parsed.file,actor);else site.uploads.toggle(f.get('id'),f.get('enabled'),actor);res.writeHead(303,{Location:url.pathname.startsWith('/twitch')?'/admin/twitch#twitch-rewards':url.pathname.startsWith('/asset')?'/admin/cosmetics#asset-uploads':'/admin/settings#feature-control','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Настройки не обновлены</h2><p>'+escape(e.status?e.message:'Проверь форму и попробуй ещё раз.')+'</p><a href="/admin">Вернуться в админку</a>');}return;
@@ -445,8 +451,10 @@ const server=http.createServer(async(req,res)=>{
  for(const [vp,price] of Object.entries(SHOP_PRICES))content+='<div class="admin-row"><span>'+vp+' VP</span><b>'+number(price)+' W</b></div>';
  content+='<div class="admin-row"><span>Версия настроек</span><b>'+escape(ECONOMY.version)+'</b></div></section>';
  content+='<section class="admin-panel" id="channel-status"><h2>Twitch-канал</h2><div class="admin-row"><span>Канал</span><b>#'+escape(channel)+'</b></div><div class="admin-row"><span>Аккаунт бота</span><b>@'+escape(linked?.login||botLogin)+'</b></div><div class="admin-row"><span>Подключение</span><b>'+(linked?'Авторизован':'Требуется вход')+'</b></div><p class="admin-note">Команды: !холодос · !баланс · !магазин · !заказ</p></section></div>';
+ content+='<section class="admin-panel" id="twitch-widget"><h2>Панель под плеером Twitch</h2><p>Компактный вход в «Холодос», кейсы и профиль со страницы канала.</p><a href="/widget" target="_blank" rel="noopener">Открыть компактный сайт ↗</a><p><a href="/assets/twitch-panel.zip">Скачать файлы панели Twitch</a></p><details><summary>Как подключить</summary><ol><li>Создай Panel Extension в кабинете разработчика Twitch.</li><li>Загрузи файлы архива; Panel Viewer Path: panel.html.</li><li>Проверь Hosted Test и пройди публикацию Twitch.</li><li>Активируй расширение под плеером своего канала.</li></ol><p>Панель открывает сайт в новой вкладке. Личные балансы и открытие кейса внутри Twitch пока не подключены: для них нужна проверка Extension JWT.</p></details></section>';
  content+=site.adminWallet.render(escape,csrf('wallet-change'),randomBytes(16).toString('hex'),url.searchParams.get('wallet_login')||'');
  content+=renderCaseEditor(site.cases,csrf('case-settings'),escape);
+ content+='<section class="admin-panel" id="player-shortcut"><h2>Удобная выдача и списание</h2><p>Баланс, кейсы, VP и аксессуары — в одной карточке.</p><a href="/admin/players">Найти игрока и открыть инвентарь ↗</a></section>';
  content+=site.caseManagement.renderAdmin(escape,csrf('case-revoke'),randomBytes(16).toString('hex'),url.searchParams.get('case_login'));
  content+=site.chatCases.purchases.renderAdmin(escape,csrf('case-purchase'),randomBytes(16).toString('hex'));
  content+=site.chatCases.renderAdmin(escape,csrf('case-prizes'),'vp');
