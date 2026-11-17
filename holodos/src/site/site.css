@@ -1932,3 +1932,28 @@ main{view-transition-name:none}
 dialog.player-popover{position:fixed;inset:0;margin:auto;max-height:calc(100dvh - 48px);overflow-y:auto;overscroll-behavior:contain}
 dialog.player-popover[data-profile="cat"]{overflow:visible;max-height:calc(100dvh - 80px)}
 :is(.case-history-row,.rank-item,.win-item,.history-item) .player-line{cursor:pointer}
+
+:is(#profile-content,.player-popover)[data-profile="cat"]::after{left:-50px;top:-46px}
+#duel-preview{display:none!important}
+.duel-arena-label,.duel-arena-result,.duel-versus{text-align:center;align-self:center;justify-self:center;width:100%;margin-left:auto;margin-right:auto}
+.duel-fighters{display:grid;grid-template-columns:minmax(0,1fr) 48px minmax(0,1fr);align-items:center;gap:16px}
+.duel-can-catalog{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:16px}
+.duel-can-catalog figure{display:flex;flex-direction:column;align-items:center;gap:10px;padding:14px 8px;border:1px solid #ffffff18;border-radius:12px;background:#ffffff03}
+.duel-can-catalog button{font:inherit;font-size:11px;border:1px solid #a7cde644;border-radius:8px;padding:8px 12px;background:#ffffff07;color:#cde4f4;cursor:pointer;margin-top:auto}
+.duel-can-catalog button[aria-pressed="true"]{background:#aad6ee18;border-color:#bcdff5;cursor:default}
+.duel-can-catalog figcaption{min-height:26px}
+.duel-can-how{width:min(440px,calc(100vw - 28px));padding:24px;border:1px solid #a1cbe644;border-radius:16px;background:#111923;color:#dcebf5}
+.duel-can-how::backdrop{background:#03070bbf;backdrop-filter:blur(5px)}
+.duel-can-how a{display:block;margin-top:12px;padding:12px;border:1px solid #b4d8ee33;border-radius:10px}
+@media(max-width:540px){.duel-fighters{gap:8px;grid-template-columns:minmax(0,1fr) 30px minmax(0,1fr)}}
+
+/* Tight decorations and uniform gallery captions. */
+.equipped-avatar[data-equipped-frame="ears"]::after{inset:auto;left:-19%;top:-16%;width:140%;height:140%;background-size:contain}
+.frame-preview:has(img[src*="/frame-ears."]) picture{position:absolute;left:-10px;top:-7px;width:182px;height:182px}.frame-preview:has(img[src*="/frame-ears."]) picture img{width:182px;height:182px}
+.equipped-avatar[data-equipped-frame="clove"]::after{inset:auto;left:-23%;top:-23%;width:146%;height:146%;background-size:contain}
+.frame-preview:has(img[src*="/frame-clove."]) picture{left:-15px;top:-15px;width:190px;height:190px}.frame-preview:has(img[src*="/frame-clove."]) picture img{width:190px;height:190px}
+.equipped-avatar[data-equipped-frame="shy"]::after{inset:auto;left:-4%;top:0;width:108%;height:108%;transform:translateY(16%)}
+.frame-preview:has(img[src*="/frame-shy."]) picture{left:10px;top:34px;width:140px;height:140px}.frame-preview:has(img[src*="/frame-shy."]) picture img{width:140px;height:140px}
+.monster-frame-grid .frame-preview-card{padding:30px 12px 20px;display:flex;flex-direction:column;align-items:center;gap:0}
+.monster-frame-grid .frame-preview-card h3{margin:28px 0 0;min-height:36px;display:flex;align-items:center;justify-content:center;font-size:13px}
+.monster-frame-grid .frame-preview-card .frame-rarity{margin-top:4px}

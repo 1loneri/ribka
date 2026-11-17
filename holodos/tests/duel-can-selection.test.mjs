@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {DatabaseSync} from 'node:sqlite';
+import {randomUUID,createHash} from 'node:crypto';
+import {Readable} from 'node:stream';
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+import {createSite} from '../src/site-server.js';
+import {freezeEarlyTesters} from '../src/early-testers.js';
+const db=new DatabaseSync(':memory:');
+db.exec("CREATE TABLE players(id TEXT PRIMARY KEY,login TEXT,balance INTEGER DEFAULT 0,opens INTEGER DEFAULT 0,wins INTEGER DEFAULT 0,jackpots INTEGER DEFAULT 0,last_opened INTEGER DEFAULT 0);CREATE TABLE shop_orders(id INTEGER PRIMARY KEY,player_id TEXT,login TEXT,vp INTEGER,price INTEGER,status TEXT,created_at INTEGER,updated_at INTEGER);CREATE TABLE chat_stats(player_id TEXT PRIMARY KEY,login TEXT,message_count INTEGER DEFAULT 0,last_seen INTEGER DEFAULT 0,badges_json TEXT DEFAULT '{}');INSERT INTO players(id,login,balance) VALUES('1','alice',200000),('2','bob',200000);INSERT INTO chat_stats(player_id,login,badges_json) VALUES('1','alice','{\"founder\":\"0\"}'),('2','bob','{}');");
+const transaction=fn=>{db.exec('BEGIN IMMEDIATE');try{const r=fn();db.exec('COMMIT');return r;}catch(e){db.exec('ROLLBACK');throw e;}},player=(id,login)=>{db.prepare('INSERT OR IGNORE INTO players(id,login) VALUES(?,?)').run(id,login);return db.prepare('SELECT * FROM players WHERE id=?').get(id)};
+let tier='1000',rewardCreated=false,redeemed=false,paused=false;
+const connections={helix:async(feature,path,params={},method='GET',body)=>{if(feature==='vips')return {data:[{user_id:'1',user_login:'alice'}]};if(feature==='subscriptions')return {data:[{user_id:'2',user_login:'bob',tier}]};if(path==='channel_points/custom_rewards/redemptions'){if(method==='PATCH'){redeemed=true;return {data:[]};}return {data:(params.status==='FULFILLED'&&redeemed||params.status==='UNFULFILLED'&&!redeemed)?[{id:'redeem-1',user_id:'1',user_login:'alice',redeemed_at:new Date().toISOString()}]:[]};}if(method==='POST'){rewardCreated=true;return {data:[{id:'reward-1'}]};}if(method==='PATCH'){if(body?.is_paused!==undefined)paused=body.is_paused;return {data:[]};}return {data:rewardCreated?[{id:'reward-1',title:'Кейс Холодоса · 10 000'}]:[]};}};
+const site=createSite({db,transaction,player,publicUrl:'https://test.local',secret:'fixture-not-real',app:()=>null,channelConnections:connections,streamStatus:{get:async()=>({live:true,known:true})}});
+
+site.duelVisuals.grant('alice','white','admin');site.duelVisuals.grant('alice','mango','admin');site.duelVisuals.equip('1','mango');assert.equal(site.duelVisuals.current('1').id,'mango');assert.throws(()=>site.duelVisuals.equip('1','violet'),/ещё не получена/);site.duelVisuals.equip('1','black');assert.equal(site.duelVisuals.current('1').id,'black');site.duelVisuals.equip('1','white');const d=site.duelVisuals.present({id:300,initiator_id:'1',initiator_login:'alice',opponent_id:'2',opponent_login:'bob'});assert.equal(d.leftCan.id,'white');site.duelVisuals.equip('1','mango');assert.equal(site.duelVisuals.present({id:300,initiator_id:'1',initiator_login:'alice',opponent_id:'2',opponent_login:'bob'}).leftCan.id,'white');console.log('PASS selected owned can, default selection, ownership enforcement and immutable existing duel artwork');
