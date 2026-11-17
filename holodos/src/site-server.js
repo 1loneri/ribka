@@ -182,7 +182,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   db.prepare('INSERT OR IGNORE INTO fridge_spins(request_id,player_id,login,cans_json,gain,description,source,created_at) VALUES(?,?,?,?,?,?,?,?)').run(requestId,id,login,JSON.stringify(display),d.gain,d.description,source,now);
  }
  function trackChat(id,login,now,tags={},message){
-  if(/^!розыгрыш\s*$/iu.test(String(message||'')))try{giveaways.join(id,login);}catch{}
+  if(giveaways.matchesCommand(message))try{giveaways.join(id,login);}catch{}
   if(!shouldCountChatMessage(message))return false;
   return transaction(()=>{
   if(tags.id&&!db.prepare('INSERT OR IGNORE INTO chat_counted_messages VALUES(?,?)').run(String(tags.id),now).changes)return false;
@@ -301,6 +301,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
      if(!isAdminSession(session)){json(res,403,{error:'Только для стримера и администраторов'});return true;}
      if(['create','start'].includes(action)&&!(await streamStatus.get()).live){json(res,403,{error:'Запуск розыгрыша доступен во время эфира Twitch.'});return true;}
      const actor=session.player_id;let result;
+     if(action==='command'){json(res,200,giveaways.setCommand(data.command,actor));return true;}
      if(action==='create')result=giveaways.create({...data,requestId:actionId(data)},actor);
      else if(action==='start')result=await giveaways.start(data.id,actor);
      else if(action==='cancel')result=giveaways.cancel(data.id,actor);
