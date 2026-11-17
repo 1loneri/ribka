@@ -1799,3 +1799,11 @@ main{view-transition-name:none}
 /* Title particles must be anchored to the title, including inventory previews. */
 [data-title]{position:relative;isolation:isolate;display:inline-flex;align-items:center}
 [data-title="chmonya"]{clip-path:inset(-24px -8px -4px)}
+
+/* Match We see you opening (about 60% of its canvas) to the avatar. */
+.equipped-avatar[data-equipped-frame="jett"]::after{inset:auto;left:-31.9%;top:-33.2%;width:167.2%;height:167.2%;background-size:contain}
+.frame-preview:has(img[src*="/frame-jett."]) .frame-preview-center{inset:15px;z-index:0}
+.frame-preview:has(img[src*="/frame-jett."]) picture{position:absolute;left:-26px;top:-28px;width:217px;height:217px;z-index:3}
+.frame-preview:has(img[src*="/frame-jett."]) picture img{width:217px;height:217px}
+.frame-preview-card:has(img[src*="/frame-jett."]){padding-top:32px;padding-bottom:23px}
+.frame-preview-card:has(img[src*="/frame-jett."]) h3{margin-top:32px}
