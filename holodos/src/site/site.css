@@ -1913,3 +1913,17 @@ main{view-transition-name:none}
 /* Slower rain on a translucent, blue glass panel. */
 :is(#profile-content,.player-popover)[data-profile="rain"]{background-color:#10283b78;border-color:#8ebbd64d;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:inset 0 1px 0 #e2f4ff12,0 16px 45px #0003;--profile-surface:#18354b66;--profile-border:#5d89a16b;animation-duration:6s}
 @media(prefers-reduced-motion:reduce){:is(#profile-content,.player-popover)[data-profile="rain"]{animation:none}}
+
+/* Compact public profile with a large, tightly framed avatar. */
+.player-popover{padding:22px;width:min(520px,calc(100vw - 28px))}
+.player-popover>[data-close-player]{position:absolute;right:16px;top:16px;float:none;z-index:5}
+.player-popover .profile-card{margin-top:0;padding:16px 4px 18px;gap:22px;clear:none}
+.player-popover .profile-equipped-avatar{margin:10px 16px 10px 10px}
+.player-popover .profile-card h2{margin:0 0 10px;font-size:24px}
+.player-popover .mini-player-stats{padding:10px 14px}
+.player-popover .mini-player-stats p{margin:10px 0}
+.equipped-avatar[data-equipped-frame="clove"]::after{inset:auto;left:-28%;top:-28%;width:156%;height:156%;background-size:contain}
+.frame-preview:has(img[src*="/frame-clove."]) picture{left:-21.4px;top:-21.4px;width:202.8px;height:202.8px}
+.frame-preview:has(img[src*="/frame-clove."]) picture img{width:202.8px;height:202.8px}
+:is(#profile-content,.player-popover)[data-profile="cat"]::after{left:-48px;top:-48px}
+@media(max-width:540px){.player-popover{padding:20px 16px}.player-popover .profile-card{gap:14px;padding:18px 0 14px}.player-popover .profile-equipped-avatar{margin:8px 12px}.player-popover .profile-card h2{font-size:22px}}
