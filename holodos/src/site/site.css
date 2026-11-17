@@ -2037,7 +2037,7 @@ body.inner-page:has(.view.active[data-view^="/giveaways"]) main{max-width:1760px
 @media(max-width:540px){.cosmetic-examples-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;max-height:360px}.cosmetic-example-tabs{gap:5px}.cosmetic-example-tabs button{padding:7px 9px;font-size:10px}.cosmetic-visual{height:108px}}
 @media(prefers-reduced-motion:reduce){.cosmetic-effect-preview i{animation:none;top:25%}}
 #profile-content[data-profile="fogcat"] :is(.history-item,.history-item strong,.chat-case-history strong,.profile-orders h3){color:var(--profile-accent)}
-#cosmetic-gallery .cosmetic-profile-preview[data-profile="cat"]::after{top:-9px;left:-7px;bottom:auto;right:auto;width:40px;height:40px;animation:none}
+#cosmetic-gallery .cosmetic-profile-preview[data-profile="cat"]::after{top:-18px;left:-21px;bottom:auto;right:auto;width:40px;height:40px;animation:none}
 #cosmetic-gallery .cosmetic-profile-preview[data-profile="roses"]::after{font-size:20px;right:8px;bottom:0}
 :is(#profile-content,.player-popover,.cosmetic-profile-preview)[data-profile="redangel"]{--profile-accent:#f2eded;--profile-surface:#181818ce;--profile-border:#55555588;--profile-muted:#a8a7aa;background:#030303 url('/assets/profile-redangel.webp') right -100px/auto 720px no-repeat;color:#eee}
 .player-popover[data-profile="redangel"]{background-position:right -115px;background-size:auto 570px}.player-popover[data-profile="redangel"] .mini-player-stats{background:#181818ce;border-color:#5558}
@@ -2046,3 +2046,5 @@ body.inner-page:has(.view.active[data-view^="/giveaways"]) main{max-width:1760px
 .profile-accordion{margin:12px 0;border:1px solid var(--profile-border,#8ea9c43d);border-radius:12px;background:var(--profile-surface,#111c2780)}.profile-accordion>summary{display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:51px;padding:14px 18px;color:var(--profile-accent,#d7e8f4);font-size:14px;font-weight:700;list-style:none;cursor:pointer}.profile-accordion>summary::-webkit-details-marker{display:none}.profile-accordion>summary::after{content:'+';font-size:20px;font-weight:400;opacity:.6}.profile-accordion[open]>summary::after{content:'−'}.profile-accordion>summary:focus-visible{outline:2px solid var(--profile-accent,#afcff0);outline-offset:3px;border-radius:10px}.profile-section-body{padding:0 18px 18px}.profile-section-body :is(.profile-orders,.profile-frames,.chat-case-history){margin:0;padding:0;border:0;background:none!important}.profile-section-body .cosmetic-tabs{margin-top:8px}
 
 #cosmetic-gallery .cosmetic-profile-preview[data-profile="cat"]{overflow:visible}
+
+.cosmetic-examples-grid:has(.cosmetic-profile-preview){padding:22px 22px 5px;gap:16px 12px}
