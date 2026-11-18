@@ -78,7 +78,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  for(const id of ['pipeline','pacific','khaotic','violet','badapple'])assetFiles['/assets/duel-can-'+id+'.webp']={file:new URL('./site/duel-can-'+id+'.webp',import.meta.url),type:'image/webp'};
  assetFiles['/assets/dela-gothic-one.woff']={file:new URL('./site/dela-gothic-one.woff',import.meta.url),type:'font/woff'};
  assetFiles['/assets/dela-gothic-one.ttf']={file:new URL('./site/dela-gothic-one.ttf',import.meta.url),type:'font/ttf'};
- for(const id of ['ears','jett','clove','shy','fish','cats','hat','angel','sims-green','sims-red'])assetFiles['/assets/frame-'+id+'.png']={file:new URL('./site/frame-'+id+'.png',import.meta.url),type:'image/png'};
+ for(const id of ['throne','ears','jett','clove','shy','fish','cats','hat','angel','sims-green','sims-red'])assetFiles['/assets/frame-'+id+'.png']={file:new URL('./site/frame-'+id+'.png',import.meta.url),type:'image/png'};
  assetFiles['/assets/site-features.js']={file:new URL('./site/site-features.js',import.meta.url),type:'text/javascript; charset=utf-8'};
  assetFiles['/assets/profile-cat.png']={file:new URL('./site/profile-cat.png',import.meta.url),type:'image/png'};
  for(const id of ['cat','roses'])assetFiles['/assets/profile-'+id+'.svg']={file:new URL('./site/profile-'+id+'.svg',import.meta.url),type:'image/svg+xml'};
