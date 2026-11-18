@@ -41,9 +41,9 @@
   if(arrangement.mode==='heart'&&all.length>1){
    const points=[],steps=2048;let distance=0,previous=null;
    for(let i=0;i<=steps;i++){const t=i/steps*Math.PI*2,p={x:16*Math.pow(Math.sin(t),3),y:-(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t))};if(previous)distance+=Math.hypot(p.x-previous.x,p.y-previous.y);points.push({...p,d:distance});previous=p;}
-   let at=0;const spacing=Math.min(w*.64,h*.48)*3/all.length;
-   layout.canH=Math.min(layout.canH,Math.max(8,spacing*.8));layout.cellW=Math.max(10,spacing);
-   all.forEach((p,i)=>{const d=i*distance/all.length;while(at<steps&&points[at].d<d)at++;const point=points[at],x=w*(.5+point.x/32*.64),y=h*(.53+point.y/29*.48);layout.positions.set(p.id,{x,y,base:y+layout.canH/2,row:0});});
+   let at=0;const spacing=Math.min(w*.48,h*.38)*3/all.length;
+   layout.canH=Math.min(128,layout.cellH*1.15,Math.max(10,spacing*1.7));layout.cellW=Math.max(10,spacing);
+   all.forEach((p,i)=>{const d=i*distance/all.length;while(at<steps&&points[at].d<d)at++;const point=points[at],x=w*(.5+point.x/32*.48),y=h*(.53+point.y/29*.38);layout.positions.set(p.id,{x,y,base:y+layout.canH/2,row:0});});
   }
   if(arrangement.mode==='manual')for(const p of all){const point=arrangement.positions?.[p.id];if(point&&Number.isFinite(point.x)&&Number.isFinite(point.y)){const x=w*point.x,y=h*point.y;layout.positions.set(p.id,{x,y,base:y+layout.canH/2,row:0});}}
   if(drag&&layout.positions.has(drag.id)){const x=drag.x*w,y=drag.y*h;layout.positions.set(drag.id,{x,y,base:y+layout.canH/2,row:0});}
