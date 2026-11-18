@@ -14,6 +14,7 @@ for(let i=0;i<count;i++){
 for(const name of ['panel.html','panel.js','catalog.json'])entries.set(name,readFileSync(new URL(name,extension)));
 entries.set('panel.css',Buffer.from(readFileSync(new URL('panel.css',extension),'utf8')+'\n'+readFileSync(new URL('cosmetic-titles.css',site),'utf8').replaceAll('/assets/monocraft.woff','media/monocraft.woff')));
 entries.set('media/frame-throne.png',readFileSync(new URL('frame-throne.png',site)));
+for(const name of ['dela-gothic-one.woff','dela-gothic-one-LICENSE.txt'])entries.set('media/'+name,readFileSync(new URL(name,site)));
 const crcTable=Array.from({length:256},(_,n)=>{for(let j=0;j<8;j++)n=n&1?0xedb88320^(n>>>1):n>>>1;return n>>>0;});
 const crc32=b=>{let n=0xffffffff;for(const v of b)n=crcTable[(n^v)&255]^(n>>>8);return (n^0xffffffff)>>>0;};
 const local=[],central=[];let offset=0,centralSize=0;

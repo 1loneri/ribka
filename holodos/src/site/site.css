@@ -2060,3 +2060,7 @@ body.inner-page:has(.view.active[data-view^="/giveaways"]) main{max-width:1760px
 .giveaway-last[data-highlight]:not([data-highlight=""]) .player-line>b{background:linear-gradient(110deg,var(--highlight,#d1bce9),#fff,var(--highlight,#d1bce9));background-size:250% 100%;background-clip:text;-webkit-background-clip:text;color:transparent;animation:rowHighlightFlow 6s linear infinite}@media(prefers-reduced-motion:reduce){.giveaway-last .player-line>b{animation:none!important}}
 
 .giveaway-layout{width:100%;max-width:1550px}.giveaway-stage .giveaway-canvas,.giveaway-stage .giveaway-canvas.giveaway-canvas--tall,.giveaway-stage .giveaway-canvas.giveaway-canvas--extra-tall{height:620px;aspect-ratio:auto}@media(max-width:660px){.giveaway-stage .giveaway-canvas,.giveaway-stage .giveaway-canvas.giveaway-canvas--tall,.giveaway-stage .giveaway-canvas.giveaway-canvas--extra-tall{height:420px}}
+
+/* Shared display font; the home and fridge pages keep their existing typography. */
+body:not(:has(#view-home.active,#view-casino.active)){font-family:'Dela Gothic One',sans-serif}
+body:not(:has(#view-home.active,#view-casino.active)) :is(h1,h2,h3,h4,button,input,select,textarea){font-family:'Dela Gothic One',sans-serif}

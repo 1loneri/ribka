@@ -7,6 +7,7 @@ names=['case-'+x+'.webp' for x in ['donation','twitch','chat','vip','coins','sub
 with zipfile.ZipFile(site/'twitch-panel.zip','w',zipfile.ZIP_DEFLATED) as z:
  for name in ['panel.html','panel.js','catalog.json']:z.write(root/name,name)
  z.writestr('panel.css',(root/'panel.css').read_text()+'\n'+(site/'cosmetic-titles.css').read_text().replace('/assets/monocraft.woff','media/monocraft.woff'))
+ for font in ['dela-gothic-one.woff','dela-gothic-one-LICENSE.txt']:z.write(site/font,'media/'+font)
  z.write(site/'monocraft.woff','media/monocraft.woff')
  z.write(site/'Monocraft-LICENSE.txt','media/Monocraft-LICENSE.txt')
  for name in ['profile-fogcat.webp','profile-chinese.webp','profile-redangel.webp','sims-red-filter.svg']:z.write(site/name,'media/'+name)
