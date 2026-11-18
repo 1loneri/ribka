@@ -2050,3 +2050,5 @@ body.inner-page:has(.view.active[data-view^="/giveaways"]) main{max-width:1760px
 .cosmetic-examples-grid:has(.cosmetic-profile-preview){padding:22px 22px 5px;gap:16px 12px}
 
 .equipped-avatar[data-equipped-frame="throne"]::after{inset:auto;left:-42%;top:-70%;width:184%;height:184%;background-image:url('/assets/frame-throne.png');background-size:100% 100%;z-index:4}
+
+#cosmetic-gallery .gallery-avatar[data-equipped-frame="throne"]{width:48px;height:48px;transform:translateY(11px);font-size:18px}
