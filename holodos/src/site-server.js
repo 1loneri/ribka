@@ -340,6 +340,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
      if(action==='command'){json(res,200,giveaways.setCommand(data.command,actor));return true;}
      if(action==='create')result=giveaways.create({...data,requestId:actionId(data)},actor);
      else if(action==='start')result=await giveaways.start(data.id,actor);
+     else if(action==='reset')result=giveaways.reset(data.id,actor);
      else if(action==='cancel')result=giveaways.cancel(data.id,actor);
      else if(action==='recheck')result=await giveaways.recheck(data.id,actor);
      else if(['issued','denied'].includes(action))result=giveaways.resolve(data.id,action,actor);
