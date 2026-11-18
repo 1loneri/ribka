@@ -42,7 +42,7 @@
    const points=[],steps=2048;let distance=0,previous=null;
    for(let i=0;i<=steps;i++){const t=i/steps*Math.PI*2,p={x:16*Math.pow(Math.sin(t),3),y:-(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t))};if(previous)distance+=Math.hypot(p.x-previous.x,p.y-previous.y);points.push({...p,d:distance});previous=p;}
    let at=0;const spacing=Math.min(w*.48,h*.38)*3/all.length;
-   layout.canH=Math.min(128,layout.cellH*1.15,Math.max(10,spacing*1.7));layout.cellW=Math.max(10,spacing);
+   layout.cellW=Math.max(10,spacing);
    all.forEach((p,i)=>{const d=i*distance/all.length;while(at<steps&&points[at].d<d)at++;const point=points[at],x=w*(.5+point.x/32*.48),wanted=h*(.53+point.y/29*.38)+layout.canH/2,row=shelfLevels.reduce((best,level,index)=>Math.abs(h*level-wanted)<Math.abs(h*shelfLevels[best]-wanted)?index:best,0),base=h*shelfLevels[row];layout.positions.set(p.id,{x,y:base-layout.canH/2,base,row});});
   }
   if(arrangement.mode==='heart'){for(let row=0;row<shelfLevels.length;row++){const group=[...layout.positions.values()].filter(p=>p.row===row).sort((a,b)=>a.x-b.x),gap=Math.min(layout.canH*.75,w*.7/Math.max(1,group.length-1));for(let i=1;i<group.length;i++)group[i].x=Math.max(group[i].x,group[i-1].x+gap);if(group.length){const shift=Math.max(0,group.at(-1).x-w*.85);for(const p of group)p.x-=shift;}}}
