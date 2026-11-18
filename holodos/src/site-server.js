@@ -206,7 +206,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  }
  function trackChat(id,login,now,tags={},message){
   if(String(message||'').trim())giveaways.claims.confirm(id,Number(tags['tmi-sent-ts'])||now);
-  if(giveaways.matchesCommand(message))try{giveaways.join(id,login);}catch{}
+  if(giveaways.matchesCommand(message)){giveaways.recordCommand(id,login);try{giveaways.join(id,login);}catch{}}
   if(!shouldCountChatMessage(message))return false;
   return transaction(()=>{
   if(tags.id&&!db.prepare('INSERT OR IGNORE INTO chat_counted_messages VALUES(?,?)').run(String(tags.id),now).changes)return false;
