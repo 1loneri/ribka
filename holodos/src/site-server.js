@@ -336,6 +336,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
      if(!isAdminSession(session)){json(res,403,{error:'Только для стримера и администраторов'});return true;}
      if(['create','start'].includes(action)&&!(await streamStatus.get()).live){json(res,403,{error:'Запуск розыгрыша доступен во время эфира Twitch.'});return true;}
      const actor=session.player_id;let result;
+     if(action==='arrangement'){json(res,200,giveaways.setArrangement(data,actor));return true;}
      if(action==='command'){json(res,200,giveaways.setCommand(data.command,actor));return true;}
      if(action==='create')result=giveaways.create({...data,requestId:actionId(data)},actor);
      else if(action==='start')result=await giveaways.start(data.id,actor);

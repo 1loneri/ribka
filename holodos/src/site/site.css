@@ -2052,3 +2052,5 @@ body.inner-page:has(.view.active[data-view^="/giveaways"]) main{max-width:1760px
 .equipped-avatar[data-equipped-frame="throne"]::after{inset:auto;left:-33%;top:-49%;width:168%;height:168%;background-image:url('/assets/frame-throne.png');background-size:100% 100%;z-index:4}
 
 #cosmetic-gallery .gallery-avatar[data-equipped-frame="throne"]{width:48px;height:48px;transform:translateY(11px);font-size:18px}
+
+.giveaway-arrangements{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 14px}.giveaway-arrangements[hidden]{display:none}.giveaway-arrangements button{padding:8px 13px;border:1px solid #8ba9bf55;border-radius:9px;background:#15222c;color:#d7e6f0;cursor:pointer}.giveaway-arrangements button[aria-pressed="true"]{background:#355063;border-color:#bddded}.giveaway-arrangements span{font-size:12px;color:#9eafbf}.giveaway-canvas.is-arranging{touch-action:none;cursor:grab}.giveaway-canvas.is-arranging:active{cursor:grabbing}
