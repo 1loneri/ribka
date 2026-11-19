@@ -6,7 +6,7 @@
 
 1. В админке сайта открой Twitch → Виджет. Введи Client ID расширения и его Base64 Extension Secret из Twitch Developer Console. Это отдельный секрет расширения, не OAuth Client Secret. Секрет сохраняется зашифрованным, в ZIP его нет. Канал проверяется сервером автоматически.
 2. В версии расширения: Panel Viewer Path `panel.html`, высота `496`. Включи Capabilities → Request Identity Link.
-3. Добавь `https://holodos-bot-production.up.railway.app` в Connect Sources, `https://static-cdn.jtvnw.net` в Image Sources. Все игровые картинки загружаются из ZIP.
+3. Добавь `https://wariouss.up.railway.app` в Connect Sources, `https://static-cdn.jtvnw.net` в Image Sources. Все игровые картинки загружаются из ZIP.
 4. Загрузи обновлённый `twitch-panel.zip`, перейди в Hosted Test. На канале тестировщик нажимает «Войти через Twitch» и разрешает раскрыть свой ID расширению. Вход происходит внутри Twitch, без OAuth-переходов и сторонних cookies.
 5. Проверь все три вкладки, баланс, бесплатное открытие, кейс при наличии права, профиль и косметику. Открытия доступны в эфире, администраторам — вне эфира. Для публичного доступа нужна проверка и публикация версии Twitch.
 
@@ -22,7 +22,7 @@ Twitch задаёт ширину панели под плеером: 318 px. В�
 
 ## Privacy Policy URL
 
-В Version Details расширения укажи `https://holodos-bot-production.up.railway.app/privacy`. Политика доступна без входа.
+В Version Details расширения укажи `https://wariouss.up.railway.app/privacy`. Политика доступна без входа.
 
 ## Диагностика подключения
 

@@ -1,6 +1,6 @@
 import {createGiveawayClaims} from './giveaway-claims.js';
 import {randomInt} from 'node:crypto';
-export function createGiveaways({db,transaction,duelVisuals,verifyUsers,clock=Date.now,profileUrl='https://holodos-bot-production.up.railway.app/profile'}){
+export function createGiveaways({db,transaction,duelVisuals,verifyUsers,clock=Date.now,profileUrl='https://wariouss.up.railway.app/profile'}){
  db.exec(`CREATE TABLE IF NOT EXISTS giveaways(id INTEGER PRIMARY KEY,request_id TEXT UNIQUE NOT NULL,vp INTEGER NOT NULL,duration INTEGER NOT NULL,layout TEXT NOT NULL,status TEXT NOT NULL,creator TEXT NOT NULL,created_at INTEGER NOT NULL,started_at INTEGER,ends_at INTEGER,order_json TEXT NOT NULL DEFAULT '[]',winner_id TEXT,winner_login TEXT,resolution TEXT NOT NULL DEFAULT 'pending',resolved_by TEXT,resolved_at INTEGER);
  CREATE TABLE IF NOT EXISTS giveaway_entries(round_id INTEGER NOT NULL,player_id TEXT NOT NULL,login TEXT NOT NULL,can_json TEXT NOT NULL,joined_at INTEGER NOT NULL,twitch_created_at INTEGER,verified_at INTEGER,PRIMARY KEY(round_id,player_id));
  CREATE TABLE IF NOT EXISTS giveaway_audit(id INTEGER PRIMARY KEY,round_id INTEGER NOT NULL,action TEXT NOT NULL,actor TEXT NOT NULL,created_at INTEGER NOT NULL);`);

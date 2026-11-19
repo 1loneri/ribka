@@ -1,6 +1,6 @@
 'use strict';
 (()=>{
- const base='https://holodos-bot-production.up.railway.app',content=document.getElementById('content'),status=document.getElementById('status');
+ const base='https://wariouss.up.railway.app',content=document.getElementById('content'),status=document.getElementById('status');
  const S={tab:'fridge',caseId:null,me:null,cases:[],auth:null,ready:null,online:false,busy:false,loading:false,reels:['white','mango','green'],pending:null,lastGain:null,caseResult:null,rollIndex:0};
  const D={build:'20261118-polish1',origin:window.location?.origin||'unknown',stage:'startup',catalog:'not checked',http:null,helper:!!window.Twitch?.ext,authorization:false,expectedOrigin:null,blocked:[]};
  document.addEventListener('securitypolicyviolation',event=>{if(!String(event.effectiveDirective||'').startsWith('connect-src'))return;let host='unknown';try{host=new URL(event.blockedURI).origin}catch{}if(host!==base)return;D.blocked=[...new Set([...D.blocked,host])];D.stage='Twitch CSP';tell('Twitch блокирует связь с холодосом. Нажми ? для диагностики.');});

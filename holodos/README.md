@@ -1,6 +1,6 @@
 # War1ouss / ЛЁХА — Twitch-бот и сайт
 
-Рабочий сайт: https://holodos-bot-production.up.railway.app/
+Рабочий сайт: https://wariouss.up.railway.app/
 
 Общая система игрового баланса W для Twitch-канала `war1ouss` и сайта. Аккаунт бота в production — `bot_lehaAI` (Twitch логин регистронезависим). Проект размещён в Railway `leha-holodos`, а исходники развёрнуты из ветки `deploy/holodos-standalone` репозитория `1loneri/ribka`.
 
@@ -21,7 +21,7 @@
 
 Требуемые переменные: `BOT_USERNAME`, `TWITCH_CHANNEL`, `DB_PATH`, `PUBLIC_URL`, `ADMIN_PASSWORD`, `APP_SECRET`; также `ENABLE_DUELS=true` для дуэлей. Секреты хранить только в Railway Variables, не коммитить и не публиковать.
 
-В Twitch Developer Console зарегистрировано приложение с callback `https://holodos-bot-production.up.railway.app/oauth/callback`, OAuth учитывает независимые права бота и входящих зрителей. Не запускайте второй независимый сервис с отдельной копией SQLite.
+В Twitch Developer Console зарегистрировано приложение с callback `https://wariouss.up.railway.app/oauth/callback`, OAuth учитывает независимые права бота и входящих зрителей. Не запускайте второй независимый сервис с отдельной копией SQLite.
 
 Проверка здоровья: `GET /health`. Наличие HTTP 200 ещё не означает, что браузерная вёрстка, OAuth и игровые сценарии протестированы — проверяйте логи и сценарии отдельно.
 
