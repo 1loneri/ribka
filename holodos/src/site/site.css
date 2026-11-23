@@ -2318,13 +2318,13 @@ body[data-site-theme="gta6"] #profile-content :is(.stat span,.profile-muted,.mut
 }
 
 .site-garland {
- position:fixed;inset:0 0 auto;z-index:65;height:clamp(30px,15vw,142px);
- background:url('/assets/site-garland.webp?v=alpha') top center/100% auto no-repeat;
+ position:absolute;inset:0 0 auto;z-index:65;height:clamp(36px,8vw,120px);
+ background:url('/assets/site-garland.webp?v=alpha') top center/100% 100% no-repeat;
  pointer-events:none;opacity:.63;
  animation:garland-glow 12s ease-in-out infinite;
 }
 .cosmetic-garland-preview {position:relative;overflow:hidden;isolation:isolate;background:#151521}
-.cosmetic-garland-preview .site-garland {position:absolute;height:100%;z-index:0}
+.cosmetic-garland-preview .site-garland {height:100%;z-index:0;background-size:100% auto}
 @keyframes garland-glow {
  0%,18%,40%,73%,100% {opacity:.63}
  24%,55%,82% {opacity:.9}
