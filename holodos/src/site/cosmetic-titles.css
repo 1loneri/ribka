@@ -10,7 +10,26 @@
 @keyframes nyashkaParticles{0%{opacity:0;transform:translate(0,4px) scale(.7)}18%{opacity:.85}100%{opacity:0;transform:translate(5px,-20px) scale(1.05)}}
 @media(prefers-reduced-motion:reduce){[data-title="nyashka"],[data-title-name="nyashka"]{animation:none!important;background-position:50% 50%!important}[data-title="nyashka"]::before,[data-title="nyashka"]::after{display:none;animation:none!important}}
 
-[data-title="gambler"]{position:relative;overflow:visible;color:#e9d889;border-color:#cbb45b66}[data-title="gambler"]::after{content:'$  $  $';position:absolute;left:10%;top:-18px;white-space:pre;color:#b9da91;pointer-events:none;font-size:11px;animation:titleDollars 3.2s linear infinite}
+[data-title="gambler"]{position:relative;overflow:visible!important;color:#e9d889;border-color:#cbb45b66}
+[data-title="gambler"]::before,[data-title="gambler"]::after{
+ content:'
+[data-title="devil"]{position:relative;overflow:visible!important;color:#f4a2a3;border-color:#dc7f8b66}
+[data-title="devil"]::before,[data-title="devil"]::after{
+ content:'';position:absolute;bottom:calc(100% - 1px);width:9px;height:9px;
+ background:linear-gradient(#ffb5bc,#d95b73);pointer-events:none;
+ clip-path:polygon(0 0,28% 36%,59% 52%,83% 58%,100% 100%,31% 100%,8% 68%);
+}
+[data-title="devil"]::before{left:5px}
+[data-title="devil"]::after{right:5px;transform:scaleX(-1)}
+[data-title="goodjob"]{position:relative;color:#c0e6ae;border-color:#97bd8266}[data-title="goodjob"]::after{content:'❧';position:absolute;right:-10px;top:-7px;color:#9bc984;font-size:16px;animation:titleLeaf 4s ease-in-out infinite}
+[data-title="moderator"]{color:#b6dcbd;border-color:#8acb9b55}[data-title="administrator"]{color:#dfc3ee;border-color:#c697df66}
+@keyframes titleLeaf{50%{transform:rotate(15deg) translateY(-2px)}}@media(prefers-reduced-motion:reduce){[data-title="goodjob"]::after{animation:none}}
+;position:absolute;top:50%;transform:translateY(-50%);
+ color:#b9da91;font-size:11px;line-height:1;pointer-events:none;
+ text-shadow:0 0 5px #b9da9166;
+}
+[data-title="gambler"]::before{right:calc(100% + 4px)}
+[data-title="gambler"]::after{left:calc(100% + 4px)}
 [data-title="devil"]{position:relative;overflow:visible!important;color:#f4a2a3;border-color:#dc7f8b66}
 [data-title="devil"]::before,[data-title="devil"]::after{
  content:'';position:absolute;bottom:calc(100% - 1px);width:9px;height:9px;
