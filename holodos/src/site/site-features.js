@@ -39,9 +39,15 @@ function paintProfileAssetStyle(host,asset){
   host.style.removeProperty('--custom-profile-image-opacity');
   host.style.removeProperty('--profile-surface');
   host.style.removeProperty('--profile-border');
+  host.style.removeProperty('--profile-accent');
+  host.style.removeProperty('--profile-muted');
   return;
  }
  host.style.setProperty('--custom-profile-image-opacity',String((asset.image_opacity??80)/100));
+ for(const property of ['--profile-accent','--profile-muted']){
+  if(asset.stats_text)host.style.setProperty(property,color(asset.stats_text,'#edf6ff'));
+  else host.style.removeProperty(property);
+ }
  if(asset.stats_border)host.style.setProperty('--profile-border',color(asset.stats_border,'#63798b'));
  else host.style.removeProperty('--profile-border');
  host.style.setProperty('--profile-surface',color(asset.stats_color,'#101720')+Math.round((asset.stats_opacity??85)*255/100).toString(16).padStart(2,'0'));
