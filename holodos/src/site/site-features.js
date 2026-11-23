@@ -38,9 +38,12 @@ function paintProfileAssetStyle(host,asset){
  if(!asset){
   host.style.removeProperty('--custom-profile-image-opacity');
   host.style.removeProperty('--profile-surface');
+  host.style.removeProperty('--profile-border');
   return;
  }
  host.style.setProperty('--custom-profile-image-opacity',String((asset.image_opacity??80)/100));
+ if(asset.stats_border)host.style.setProperty('--profile-border',color(asset.stats_border,'#63798b'));
+ else host.style.removeProperty('--profile-border');
  host.style.setProperty('--profile-surface',color(asset.stats_color,'#101720')+Math.round((asset.stats_opacity??85)*255/100).toString(16).padStart(2,'0'));
 }
 async function openPlayer(login,previewProfile){const sequence=++playerOpenSequence;const point={x:window.scrollX,y:window.scrollY};try{const data=await api('/api/player?login='+encodeURIComponent(login)),p=data.player;if(sequence!==playerOpenSequence)return;playerReturnPoint=point;const profile=previewProfile??data.look.profile??'';playerDialog.dataset.profile=profile;playerDialog.dataset.highlight=data.look.highlight||'';playerDialog.dataset.effect=data.look.effect||'';playerDialog.querySelector('.player-popover-content').innerHTML='<div class="profile-card" data-profile="'+esc(profile)+'"><span class="profile-equipped-avatar">'+avatarHtml(p.login)+'</span><div><h2 data-title-name="'+esc(({'грязнулька':'dirty','няшка':'nyashka','лудоман':'gambler','чертовка':'devil','молодец':'goodjob','модератор':'moderator','администратор':'administrator'})[data.look.title]||'')+'" data-name-style="'+esc(data.look.name_color||'')+'">@'+esc(p.login)+'</h2>'+(data.look.title?'<span class="player-cosmetic-title">'+esc(data.look.title)+'</span>':'')+'</div></div><div class="mini-player-stats"><p>Баланс <b>'+fmt(p.balance)+' W</b></p><p>Сообщений <b>'+fmt(data.messages)+'</b></p><p>Открытий <b>'+fmt(p.opens)+'</b></p></div>'+(previewProfile!==undefined?'<p class="player-preview-caption">(предпросмотр)</p>':'');playerDialog.querySelector(':scope > .profile-custom-layer')?.remove();
