@@ -2175,3 +2175,7 @@ body[data-site-theme="gta6"] #view-home .hero::before {
       url('/assets/hero-gta6.webp');
   }
 }
+
+@media(min-width:981px){
+ body[data-site-theme="gta6"] .topbar .nav {background:transparent}
+}
