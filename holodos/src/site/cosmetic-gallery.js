@@ -16,8 +16,8 @@
   if(kind==='highlight')visual='<div class="cosmetic-visual cosmetic-highlight-preview"><span class="history-item" data-highlight="'+escaped+'">'+avatar()+'<b>@'+escape(state.me?.player?.login||'Игрок')+'</b></span></div>';
   if(kind==='effect')visual='<div class="cosmetic-visual cosmetic-effect-preview"><span class="snowfall-preview" role="img" aria-label="Падающий снег">'+Array.from({length:16},()=>'<i aria-hidden="true"></i>').join('')+'</span></div>';
   if(kind==='profile'){
-   return '<figure class="cosmetic-example" style="position:relative">'+visual+caption+
-    '<button type="button" data-preview-profile="'+escaped+'" aria-label="Примерить фон '+escape(label)+'" title="Примерить фон" style="position:absolute;inset:0;width:100%;border:0;border-radius:inherit;background:transparent;z-index:2"></button></figure>';
+   return '<figure class="cosmetic-example cosmetic-example--profile">'+visual+caption+
+    '<button type="button" data-preview-profile="'+escaped+'" aria-label="Примерить фон '+escape(label)+'" title="Примерить фон" class="cosmetic-profile-trigger"></button></figure>';
   }
   return '<figure class="cosmetic-example" aria-label="'+escape(label)+'">'+visual+caption+'</figure>';
  }
