@@ -2201,3 +2201,9 @@ body[data-site-theme="gta6"] :is(.section-heading,.page-header,.cases-footnote,.
 body[data-site-theme="gta6"] #profile-content :is(.stat span,.profile-muted,.muted,.profile-orders small,.chat-case-history time) {
   color:var(--gta-secondary-copy);
 }
+
+.rank-item .player-extras :is(.chat-badge,.player-cosmetic-title,.role-title) {
+  display:inline-flex;align-items:center;box-sizing:border-box;
+  min-height:20px;margin:0;padding:2px 6px;border-width:1px;
+  border-radius:5px;font-size:10px;line-height:14px;font-weight:600;
+}
