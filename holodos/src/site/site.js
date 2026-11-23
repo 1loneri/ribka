@@ -369,19 +369,19 @@ async function refreshSpins(){
 }
 document.addEventListener('click',e=>{const tab=e.target.closest('[data-history-scope]');if(tab)setHistoryScope(tab.dataset.historyScope);});
 document.addEventListener('keydown',e=>{const tab=e.target.closest('[data-history-scope]');if(!tab||!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const scopes=['recent','mine','jackpots','superjackpots'],scope=e.key==='Home'?scopes[0]:e.key==='End'?scopes.at(-1):scopes[(scopes.indexOf(historyScope)+(e.key==='ArrowRight'?1:-1)+scopes.length)%scopes.length];setHistoryScope(scope);$('history-tab-'+scope).focus();});
-let duelRefreshBusy=false;
+let duelRefreshSequence=0;
 async function refreshDuels(){
- if(duelRefreshBusy)return;duelRefreshBusy=true;
+ const request=++duelRefreshSequence;
  try{
-  const data=await api('/api/duels');state.duels=data;
+  const data=await api('/api/duels');if(request!==duelRefreshSequence)return;state.duels=data;
   const pending=data.pending||[],recent=data.recent||[],logged=state.me?.authenticated;
-  const pendingKey=JSON.stringify(pending);if($('pending-duels').dataset.content!==pendingKey){$('pending-duels').dataset.content=pendingKey;$('pending-duels').innerHTML=pending.length?pending.map(d=>{
+  const pendingKey=JSON.stringify([state.me?.player?.login,pending]);if($('pending-duels').dataset.content!==pendingKey){$('pending-duels').dataset.content=pendingKey;$('pending-duels').innerHTML=pending.length?pending.map(d=>{
    const mine=logged&&d.opponent_login===state.me.player.login.toLowerCase();
    return '<div class="duel-item"><div class="duel-mini-cans">'+duelCanImage(d.leftCan)+duelCanImage(d.rightCan)+'</div><div><strong>@'+esc(d.initiator_login)+' → @'+esc(d.opponent_login)+'</strong><p>Банк '+fmt(d.wager*2)+' W · ставка '+fmt(d.wager)+' W · до '+new Date(d.expires_at).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})+'</p></div>'+(mine?'<div class="duel-actions"><button data-duel-answer="accept">Принять</button><button class="decline" data-duel-answer="decline">Отказ</button></div>':'')+'</div>';
   }).join(''):'<p class="muted">Активных вызовов пока нет. Создай первый!</p>';}
-  await maybeAnimateDuel(recent);
+  void maybeAnimateDuel(recent).catch(console.warn);
   const historyKey=JSON.stringify(recent);if($('duel-history').dataset.content!==historyKey){$('duel-history').dataset.content=historyKey;$('duel-history').innerHTML=recent.length?recent.map(d=>'<div class="history-item"><strong>@'+esc(d.initiator_login)+' ↔ @'+esc(d.opponent_login)+'</strong><span>'+esc(d.winner_login?'Победил @'+d.winner_login:d.status)+'</span><em>'+fmt(d.wager*2-d.fee)+' W</em><time>'+ruTime(d.resolved_at||d.created_at)+'</time></div>').join(''):'<p class="muted">Завершённых дуэлей пока нет.</p>';}
- }catch(e){$('pending-duels').textContent=e.message;$('duel-history').textContent=e.message;}finally{duelRefreshBusy=false;}
+ }catch(e){if(request!==duelRefreshSequence)return;for(const id of ['pending-duels','duel-history']){delete $(id).dataset.content;$(id).textContent=e.message;}}
 }
 async function duelAction(answer){
  if(!state.me?.authenticated){location.href='/auth/twitch';return;}

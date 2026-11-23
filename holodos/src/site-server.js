@@ -43,6 +43,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  const siteKey=createHash('sha256').update('war1ouss-web:'+secret).digest();
  const sitePages=new Set(['/','/casino','/cases','/duels','/top','/chat','/shop','/profile','/help','/requests','/widget','/giveaways','/giveaways/manage']);
  const assetFiles={
+ '/assets/profile-roses.webp':{file:new URL('./site/profile-roses.webp',import.meta.url),type:'image/webp'},
  '/assets/logo-easter-egg.png':{file:new URL('./site/logo-easter-egg.png',import.meta.url),type:'image/png'},
  '/assets/privacy.css':{file:new URL('./site/privacy.css',import.meta.url),type:'text/css; charset=utf-8'},
  '/assets/giveaway-operator-atlas.webp':{file:new URL('./site/giveaway-operator-atlas.webp',import.meta.url),type:'image/webp'},

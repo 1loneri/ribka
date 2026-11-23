@@ -2235,3 +2235,15 @@ body[data-site-theme="gta6"] #profile-content :is(.stat span,.profile-muted,.mut
 .giveaway-members-list .giveaway-member .player-extras:empty {display:none}
 .giveaway-members-list > .giveaway-member > .giveaway-member-can {grid-area:1/2;margin:0;align-self:start}
 .giveaway-members-list > .giveaway-member > small {grid-area:2/1/3/3;align-self:end;margin:0}
+
+.duel-can-wrap > img[src$="/duel-can-tea.webp"] {
+ width:clamp(94px,15vw,168px);max-width:none;object-fit:contain;
+}
+.giveaway-member .giveaway-member-can[src$="/duel-can-tea.webp"] {
+ object-fit:contain;transform:scale(1.65);transform-origin:right center;
+}
+:is(#profile-content,.player-popover,.cosmetic-profile-preview)[data-profile="roses"] {
+ background:#272725 linear-gradient(#12121665,#121216b0) center/cover;
+ background-image:linear-gradient(#12121665,#121216b0),url('/assets/profile-roses.webp');
+}
+:is(#profile-content,.player-popover,.cosmetic-profile-preview)[data-profile="roses"]::after {content:none}
