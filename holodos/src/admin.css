@@ -43,3 +43,22 @@ textarea{display:block;width:100%;padding:12px;margin:10px 0;background:#0b0e14;
 @media(prefers-reduced-motion:reduce){[data-title="poor"],[data-title="sneaky"]{animation:none!important;opacity:1;filter:none;background-size:100% 100%!important}}
 
 img[src*="frame-sims-red."]{filter:url('/assets/sims-red-filter.svg#red')}
+
+.profile-style-editor{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;margin:16px 0}
+.profile-style-fields{display:grid;gap:12px}
+.profile-style-fields label{margin:0}
+.profile-style-fields output{float:right;font-variant-numeric:tabular-nums}
+.profile-style-fields input[type=range]{width:100%;padding:0;accent-color:#aadbf6}
+.profile-style-fields select{display:block;width:100%;margin-top:5px;padding:9px;border:1px solid #465567;border-radius:8px;background:#10151d;color:#eaf5ff}
+.profile-color-row{display:grid;grid-template-columns:minmax(110px,1fr) 95px;align-items:end;gap:10px;margin-bottom:8px}
+.profile-style-fields .profile-color-row input[type=color]{display:block;width:50px;height:36px;padding:3px;cursor:pointer}
+.profile-color-row input[type=text]{width:100%;font-family:monospace}
+.profile-style-preview{position:sticky;top:16px;align-self:start;min-width:0}
+.profile-style-card{position:relative;isolation:isolate;overflow:hidden;margin-top:10px;padding:18px;border:1px solid #6c7d90;border-radius:16px;background:#161c28;color:#edf6ff}
+.profile-style-card [data-profile-art]{position:absolute;inset:0;z-index:-1;pointer-events:none}
+.profile-style-card [data-profile-art] :is(img,iframe){display:block;width:100%;height:100%;object-fit:cover;border:0}
+.profile-style-name{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.profile-style-name span{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:#182536;color:#eaf5ff}
+.profile-style-card [data-profile-stats]{padding:8px 12px;border:1px solid;border-radius:10px}
+.profile-style-card p{display:flex;justify-content:space-between;gap:8px;margin:5px 0;font-size:13px}
+@media(max-width:700px){.profile-style-editor{grid-template-columns:1fr}.profile-style-preview{grid-row:1;position:static}}
