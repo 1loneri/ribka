@@ -2263,3 +2263,14 @@ body[data-site-theme="gta6"] #profile-content :is(.stat span,.profile-muted,.mut
 }
 
 .duel-can-catalog figure > img[src$="/duel-can-tea.webp"] {transform:scale(1.6)}
+
+.cosmetic-example--profile {position:relative}
+.cosmetic-example--profile > .cosmetic-profile-trigger {
+ position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;
+ border:0;border-radius:inherit;background:transparent;z-index:5;
+}
+.cosmetic-profile-trigger:focus-visible {outline-offset:3px}
+.player-preview-caption {
+ margin:12px 0 0;text-align:center;color:var(--bright);
+ font-size:12px;text-shadow:0 1px 3px #000;
+}
