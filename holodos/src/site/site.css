@@ -2160,3 +2160,18 @@ body[data-site-theme="gta6"] :is(.community-strip,.footer) {
 body[data-site-theme="gta6"] :is(.community-strip,.footer) {color:#fff0f6;text-shadow:0 1px 4px #301533}
 body[data-site-theme="gta6"] :is(.community-strip p,.footer span,.footer a) {color:#fff0f6}
 body[data-site-theme="gta6"] .community-strip .blue-mark {background:#ef9ebc;box-shadow:0 0 10px #ef9ebc80}
+
+body[data-site-theme="gta6"] #view-home .hero::before {
+  background-color:#48265e;
+  background-image:linear-gradient(90deg,#26143575,transparent 65%),url('/assets/hero-gta6.webp');
+  background-size:100% 100%,cover;
+  background-position:center,right center;
+}
+@media(max-width:820px){
+  body[data-site-theme="gta6"] #view-home .hero::before {
+    background-image:linear-gradient(180deg,#321b46 10%,#321b4666 50%,transparent),url('/assets/hero-gta6.webp');
+    background-size:100% 100%,auto 78%;
+    background-position:center,75% bottom;
+    background-repeat:no-repeat;
+  }
+}

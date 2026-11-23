@@ -53,6 +53,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   '/assets/site.js':{file:new URL('./site/site.js',import.meta.url),type:'text/javascript; charset=utf-8'},
   '/assets/holodos-frame-2026.webp':{file:new URL('./site/holodos-frame-2026.webp',import.meta.url),type:'image/webp'},
   '/assets/hero-ultra-2026.webp':{file:new URL('./site/hero-ultra-2026.webp',import.meta.url),type:'image/webp'},
+  '/assets/hero-gta6.webp':{file:new URL('./site/hero-gta6.webp',import.meta.url),type:'image/webp'},
   '/assets/hero-main-2026.webp':{file:new URL('./site/hero-main-2026.webp',import.meta.url),type:'image/webp'},
   '/assets/casino-main-2026.webp':{file:new URL('./site/casino-main-2026.webp',import.meta.url),type:'image/webp'},
   '/assets/cases-main-2026.webp':{file:new URL('./site/cases-main-2026.webp',import.meta.url),type:'image/webp'},
