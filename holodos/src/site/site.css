@@ -2292,3 +2292,16 @@ body[data-site-theme="gta6"] #profile-content :is(.stat span,.profile-muted,.mut
 }
 
 .player-popover[data-profile="wood"] .mini-player-stats {backdrop-filter:blur(6px)}
+
+:is(.player-popover,.player-popover[data-profile]) .mini-player-stats,
+#profile-content .stat {
+ border-color:var(--custom-stats-border,var(--profile-border));
+}
+.player-popover .mini-player-stats p,
+#profile-content .stat span {
+ color:var(--custom-stats-text,var(--profile-muted));
+}
+.player-popover .mini-player-stats b,
+#profile-content .stat strong {
+ color:var(--custom-stats-text,var(--profile-accent));
+}
