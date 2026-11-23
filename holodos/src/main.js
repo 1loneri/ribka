@@ -381,6 +381,15 @@ const server=http.createServer(async(req,res)=>{
   if(['/channel-connect','/channel-check','/channel-disconnect'].includes(url.pathname)){
    try{const f=await formData(req);if(!validCsrf(f,'channel-connections')){html(403,'Форма устарела. Обнови страницу.');return;}const id=String(f.get('feature')||'');if(url.pathname==='/channel-connect'){const flow=channelConnections.begin(id),target=escape(flow.url);html(200,'<meta http-equiv="refresh" content="0;url='+target+'"><h2>Подключение Twitch</h2><p>Переходим в Twitch. Подтверди доступ к баллам, подпискам и VIP от аккаунта @'+escape(channel)+'.</p><p><a class="admin-button" href="'+target+'">Перейти в Twitch</a></p>',{'Set-Cookie':flow.cookie});return;}if(url.pathname==='/channel-check')await channelConnections.check(id);else channelConnections.disconnect(id);res.writeHead(303,{Location:'/admin/twitch#channel-connections','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Не получилось выполнить действие</h2><p>'+escape(e.status?e.message:'Повтори попытку позже.')+'</p><a href="/admin/twitch#channel-connections">Вернуться</a>');}return;
   }
+  if(url.pathname==='/cosmetic-name-save'){
+   try{
+    const form=await formData(req);
+    if(!validCsrf(form,'cosmetic-name-save')){html(403,'Форма устарела. Обнови страницу.');return;}
+    site.cosmeticNames.save(form);
+    res.writeHead(303,{Location:'/admin/cosmetics#cosmetic-names','Cache-Control':'no-store'});res.end();
+   }catch(e){html(e.status||400,'<h2>Название не сохранено</h2><p>'+escape(e.status?e.message:'Попробуй ещё раз.')+'</p><a href="/admin/cosmetics#cosmetic-names">Вернуться к названиям</a>');}
+   return;
+  }
   if(url.pathname==='/cosmetic-grant'){
    try{const f=await formData(req);if(!validCsrf(f,'cosmetic-grant')){html(403,'Форма устарела. Обнови страницу.');return;}const [kind,id]=String(f.get('item')||'').split(':');site.cosmetics.grant(f.get('login'),kind,id,site.adminIdentity(req).player_id);res.writeHead(303,{Location:'/admin/cosmetics#appearance','Cache-Control':'no-store'});res.end();}catch(e){html(e.status||400,'<h2>Косметика не выдана</h2><p>'+escape(e.message)+'</p><a href="/admin/cosmetics#appearance">Вернуться</a>');}return;
   }
@@ -468,6 +477,7 @@ const server=http.createServer(async(req,res)=>{
  content+=site.vipShop.renderAdmin(escape,csrf('vip-shop'));
  content+=site.vpShop.renderAdmin(escape,csrf('vp-stock'));
  content+=site.controls.renderAdmin(escape,csrf('site-control'));
+ content+=site.cosmeticNames.render(escape,csrf('cosmetic-name-save'));
  content+=site.uploads.renderAdmin(escape,csrf('site-control'));
  content+=site.twitchRewards.renderAdmin(escape,csrf('site-control'));
  content+=site.manualVp.renderAdmin(escape,csrf('vp-manual'),randomBytes(16).toString('hex'));

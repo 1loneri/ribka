@@ -7,6 +7,7 @@ import {freezeEarlyTesters} from './early-testers.js';
 import {createCaseTickets} from './case-tickets.js';
 import {createTwitchRewards} from './twitch-rewards.js';
 import {caseRewardOptions} from './case-catalog.js';
+import {createCosmeticNames} from './cosmetic-names.js';
 import {canArt} from './duel-visuals.js';
 import {createCaseManagement} from './case-management.js';
 import {createVpShop} from './vp-shop.js';
@@ -40,6 +41,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  db.exec("CREATE TABLE IF NOT EXISTS cosmetic_profiles(player_id TEXT PRIMARY KEY,frame TEXT NOT NULL DEFAULT '',title TEXT NOT NULL DEFAULT '',name_color TEXT NOT NULL DEFAULT '');");
  const frames=createFrames(db,transaction);
  const cosmetics=createCosmetics(db,transaction);
+ const cosmeticNames=createCosmeticNames(db,transaction,{...cosmeticCatalog,frame:frames.catalog,can:duelVisuals.catalog},caseRewardOptions);
  const siteKey=createHash('sha256').update('war1ouss-web:'+secret).digest();
  const sitePages=new Set(['/','/casino','/cases','/duels','/top','/chat','/shop','/profile','/help','/requests','/widget','/giveaways','/giveaways/manage']);
  const assetFiles={
@@ -460,5 +462,5 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   }
   return false;
  }
- return {handle,oauthCallback,recordSpin,trackChat,isAdminRequest,cases,chatCases,adminWallet,debts,vipShop,manualVp,vpShop,caseManagement,uploads,controls,twitchRewards,support,reviews,duelVisuals,giveaways,extensionAuth,frames,cosmetics,isAdminIdentity:isAdminSession,adminIdentity:req=>{const s=getSession(req);return s&&isAdminSession(s)?s:{player_id:'admin-panel',login:'Администратор'};}};
+ return {handle,oauthCallback,recordSpin,trackChat,isAdminRequest,cases,chatCases,adminWallet,debts,vipShop,manualVp,vpShop,caseManagement,uploads,controls,twitchRewards,support,reviews,duelVisuals,giveaways,extensionAuth,frames,cosmetics,cosmeticNames,isAdminIdentity:isAdminSession,adminIdentity:req=>{const s=getSession(req);return s&&isAdminSession(s)?s:{player_id:'admin-panel',login:'Администратор'};}};
 }

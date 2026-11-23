@@ -6,7 +6,7 @@ export const adminSections=[
  {key:'cases',path:'/admin/cases',label:'Кейсы',description:'Покупки, редактор кейсов и остальные призы.',ids:['player-shortcut','case-management','case-purchases','case-prizes','cases-editor']},
  {key:'violations',path:'/admin/violations',label:'Нарушения и долги',description:'Назначение долгов в W, причины нарушений и история оплаты.',ids:['violations']},
  {key:'balances',path:'/admin/balances',label:'W-монеты игроков',description:'Поиск баланса, начисление и списание W.',ids:['balances']},
- {key:'cosmetics',path:'/admin/cosmetics',label:'Косметика',description:'Рамки, титулы, оформление ников, темы и банки.',ids:['title-previews','asset-uploads','appearance','frames','cosmetics']},
+ {key:'cosmetics',path:'/admin/cosmetics',label:'Косметика',description:'Рамки, титулы, оформление ников, темы и банки.',ids:['cosmetic-names','title-previews','asset-uploads','appearance','frames','cosmetics']},
  {key:'support',path:'/admin/support',label:'Обращения',description:'Вопросы игроков и ответы администрации.',ids:['support']},
  {key:'twitch',path:'/admin/twitch',label:'Twitch и бот',description:'Подключения, настройки канала и команды.',ids:['twitch-widget','twitch-rewards','channel-status','channel-connections','bot-commands','settings']}
 ];
