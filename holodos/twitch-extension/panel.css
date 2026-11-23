@@ -25,3 +25,5 @@ body{background:radial-gradient(ellipse at 20% 0,#1a2b35 0,transparent 55%),#0a1
 
 @font-face{font-family:'Dela Gothic One';font-style:normal;font-weight:400;font-display:swap;src:url('media/dela-gothic-one.woff') format('woff')}
 body{font-family:Arial,sans-serif}button,input,select{font-family:inherit}h2{font-family:'Dela Gothic One',sans-serif;font-weight:400}
+
+.avatar .frame[src*="frame-gta6."]{inset:-15%;width:130%;height:130%}

@@ -1,5 +1,5 @@
-export const duelCanCatalog=({pipeline:'Pipeline Punch',pacific:'Pacific Punch',khaotic:'Khaotic',violet:'Ultra Violet',badapple:'Bad Apple',white:'Ultra White',green:'Original Green',mango:'Mango',pink:'Ultra Pink',blue:'Ultra Blue',watermelon:'Watermelon',yellow:'Ultra Gold','w-edition':'W Edition'});
-export const rainbowCans=new Set(['pipeline','pacific','khaotic','violet','badapple']);
+export const duelCanCatalog=({peach:'Peach Ice',berry:'Midnight Berry',pipeline:'Pipeline Punch',pacific:'Pacific Punch',khaotic:'Khaotic',violet:'Ultra Violet',badapple:'Bad Apple',white:'Ultra White',green:'Original Green',mango:'Mango',pink:'Ultra Pink',blue:'Ultra Blue',watermelon:'Watermelon',yellow:'Ultra Gold','w-edition':'W Edition'});
+export const rainbowCans=new Set(['peach','berry','pipeline','pacific','khaotic','violet','badapple']);
 export const duelCanAssets={};
 export const canArt=id=>duelCanAssets[id]||('/assets/'+(rainbowCans.has(id)?'duel-can-':'slot-')+id+'.webp');
 export function createDuelVisuals(db){

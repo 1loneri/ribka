@@ -3,8 +3,8 @@
   "source": "war1ouss_hub_economy_v1_1.xlsx",
   "shopPricesW": {
     "240": 25000,
-    "475": 55000,
-    "1000": 115000
+    "475": 50000,
+    "1000": 110000
   },
   "caseRewards": {
     "donation": [

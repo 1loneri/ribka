@@ -75,10 +75,11 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  assetFiles['/assets/frame-assault.png']={file:new URL('./site/frame-assault.png',import.meta.url),type:'image/png'};
  assetFiles['/assets/case-subscriber-open.webp']={file:new URL('./site/case-subscriber-open.webp',import.meta.url),type:'image/webp'};
  assetFiles['/assets/notification.mp3']={file:new URL('./site/notification.mp3',import.meta.url),type:'audio/mpeg'};
- for(const id of ['pipeline','pacific','khaotic','violet','badapple'])assetFiles['/assets/duel-can-'+id+'.webp']={file:new URL('./site/duel-can-'+id+'.webp',import.meta.url),type:'image/webp'};
+ for(const id of ['peach','berry','pipeline','pacific','khaotic','violet','badapple'])assetFiles['/assets/duel-can-'+id+'.webp']={file:new URL('./site/duel-can-'+id+'.webp',import.meta.url),type:'image/webp'};
  assetFiles['/assets/dela-gothic-one.woff']={file:new URL('./site/dela-gothic-one.woff',import.meta.url),type:'font/woff'};
  assetFiles['/assets/dela-gothic-one.ttf']={file:new URL('./site/dela-gothic-one.ttf',import.meta.url),type:'font/ttf'};
- for(const id of ['throne','ears','jett','clove','shy','fish','cats','hat','angel','sims-green','sims-red'])assetFiles['/assets/frame-'+id+'.png']={file:new URL('./site/frame-'+id+'.png',import.meta.url),type:'image/png'};
+ for(const id of ['gta6','throne','ears','jett','clove','shy','fish','cats','hat','angel','sims-green','sims-red'])assetFiles['/assets/frame-'+id+'.png']={file:new URL('./site/frame-'+id+'.png',import.meta.url),type:'image/png'};
+ assetFiles['/assets/nov23-ui.js']={file:new URL('./site/nov23-ui.js',import.meta.url),type:'text/javascript; charset=utf-8'};
  assetFiles['/assets/site-features.js']={file:new URL('./site/site-features.js',import.meta.url),type:'text/javascript; charset=utf-8'};
  assetFiles['/assets/profile-cat.png']={file:new URL('./site/profile-cat.png',import.meta.url),type:'image/png'};
  for(const id of ['cat','roses'])assetFiles['/assets/profile-'+id+'.svg']={file:new URL('./site/profile-'+id+'.svg',import.meta.url),type:'image/svg+xml'};
@@ -99,7 +100,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  const chatLeaderboard=createChatLeaderboard(db);
  const adminWallet=createAdminWallet(db,transaction);
  freezeEarlyTesters(db);
- const notifications=createNotifications(db);
+ const notifications=createNotifications(db,isAdminSession);
  const debts=createDebts({db,transaction,lookup:adminWallet.lookup});
  const tickets=createCaseTickets(db,transaction);
  const twitchRewards=createTwitchRewards({db,transaction,connections:channelConnections,tickets,controls});
@@ -179,6 +180,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   if(!/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(value))throw Error('Неверный идентификатор запроса');
   return value.toLowerCase();
  }
+ db.exec("CREATE TABLE IF NOT EXISTS site_visitors(player_id TEXT PRIMARY KEY,first_seen INTEGER NOT NULL);INSERT OR IGNORE INTO site_visitors SELECT player_id,MIN(created_at) FROM web_sessions GROUP BY player_id");
  const adminLogins=new Set(['lick0ver','war1ouss','bot_lehaai']);
  db.exec("CREATE TABLE IF NOT EXISTS twitch_admin_accounts(login TEXT PRIMARY KEY,player_id TEXT NOT NULL UNIQUE,bound_at INTEGER NOT NULL);");
  function isAdminSession(session){
@@ -194,6 +196,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  function userMe(session,stream){
   if(!session)return {authenticated:false};
   const p=player(session.player_id,session.login);
+  db.prepare('INSERT OR IGNORE INTO site_visitors VALUES(?,?)').run(p.id,Date.now());
   const orders=db.prepare('SELECT id,vp,price,status,created_at FROM shop_orders WHERE player_id=? ORDER BY id DESC LIMIT 10').all(session.player_id);
   return {authenticated:true,is_admin:isAdminSession(session),stream,spin_allowed:isAdminSession(session)||stream?.live===true,support_unread:support.unread(session),notification_unread:notifications.unread(session),csrf:csrf(session),chatCase:chatCases.progress(p.id),coinCase:chatCases.coinStatus(p.id),donationCase:chatCases.purchases.status(p.id),entitlements:tickets.status(p.id),debts:debts.list(p.id),memberships:twitchRewards.eligibility(p.id),features:Object.fromEntries(controls.list().map(f=>[f.key,f.enabled])),vipShop:vipShop.status(p.id),vipOrders:vipShop.orders(p.id),manualVp:manualVp.list(p.id),vpCodes:vpShop.list(p.id),caseHistory:chatCases.history(p.id),giveawayPrizes:giveaways.claims.forPlayer(p.id),cosmetics:{...cosmetics.summary(p.id),duel_can:duelVisuals.current(p.id,p.login),duel_cans:db.prepare('SELECT can_id FROM duel_can_inventory WHERE player_id=? ORDER BY can_id').all(p.id).map(r=>({id:r.can_id,label:duelVisuals.catalog[r.can_id],src:canArt(r.can_id)})).filter(r=>r.label)},frames:{catalog:frames.catalog,rarity:frames.rarity,owned:frames.owned(p.id),active:frames.active(p.id)},player:{id:p.id,login:p.login,display_name:session.display_name,avatar:session.avatar,balance:p.balance,opens:p.opens,wins:p.wins,jackpots:p.jackpots,last_opened:p.last_opened,message_count:db.prepare('SELECT message_count FROM chat_stats WHERE player_id=?').get(session.player_id)?.message_count||0},orders};
  }
@@ -296,6 +299,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
     if(path==='/api/reviews'){const session=getSession(req);json(res,200,{reviews:reviews.list(),eligibleOrders:reviews.eligible(session)});return true;}
     if(path==='/api/frames'){json(res,200,{frames:frames.publicFrames((url.searchParams.get('logins')||'').toLowerCase().split(',')),cosmetics:cosmetics.publicLooks((url.searchParams.get('logins')||'').toLowerCase().split(','))});return true;}
     if(path==='/api/avatars'){const names=(url.searchParams.get('logins')||'').split(',').slice(0,50);json(res,200,{avatars:await avatars.get(names)});return true;}
+    if(path==='/api/players/suggest'){const session=getSession(req);if(!session){json(res,401,{error:'Сначала войди через Twitch'});return true;}const prefix=String(url.searchParams.get('q')||'').replace(/^@/,'').toLowerCase();if(!/^[a-z0-9_]{1,25}$/.test(prefix)){json(res,200,{players:[]});return true;}const players=db.prepare("SELECT p.login FROM players p JOIN site_visitors v ON v.player_id=p.id WHERE lower(p.login) LIKE ? ESCAPE '!' AND p.id<>? ORDER BY lower(p.login) LIMIT 8").all(prefix.replaceAll('_','!_')+'%',session.player_id);json(res,200,{players});return true;}
     if(path==='/api/notifications'){const session=getSession(req);if(!session){json(res,401,{error:'Сначала войди через Twitch'});return true;}json(res,200,{notifications:vpShop.decorate(session,notifications.list(session))});return true;}
     if(path==='/api/support'||path.startsWith('/api/support/')){
      const session=getSession(req);if(!session){json(res,401,{error:'Сначала войди через Twitch'});return true;}
@@ -378,6 +382,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
        const credit=debts.spinCredit('web:'+rid,session.player_id);return {cans:JSON.parse(previous.cans_json),gain:previous.gain,description:previous.description,...(credit?{credit,creditText:spinCreditText(credit)}:{}),balance:player(session.player_id,session.login).balance,last_opened:previous.created_at};
       }
       const p=player(session.player_id,session.login);
+  db.prepare('INSERT OR IGNORE INTO site_visitors VALUES(?,?)').run(p.id,Date.now());
       const left=120000-(now-p.last_opened);
       if(left>0)return {cooldown:Math.ceil(left/1000)};
       const d=draw();

@@ -74,3 +74,25 @@ for(const profile of ['fogcat','chinese','redangel']){site.cosmetics.grant('alic
 const publicSamples=(await call('/api/site-features')).data;assert.equal(publicSamples.cosmetics.profile.chinese,'Chinese');assert.equal(publicSamples.frames.angel,'Angel');assert.equal((await call('/assets/cosmetic-gallery.js')).status,200);
 for(let i=0;i<9;i++)db.prepare('INSERT INTO case_openings(request_id,player_id,login,case_id,cost,revision,reward_json,created_at) VALUES(?,?,?,?,?,?,?,?)').run(randomUUID(),'1','alice','coins',0,1,JSON.stringify({label:'Fixture',gain:0}),Date.now()+i);
 const page1=(await call('/api/case-history?page=1')).data,page2=(await call('/api/case-history?page=2')).data;assert.equal(page1.pageSize,5);assert.equal(page1.openings.length,5);assert.equal(page2.openings.length,5);assert.ok(page1.openings.every(x=>!page2.openings.some(y=>y.id===x.id)));assert.equal((await call('/api/case-history?page=999999')).data.page,page1.pages);console.log('PASS new profile/frame ownership, public previews and five-case pagination without repeats');
+// November release: suggestions contain only site visitors and escape Twitch underscores.
+for(const [id,login,visited] of [['21','similar_one',1],['22','similarXone',1],['23','similar_onlychat',0]]){player(id,login);if(visited)db.prepare('INSERT INTO site_visitors VALUES(?,?)').run(id,Date.now());}
+assert.deepEqual((await call('/api/players/suggest?q=similar_')).data.players.map(p=>p.login),['similar_one']);
+assert.equal((await call('/api/players/suggest?q=ali')).data.players.length,0);
+assert.equal((await call('/api/players/suggest?q=similar',{},{cookie:''})).status,401);
+assert.deepEqual((await call('/api/players/suggest?q=%25')).data.players,[]);
+// User messages notify administrators only; each administrator has an independent read cursor.
+const ticket=site.support.create({player_id:'1',login:'alice'},'Проверка обращения');
+assert.equal((await call('/api/notifications')).data.notifications.some(n=>n.body.includes('написал в обращение')),false);
+db.prepare('INSERT INTO twitch_admin_accounts VALUES(?,?,?)').run('alice','1',Date.now());
+let adminNotes=(await call('/api/notifications')).data.notifications;const newSupport=adminNotes.find(n=>n.body.includes('написал в обращение'));
+assert.ok(newSupport);assert.equal(newSupport.url,'/admin/support#support');
+assert.equal((await call('/api/notifications/read',{maxId:newSupport.id},auth)).status,200);
+assert.equal((await call('/api/notifications')).data.notifications.find(n=>n.id===newSupport.id).unread,false);
+// Personal role titles are not random case prizes.
+player('24','lick0ver');assert.ok(site.cosmetics.summary('24').owned.title.includes('administrator'));assert.ok(site.cosmetics.summary('24').owned.title.includes('moderator'));
+assert.ok(!site.cases.rewardOptions['title-administrator']);assert.ok(!site.cases.rewardOptions['title-moderator']);
+for(const kind of ['title-gambler','title-devil','title-goodjob','theme-gta6','frame-gta6','can-peach','can-berry'])assert.ok(site.cases.list().find(c=>c.id==='subscriber').rewards.some(r=>r.id===kind),kind);
+for(const asset of ['nov23-ui.js','frame-gta6.png','duel-can-peach.webp','duel-can-berry.webp'])assert.equal((await call('/assets/'+asset)).status,200,asset);
+assert.equal(site.vpShop.catalog().find(p=>p.vp===475).price,50000);assert.equal(site.vpShop.catalog().find(p=>p.vp===1000).price,110000);
+const arbitrary=site.cases.list().find(c=>c.id==='chat');const custom=new URLSearchParams({case_id:'chat',revision:arbitrary.revision,title:arbitrary.title,description:arbitrary.description,category:arbitrary.category,price_unit:'messages',price_amount:1500,custom_w_amount:1234567,custom_w_weight:100});site.cases.save(custom,'admin');assert.equal(site.cases.list().find(c=>c.id==='chat').rewards[0].id,'w-1234567');
+console.log('PASS visitor-only nickname suggestions, escaped underscores, admin support alerts, personal roles, new cosmetic pools/assets, VP prices and arbitrary W rewards');

@@ -1,0 +1,28 @@
+'use strict';
+// Keep live panels current without collapsing their height or stealing focus.
+let liveHistoryBusy=false;
+setInterval(async()=>{
+ if(document.visibilityState!=='visible'||state.busy||liveHistoryBusy)return;
+ liveHistoryBusy=true;
+ try{if(currentRoute()==='/casino')await refreshSpins();if(currentRoute()==='/cases')await refreshGlobalCases();if(state.me?.authenticated)await refreshAccountNotifications();}finally{liveHistoryBusy=false;}
+},5000);
+
+function roleBadgesHtml(login){return String(login||'').toLowerCase()==='lick0ver'?'<span class="role-title" data-title="moderator">Модератор</span><span class="role-title" data-title="administrator">Администратор</span>':'';}
+const nov23Looks=applyPlayerCosmetics;
+applyPlayerCosmetics=function(avatar,look){nov23Looks(avatar,look);const line=avatar.closest('.player-line');if(line&&!line.querySelector('.role-title')&&roleBadgesHtml(avatar.dataset.playerAvatar))line.insertAdjacentHTML('beforeend',roleBadgesHtml(avatar.dataset.playerAvatar));};
+const nov23Profile=renderProfile;
+renderProfile=function(){nov23Profile();if(!state.me?.authenticated)return;const host=$('profile-content'),name=host.querySelector('.profile-name-line');if(name&&!name.querySelector('.role-title'))name.insertAdjacentHTML('beforeend',roleBadgesHtml(state.me.player.login));const box=host.querySelector('#cosmetic-panel-cans');if(!box||box.querySelector('[data-profile-can]'))return;const active=state.me.cosmetics?.duel_can?.id||'black',items=state.me.cosmetics?.duel_cans||[];box.insertAdjacentHTML('afterbegin','<label class="profile-bank-choice">Банка игрока<select data-profile-can aria-label="Банка в профиле"><option value="black" '+(active==='black'?'selected':'')+'>Original</option>'+items.map(c=>'<option value="'+esc(c.id)+'" '+(active===c.id?'selected':'')+'>'+esc(c.label)+'</option>').join('')+'</select></label>');};
+document.addEventListener('change',async event=>{if(!event.target.matches('[data-profile-can]'))return;const input=event.target;input.disabled=true;try{await supportPost('/api/duels/equip',{can:input.value});await refreshMe();notice('Банка обновлена');}catch(error){notice(error.message);}finally{input.disabled=false;}});
+
+// Suggestions only include accounts which have entered the site.
+(()=>{
+ const input=$('duel-target');if(!input)return;const box=document.createElement('div');box.id='duel-suggestions';box.className='duel-suggestions';box.hidden=true;box.setAttribute('role','listbox');input.after(box);input.setAttribute('role','combobox');input.setAttribute('aria-controls',box.id);input.setAttribute('aria-autocomplete','list');input.setAttribute('aria-expanded','false');input.autocomplete='off';let timer,sequence=0,selected=-1,people=[];
+ const close=()=>{box.hidden=true;input.setAttribute('aria-expanded','false');input.removeAttribute('aria-activedescendant');selected=-1;};
+ const choose=login=>{clearTimeout(timer);++sequence;input.value=login;close();input.dispatchEvent(new Event('change',{bubbles:true}));};
+ input.addEventListener('input',()=>{clearTimeout(timer);const request=++sequence,prefix=input.value.trim().replace(/^@/,'').toLowerCase();close();if(!/^[a-z0-9_]{1,25}$/.test(prefix)||!state.me?.authenticated)return;timer=setTimeout(async()=>{try{const data=await api('/api/players/suggest?q='+encodeURIComponent(prefix));if(request!==sequence||document.activeElement!==input)return;people=data.players||[];box.innerHTML=people.map((p,i)=>'<button type="button" role="option" id="duel-suggestion-'+i+'" data-suggest-login="'+esc(p.login)+'" aria-selected="false">@'+esc(p.login)+'</button>').join('');box.hidden=!people.length;input.setAttribute('aria-expanded',String(!!people.length));}catch{close();}},180);});
+ box.addEventListener('pointerdown',event=>event.preventDefault());box.addEventListener('click',event=>{const b=event.target.closest('[data-suggest-login]');if(b)choose(b.dataset.suggestLogin);});
+ input.addEventListener('keydown',event=>{if(event.key==='Escape'){close();return;}if(box.hidden)return;if(['ArrowDown','ArrowUp'].includes(event.key)){event.preventDefault();selected=(selected+(event.key==='ArrowDown'?1:people.length-1)+people.length)%people.length;box.querySelectorAll('button').forEach((b,i)=>b.setAttribute('aria-selected',String(i===selected)));input.setAttribute('aria-activedescendant','duel-suggestion-'+selected);}if(event.key==='Enter'&&selected>=0){event.preventDefault();choose(people[selected].login);}});
+ input.addEventListener('blur',()=>{++sequence;close();});
+})();
+
+function playJackpotCan(big=false){const ctx=gameAudioReady();if(!ctx)return;try{const t=ctx.currentTime,master=ctx.createGain();master.gain.value=big?.12:.08;master.connect(ctx.destination);const hiss=(at,length,hz,volume)=>{const buffer=ctx.createBuffer(1,Math.ceil(ctx.sampleRate*length),ctx.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*Math.exp(-i/(ctx.sampleRate*length*.25));const source=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),gain=ctx.createGain();source.buffer=buffer;filter.type='highpass';filter.frequency.value=hz;gain.gain.value=volume;source.connect(filter);filter.connect(gain);gain.connect(master);source.start(at);source.stop(at+length);};hiss(t,.065,1800,.9);hiss(t+.06,big?1.5:.65,2400,big?.8:.5);if(big)for(const [i,hz] of [130.81,164.81,196,261.63,329.63].entries()){const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type='triangle';osc.frequency.value=hz;gain.gain.setValueAtTime(.001,t+i*.07);gain.gain.exponentialRampToValueAtTime(.2,t+i*.07+.02);gain.gain.exponentialRampToValueAtTime(.001,t+1.6);osc.connect(gain);gain.connect(master);osc.start(t+i*.07);osc.stop(t+1.7);}}catch{}}

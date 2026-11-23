@@ -222,7 +222,7 @@ async function handle(login,id,msg,mid,now){
   return '@'+login+' открыл холодос: '+d.cans.map(i=>cans[i]).join(' ')+' - '+d.description+' '+spinCreditText(credit);
  });
  else if(cmd==='!баланс')output=transaction(()=>seen(mid,now)?'@'+login+', у тебя '+player(id,login).balance.toLocaleString('ru-RU')+' W-монет.':null);
- else if(cmd==='!топмонет')output=transaction(()=>{
+ else if(cmd==='!топ')output=transaction(()=>{
   if(!seen(mid,now))return null;
   const top=db.prepare('SELECT login,balance FROM players ORDER BY balance DESC,login ASC LIMIT 5').all();
   return top.length?'Топ W-монет: '+top.map((p,i)=>(i+1)+'. @'+p.login+' '+p.balance+' W').join(' · '):'Топ W-монет пуст. Открой !холодос.';
