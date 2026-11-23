@@ -2247,3 +2247,17 @@ body[data-site-theme="gta6"] #profile-content :is(.stat span,.profile-muted,.mut
  background-image:linear-gradient(#12121665,#121216b0),url('/assets/profile-roses.webp');
 }
 :is(#profile-content,.player-popover,.cosmetic-profile-preview)[data-profile="roses"]::after {content:none}
+
+#view-top :is(.rank-list,.rank-item,.rank-name,.player-line,.equipped-avatar) {overflow:visible}
+#view-top .rank-item {padding-block:19px}
+#view-top .player-avatar {width:40px;height:40px;flex:0 0 40px;margin:0 6px 0 0}
+#view-top .rank-name .player-line > b,#view-top .rank-score {font-size:16px}
+#view-top .rank-name small {font-size:13px}
+#view-top .player-extras :is(.player-cosmetic-title,.role-title,.chat-badge) {
+ font-size:11px;line-height:15px;min-height:22px;padding:2px 7px;
+}
+#view-top .equipped-avatar[data-equipped-frame="hat"]::after {top:-82%}
+@media(max-width:600px){
+ #view-top .player-avatar {width:36px;height:36px;flex-basis:36px}
+ #view-top .rank-name .player-line > b,#view-top .rank-score {font-size:14px}
+}
