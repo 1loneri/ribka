@@ -1722,7 +1722,7 @@ img[src*="/frame-thorn."]{filter:invert(1)}.equipped-avatar[data-equipped-frame=
 :is(#profile-content,.player-popover,.cosmetic-profile-preview)[data-profile="rain"]{background:repeating-linear-gradient(105deg,transparent 0 16px,#b3e7ff0a 17px 18px,transparent 19px 36px),#0c171f}
 :is(#profile-content,.player-popover,.cosmetic-profile-preview)[data-profile="snow"]{background:radial-gradient(circle,#dff5ff38 1px,transparent 2px),#101a22;background-size:26px 31px}
 :is(#profile-content,.player-popover,.cosmetic-profile-preview)[data-profile="cat"]::after{content:"ฅ^•ﻌ•^ฅ";position:absolute;bottom:18px;right:22px;font-size:25px;color:#e3d1e7;pointer-events:none}
-.profile-custom-layer{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-1;border:0;pointer-events:none;opacity:.8}
+.profile-custom-layer{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-1;border:0;pointer-events:none;opacity:var(--custom-profile-image-opacity,.8)}
 .cosmetic-snow{position:fixed;inset:0;pointer-events:none;z-index:9;overflow:hidden}.cosmetic-snow i{position:absolute;top:-12px;left:var(--x);width:var(--size);height:var(--size);border-radius:50%;background:#ebfaffb0;animation:cosmeticSnowFall var(--duration) linear var(--delay) infinite}
 @keyframes cosmeticSnowFall{to{transform:translate(22px,105vh)}}
 .snow-toggle{display:inline-grid;place-items:center;color:#caeaff;border:1px solid #8db7d044;background:#ffffff05;border-radius:10px;min-width:36px;height:36px;cursor:pointer}.snow-toggle[aria-pressed="true"]{box-shadow:0 0 12px #a5dfff33}.side-wallets .snow-toggle{width:100%}
