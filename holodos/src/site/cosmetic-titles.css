@@ -41,3 +41,25 @@
 [data-title="goodjob"]{position:relative;color:#c0e6ae;border-color:#97bd8266}[data-title="goodjob"]::after{content:'❧';position:absolute;right:-10px;top:-7px;color:#9bc984;font-size:16px;animation:titleLeaf 4s ease-in-out infinite}
 [data-title="moderator"]{color:#b6dcbd;border-color:#8acb9b55}[data-title="administrator"]{color:#dfc3ee;border-color:#c697df66}
 @keyframes titleDollars{0%{transform:translateY(-8px);opacity:0}25%{opacity:.85}100%{transform:translateY(30px) rotate(12deg);opacity:0}}@keyframes titleLeaf{50%{transform:rotate(15deg) translateY(-2px)}}@media(prefers-reduced-motion:reduce){[data-title="gambler"]::after,[data-title="goodjob"]::after{animation:none}}
+
+[data-title="gambler"],[data-title="goodjob"] {
+  display:inline-flex;align-items:center;justify-content:center;gap:4px;
+}
+[data-title="gambler"]::before,[data-title="gambler"]::after,
+[data-title="goodjob"]::before,[data-title="goodjob"]::after {
+  position:static;flex:none;transform:none;animation:none;
+  opacity:1;line-height:1;font-size:10px;
+}
+[data-title="gambler"]::before,[data-title="gambler"]::after {
+  content:"$";color:#e4cf71;text-shadow:0 0 5px #e4cf71;
+}
+[data-title="goodjob"] {
+  color:#c5ffb0;border-color:#83dd8288;
+  text-shadow:0 0 6px #82ff7699;box-shadow:0 0 10px #76f68955,inset 0 0 7px #76f68922;
+}
+[data-title="goodjob"]::before,[data-title="goodjob"]::after {
+  content:"";width:7px;height:5px;border-radius:85% 0 85% 0;
+  background:linear-gradient(25deg,#559b46,#c0ff9c);
+  box-shadow:0 0 5px #91ff77aa;transform:rotate(24deg);
+}
+[data-title="goodjob"]::after {transform:scaleX(-1) rotate(24deg)}
