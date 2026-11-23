@@ -2108,7 +2108,7 @@ body[data-site-theme="gta6"] .page-header h1 .period{color:#ffbdad}
 .profile-can-card[aria-pressed="true"] .profile-can-art{border-color:var(--ice);box-shadow:0 0 0 2px #b8dfff20,0 0 22px #b8dfff35}
 .profile-can-status{display:grid;place-items:center;min-height:16px;color:var(--ice);font-size:14px;font-weight:800}
 .profile-can-card:focus-visible{outline:2px solid var(--ice);outline-offset:3px}
-.topbar .brand{box-sizing:border-box;width:128px;min-width:128px;height:42px;justify-content:center;padding:0;border:1px solid #707984;border-radius:9px;background:transparent!important;box-shadow:none!important;color:#f4f6f8;text-align:center}
+
 
 
 
