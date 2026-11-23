@@ -6,7 +6,7 @@
  document.addEventListener('securitypolicyviolation',event=>{if(!String(event.effectiveDirective||'').startsWith('connect-src'))return;let host='unknown';try{host=new URL(event.blockedURI).origin}catch{}if(host!==base)return;D.blocked=[...new Set([...D.blocked,host])];D.stage='Twitch CSP';tell('Twitch блокирует связь с холодосом. Нажми ? для диагностики.');});
  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const fmt=n=>Number(n||0).toLocaleString('ru-RU'),symbols={'⚪':'white','🟢':'green','🥭':'mango','🌸':'pink','🔵':'blue','⚫':'black','🍉':'watermelon','🟡':'yellow','👑':'w-edition'};
- const known=/^(case-(donation|twitch|chat|vip|coins|subscriber)|slot-(white|green|mango|pink|blue|black|watermelon|yellow|w-edition)|duel-can-(peach(?:-real)?|berry(?:-real)?|pipeline|pacific|khaotic|violet|badapple))\.webp$|^frame-(gta6|ultra|original|mango|thorn|assault|ears|jett|clove|shy|fish|throne|cats|hat|angel|sims-green|sims-red)\.png$/;
+ const known=/^(case-(donation|twitch|chat|vip|coins|subscriber)|slot-(white|green|mango|pink|blue|black|watermelon|yellow|w-edition(?:-v2)?)|duel-can-(rehab|strawberry|peach(?:-real)?|berry(?:-real)?|pipeline|pacific|khaotic|violet|badapple))\.webp$|^frame-(gta6|ultra|original|mango|thorn|assault|ears|jett|clove|shy|fish|throne|cats|hat|angel|sims-green|sims-red)\.png$/;
  function art(path,fallback='case-subscriber.webp'){const name=String(path||'').split('/').pop().split('?')[0];return 'media/'+(known.test(name)?name:fallback)}
  const can=id=>art('/assets/'+(['pipeline','pacific','khaotic','violet','badapple'].includes(id)?'duel-can-':'slot-')+id+'.webp','slot-black.webp');
  function tell(text){status.textContent=text}

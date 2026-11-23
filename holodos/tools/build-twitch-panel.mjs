@@ -13,8 +13,9 @@ for(let i=0;i<count;i++){
 }
 for(const name of ['panel.html','panel.js','catalog.json'])entries.set(name,readFileSync(new URL(name,extension)));
 entries.set('panel.css',Buffer.from(readFileSync(new URL('panel.css',extension),'utf8')+'\n'+readFileSync(new URL('cosmetic-titles.css',site),'utf8').replaceAll('/assets/monocraft.woff','media/monocraft.woff')));
-for(const id of ['peach','berry']){const data=readFileSync(new URL('duel-can-'+id+'-real.webp',site));entries.set('media/duel-can-'+id+'.webp',data);entries.set('media/duel-can-'+id+'-real.webp',data);}
-for(const name of ['frame-gta6.png'])entries.set('media/'+name,readFileSync(new URL(name,site)));
+for(const id of ['peach','berry']){const data=readFileSync(new URL(id==='peach'?'duel-can-rehab.webp':'duel-can-strawberry.webp',site));entries.set('media/duel-can-'+id+'.webp',data);entries.set('media/duel-can-'+id+'-real.webp',data);}
+entries.set('media/slot-w-edition.webp',readFileSync(new URL('slot-w-edition-v2.webp',site)));
+for(const name of ['duel-can-rehab.webp','duel-can-strawberry.webp','slot-w-edition-v2.webp','frame-gta6.png'])entries.set('media/'+name,readFileSync(new URL(name,site)));
 entries.set('media/frame-throne.png',readFileSync(new URL('frame-throne.png',site)));
 for(const name of ['dela-gothic-one.woff','dela-gothic-one-LICENSE.txt'])entries.set('media/'+name,readFileSync(new URL(name,site)));
 const crcTable=Array.from({length:256},(_,n)=>{for(let j=0;j<8;j++)n=n&1?0xedb88320^(n>>>1):n>>>1;return n>>>0;});

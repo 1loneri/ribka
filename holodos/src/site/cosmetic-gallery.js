@@ -14,7 +14,7 @@
   if(kind==='name_color')visual='<div class="cosmetic-visual cosmetic-name-preview" data-name-style="'+escaped+'"><b>@'+escape(state.me?.player?.login||'Игрок')+'</b><span class="sample-underline"></span></div>';
   if(kind==='cans')visual='<div class="cosmetic-visual cosmetic-can-preview"><img loading="lazy" src="'+escape(siteFeatures.cans[id]?.src||'')+'" alt=""></div>';
   if(kind==='highlight')visual='<div class="cosmetic-visual cosmetic-highlight-preview"><span class="history-item" data-highlight="'+escaped+'">'+avatar()+'<b>@'+escape(state.me?.player?.login||'Игрок')+'</b></span></div>';
-  if(kind==='effect')visual='<div class="cosmetic-visual cosmetic-effect-preview"><b>W.</b><span>· ❄ ·</span><i></i><i></i><i></i><i></i></div>';
+  if(kind==='effect')visual='<div class="cosmetic-visual cosmetic-effect-preview"><span class="snowfall-preview" role="img" aria-label="Падающий снег">'+Array.from({length:16},()=>'<i aria-hidden="true"></i>').join('')+'</span></div>';
   return '<figure class="cosmetic-example" aria-label="'+escape(label)+'">'+visual+caption+'</figure>';
  }
  function paintThemeAssets(){if(selected!=='theme')return;for(const asset of siteFeatures.assets||[]){if(!asset.enabled||asset.kind!=='theme')continue;const node=[...host.querySelectorAll('[data-theme]')].find(n=>n.dataset.theme===asset.id);if(!node)continue;if(!themeCache.has(asset.id))themeCache.set(asset.id,api(asset.src).catch(()=>null));themeCache.get(asset.id).then(theme=>{if(!node.isConnected||!theme?.colors?.length||!theme.colors.every(c=>/^#[a-f0-9]{6}$/i.test(c)))return;node.style.backgroundImage='linear-gradient('+(Number(theme.angle)||135)+'deg,'+theme.colors.join(',')+')';});}}

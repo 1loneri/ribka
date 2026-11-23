@@ -247,7 +247,7 @@ function setReelSymbol(el,symbol){
  if(!sprite){el.textContent=symbol;return;}
  let img=el.querySelector('img');
  if(!img){img=document.createElement('img');img.className='slot-symbol';img.draggable=false;el.replaceChildren(img);}
- img.src='/assets/slot-'+sprite[0]+'.webp?v=14';img.alt=sprite[1];
+ img.src='/assets/slot-'+sprite[0]+'.webp?v=20261123c';img.alt=sprite[1];
 }
 Object.values(slotSprites).forEach(([id])=>{const image=new Image();image.src='/assets/slot-'+id+'.webp?v=14';});
 ['reel-1','reel-2','reel-3'].forEach(id=>setReelSymbol($(id),$(id).textContent.trim()));
@@ -535,7 +535,7 @@ document.addEventListener('submit',async e=>{
 });
 const cosmeticDuelIds=['pipeline','pacific','khaotic','violet','badapple'];
 const normalDuelIds=['white','green','mango','pink','blue','black','watermelon','yellow','w-edition'];
-function canImageSource(id){if(['peach','berry'].includes(id))return '/assets/duel-can-'+id+'-real.webp';return '/assets/'+(['peach','berry','pipeline','pacific','khaotic','violet','badapple'].includes(id)?'duel-can-':'slot-')+id+'.webp';}
+function canImageSource(id){if(id==='peach')return '/assets/duel-can-rehab.webp';if(id==='berry')return '/assets/duel-can-strawberry.webp';if(id==='w-edition')return '/assets/slot-w-edition-v2.webp';return '/assets/'+(['peach','berry','pipeline','pacific','khaotic','violet','badapple'].includes(id)?'duel-can-':'slot-')+id+'.webp';}
 function duelCanImage(can){const src=can?.src||canImageSource(can?.id||'black');return '<img src="'+esc(/^\/(assets\/[a-z0-9_-]+\.(webp|png|svg)|api\/cosmetic-assets\/custom_[a-f0-9]{16})$/.test(src)?src:'/assets/slot-black.webp')+'" alt="'+esc(can?.label||'Monster')+'" width="80" height="160">';}
 let duelAnimationBusy=false;
 function duelFighterHtml(login,can){return '<div data-can="'+esc(can?.id||'black')+'" class="duel-fighter '+(can?.cosmetic?'duel-fighter--cosmetic':'')+'"><div class="duel-can-wrap">'+duelCanImage(can)+'<span class="duel-soda" aria-hidden="true"><svg class="soda-stream" viewBox="0 0 200 170" fill="none"><path pathLength="1" d="M100 90 C86 51 43 35 24 65 C12 84 19 111 32 130"/><path pathLength="1" d="M100 90 C112 48 151 30 170 66 C182 89 174 109 165 121"/><path pathLength="1" d="M100 90 C96 58 77 34 60 42 C45 49 45 67 49 78"/></svg><i class="soda-drop soda-drop--0"></i><i class="soda-drop soda-drop--1"></i><i class="soda-drop soda-drop--2"></i><i class="soda-drop soda-drop--3"></i><i class="soda-drop soda-drop--4"></i><i class="soda-drop soda-drop--5"></i><i class="soda-drop soda-drop--6"></i><i class="soda-drop soda-drop--7"></i><i class="soda-drop soda-drop--8"></i><i class="soda-drop soda-drop--9"></i><i class="soda-drop soda-drop--10"></i><i class="soda-drop soda-drop--11"></i><i class="soda-foam"></i></span></div><span class="player-line">'+avatarHtml(login)+'<b>@'+esc(login)+'</b></span></div>';}
@@ -580,6 +580,8 @@ const previewVp={id:'vp',label:'240 VP',kind:'Пример награды',symbo
 const previewVip={id:'vip-month',label:'VIP на месяц',kind:'VIP канала',symbol:'vip'};
 const casePreviewPools={twitch:[500,1000,2000,5000].map(previewW).concat(previewVp),chat:[100,250,1000,3000,8000].map(previewW).concat(previewVp,previewVip),vip:[50,100,500,2000,5000,10000].map(previewW).concat(previewVp),coins:demoPrizes.concat(previewVp),subscriber:demoPrizes,donation:[3000,5000,10000,15000].map(previewW).concat(previewVp,{id:'vp-475',label:'475 VP',kind:'VP',symbol:'vp'},{id:'vp-1000',label:'1000 VP',kind:'VP',symbol:'vp'},{id:'popmart',label:'Фигурка POP MART',kind:'Фигурка',symbol:'physical'})};
 function demoPrizeArt(p){
+ if(p.symbol==='effect')return '<span class="snowfall-preview" role="img" aria-label="Падающий снег">'+Array.from({length:16},()=>'<i aria-hidden="true"></i>').join('')+'</span>';
+
  const frameId=p.frame||(['ultra','original','mango'].includes(p.id)?p.id:'');if(frameId)return '<img src="'+frameArt(frameId)+'" alt="">';
  if(p.can||p.id==='can')return '<img src="'+esc(p.src||canImageSource(p.can||'violet'))+'" alt="">';if(p.symbol==='case')return '<img src="/assets/case-donation.webp" alt="">';
  const icon=p.symbol==='vip'?'<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="m10 20 12 11 10-19 10 19 12-11-6 29H16l-6-29Z"/><path d="M17 55h30"/></svg>':p.symbol==='w'?'<span class="demo-w-coin">W</span>':p.symbol==='vp'?'VP':p.symbol==='physical'?'✧':(p.symbol==='name'||p.id==='name')?'W':(p.symbol==='title'||p.id==='title')?'✦':'◈';
