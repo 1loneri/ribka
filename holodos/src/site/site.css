@@ -2261,3 +2261,5 @@ body[data-site-theme="gta6"] #profile-content :is(.stat span,.profile-muted,.mut
  #view-top .player-avatar {width:36px;height:36px;flex-basis:36px}
  #view-top .rank-name .player-line > b,#view-top .rank-score {font-size:14px}
 }
+
+.duel-can-catalog figure > img[src$="/duel-can-tea.webp"] {transform:scale(1.6)}
