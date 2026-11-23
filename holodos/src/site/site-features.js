@@ -73,7 +73,7 @@ const garland=document.createElement('div');
 garland.className='site-garland';
 garland.hidden=true;
 garland.setAttribute('aria-hidden','true');
-document.body.append(garland);
+document.querySelector('main').before(garland);
 function snowButton(){const b=document.createElement('button');b.type='button';b.className='snow-toggle';b.textContent='❄';b.hidden=true;b.title='Включить / выключить косметический снег';b.setAttribute('aria-label',b.title);b.addEventListener('click',async()=>{b.disabled=true;try{await supportPost('/api/cosmetics/equip',{kind:'effect',item:state.me?.cosmetics?.active?.effect==='snow'?'':'snow'});await refreshMe();}catch(e){notice(e.message)}finally{b.disabled=false;}});return b;}
 const homeBell=document.querySelector('.topbar .notify-toggle');if(homeBell)homeBell.after(snowButton());const sideWallet=document.querySelector('.side-wallets');if(sideWallet)sideWallet.append(snowButton());
 const customThemeCache=new Map();
