@@ -12,7 +12,7 @@
   if(kind==='theme')visual='<div class="cosmetic-visual cosmetic-site-preview" data-theme="'+escaped+'"><span class="sample-site-nav"><i></i><i></i><i></i></span><span class="sample-site-body"><b>W.</b><i></i><i></i></span></div>';
   if(kind==='title')visual='<div class="cosmetic-visual cosmetic-title-preview"><b data-title-name="'+escaped+'">@'+escape(state.me?.player?.login||'Игрок')+'</b><span class="player-cosmetic-title" data-title="'+escaped+'">'+escape(label)+'</span></div>';
   if(kind==='name_color')visual='<div class="cosmetic-visual cosmetic-name-preview" data-name-style="'+escaped+'"><b>@'+escape(state.me?.player?.login||'Игрок')+'</b><span class="sample-underline"></span></div>';
-  if(kind==='cans')visual='<div class="cosmetic-visual cosmetic-can-preview"><img loading="lazy" src="'+escape(siteFeatures.cans[id]?.src||'')+'" alt=""></div>';
+  if(kind==='cans')visual='<div class="cosmetic-visual cosmetic-can-preview"><img loading="lazy" '+(id==='w-edition'?'style="transform:scaleX(1.15)" ':'')+'src="'+escape(siteFeatures.cans[id]?.src||'')+'" alt=""></div>';
   if(kind==='highlight')visual='<div class="cosmetic-visual cosmetic-highlight-preview"><span class="history-item" data-highlight="'+escaped+'">'+avatar()+'<b>@'+escape(state.me?.player?.login||'Игрок')+'</b></span></div>';
   if(kind==='effect')visual='<div class="cosmetic-visual cosmetic-effect-preview"><span class="snowfall-preview" role="img" aria-label="Падающий снег">'+Array.from({length:16},()=>'<i aria-hidden="true"></i>').join('')+'</span></div>';
   return '<figure class="cosmetic-example" aria-label="'+escape(label)+'">'+visual+caption+'</figure>';
