@@ -224,7 +224,7 @@ function updateCooldown(){
   button.disabled=false;button.textContent='Войти через Twitch ↗';
   return;
  }
- if(message.dataset.authPending){delete message.dataset.authPending;message.textContent='Холодос готов к открытию.';}
+ if(message.dataset.authPending||message.textContent.trim()==='Войди через Twitch, чтобы открыть холодос.'){delete message.dataset.authPending;message.textContent='Холодос готов к открытию.';}
  if(!me.spin_allowed){message.dataset.streamLocked='true';button.disabled=true;button.textContent=me.stream?.known?'Открытия во время стрима':'Проверяем эфир';message.textContent=me.stream?.known?'Холодос доступен во время стрима. Вне эфира — только администраторам.':'Статус эфира временно недоступен.';return;}
  if(message.dataset.streamLocked){message.textContent='Холодос готов к открытию.';delete message.dataset.streamLocked;}
  const remains=Math.max(0,Math.ceil((Number(me.player.last_opened||0)+120000-Date.now())/1000));
