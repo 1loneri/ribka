@@ -33,6 +33,8 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  const controls=createFeatureControl(db,transaction,()=>[['shop:vp','Магазин VP'],['shop:vip','Магазин VIP'],['sync:points','Twitch · баллы и выдача кейсов'],['sync:vip','Twitch · VIP-кейсы'],['sync:subscriber','Twitch · кейсы за подписку'],...cases.list().map(c=>['case:'+c.id,'Кейс · '+c.title]),...Object.entries(caseRewardOptions).map(([id,r])=>['reward:'+id,'Награда · '+r.label])]);
  const leaderboard=createLeaderboard(db);
  const support=createSupport(db,transaction);
+ db.exec(`CREATE TABLE IF NOT EXISTS logo_egg_clicks(player_id TEXT PRIMARY KEY, clicks INTEGER NOT NULL);
+ CREATE TABLE IF NOT EXISTS logo_egg_winner(singleton INTEGER PRIMARY KEY CHECK(singleton=1), player_id TEXT NOT NULL);`);
  const reviews=createReviews(db,transaction);
  const duelVisuals=createDuelVisuals(db);
  db.exec("CREATE TABLE IF NOT EXISTS cosmetic_profiles(player_id TEXT PRIMARY KEY,frame TEXT NOT NULL DEFAULT '',title TEXT NOT NULL DEFAULT '',name_color TEXT NOT NULL DEFAULT '');");
@@ -41,6 +43,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  const siteKey=createHash('sha256').update('war1ouss-web:'+secret).digest();
  const sitePages=new Set(['/','/casino','/cases','/duels','/top','/chat','/shop','/profile','/help','/requests','/widget','/giveaways','/giveaways/manage']);
  const assetFiles={
+ '/assets/logo-easter-egg.png':{file:new URL('./site/logo-easter-egg.png',import.meta.url),type:'image/png'},
  '/assets/privacy.css':{file:new URL('./site/privacy.css',import.meta.url),type:'text/css; charset=utf-8'},
  '/assets/giveaway-operator-atlas.webp':{file:new URL('./site/giveaway-operator-atlas.webp',import.meta.url),type:'image/webp'},
  '/assets/giveaway-operator.webm':{file:new URL('./site/giveaway-operator.webm',import.meta.url),type:'video/webm'},
@@ -339,6 +342,20 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
    if(!constantTime(String(req.headers['x-csrf-token']||''),csrf(session))){json(res,403,{error:'Сессия устарела. Обнови страницу.'});return true;}
    try{
     const data=await readJson(req);
+    if(path==='/api/logo-easter-egg'){
+     const result=transaction(()=>{
+      const {clicks}=db.prepare('INSERT INTO logo_egg_clicks VALUES(?,1) ON CONFLICT(player_id) DO UPDATE SET clicks=min(67,clicks+1) RETURNING clicks').get(session.player_id);
+      if(clicks<67)return {open:false};
+      const winner=db.prepare('INSERT OR IGNORE INTO logo_egg_winner VALUES(1,?)').run(session.player_id);
+      if(winner.changes){
+       const updated=db.prepare('UPDATE players SET balance=balance+5000 WHERE id=?').run(session.player_id);
+       if(!updated.changes)throw Error('Не удалось начислить награду');
+      }
+      const own=db.prepare('SELECT player_id FROM logo_egg_winner WHERE singleton=1').get().player_id===session.player_id;
+      return {open:true,won:own};
+     });
+     json(res,200,result);return true;
+    }
     if(path.startsWith('/api/giveaways/')){
      const action=path.split('/').pop();if(action==='join'){json(res,200,giveaways.join(session.player_id,session.login,data.id));return true;}
      if(!isAdminSession(session)){json(res,403,{error:'Только для стримера и администраторов'});return true;}

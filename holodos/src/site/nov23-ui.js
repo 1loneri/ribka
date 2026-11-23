@@ -32,3 +32,23 @@ document.addEventListener('click',async event=>{const button=event.target.closes
 })();
 
 function playJackpotCan(big=false){const ctx=gameAudioReady();if(!ctx)return;try{const t=ctx.currentTime,master=ctx.createGain();master.gain.value=big?.12:.08;master.connect(ctx.destination);const hiss=(at,length,hz,volume)=>{const buffer=ctx.createBuffer(1,Math.ceil(ctx.sampleRate*length),ctx.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*Math.exp(-i/(ctx.sampleRate*length*.25));const source=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),gain=ctx.createGain();source.buffer=buffer;filter.type='highpass';filter.frequency.value=hz;gain.gain.value=volume;source.connect(filter);filter.connect(gain);gain.connect(master);source.start(at);source.stop(at+length);};hiss(t,.065,1800,.9);hiss(t+.06,big?1.5:.65,2400,big?.8:.5);if(big)for(const [i,hz] of [130.81,164.81,196,261.63,329.63].entries()){const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type='triangle';osc.frequency.value=hz;gain.gain.setValueAtTime(.001,t+i*.07);gain.gain.exponentialRampToValueAtTime(.2,t+i*.07+.02);gain.gain.exponentialRampToValueAtTime(.001,t+1.6);osc.connect(gain);gain.connect(master);osc.start(t+i*.07);osc.stop(t+1.7);}}catch{}}
+
+(()=>{
+ let guestClicks=0,shown=false;
+ const popup=$('logo-easter-egg');
+ popup.querySelector('button').addEventListener('click',()=>{popup.hidden=true;});
+ document.addEventListener('click',async event=>{
+  if(shown||event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey||!event.target.closest('.brand,.side-brand'))return;
+  if(state.me===null)await refreshMe();
+  let result;
+  try{
+   result=state.me?.authenticated?await supportPost('/api/logo-easter-egg',{}):{open:++guestClicks>=67,guest:true};
+  }catch(error){console.warn('Logo request failed:',error.message);return;}
+  if(!result.open||shown)return;
+  shown=true;
+  popup.querySelector('img').src='/assets/logo-easter-egg.png';
+  popup.querySelector('p').textContent=result.won?'Ты нашла пасхалку первой! +5000 W':result.guest?'Ты нашла пасхалку! Войди через Twitch, чтобы участвовать.':'Ты нашла пасхалку! Приз уже забрали.';
+  popup.hidden=false;
+  if(result.won)void refreshMe();
+ });
+})();
