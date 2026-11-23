@@ -85,7 +85,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  for(const id of ['cat','roses'])assetFiles['/assets/profile-'+id+'.svg']={file:new URL('./site/profile-'+id+'.svg',import.meta.url),type:'image/svg+xml'};
  for(const id of ['peach','berry']){const asset={file:new URL('./site/duel-can-'+id+'-real.webp',import.meta.url),type:'image/webp'};assetFiles['/assets/duel-can-'+id+'-real.webp']=asset;assetFiles['/assets/duel-can-'+id+'.webp']=asset;}
  for(const [name,aliases] of [['duel-can-rehab.webp',['duel-can-peach.webp','duel-can-peach-real.webp']],['duel-can-strawberry.webp',['duel-can-berry.webp','duel-can-berry-real.webp']],['slot-w-edition-v2.webp',['slot-w-edition.webp']]])for(const asset of [name,...aliases])assetFiles['/assets/'+asset]={file:new URL('./site/'+name,import.meta.url),type:'image/webp'};
- for(const [url,name,type] of [['/favicon.ico','favicon.ico','image/x-icon'],['/assets/site-icon.png','site-icon.png','image/png'],['/assets/apple-touch-icon.png','apple-touch-icon.png','image/png']])assetFiles[url]={file:new URL('./site/'+name,import.meta.url),type};
+ for(const [url,name,type] of [['/favicon.ico','favicon.ico','image/x-icon'],['/assets/site-icon.png','site-icon.png','image/png'],['/assets/site-icon.svg','site-icon.svg','image/svg+xml'],['/assets/apple-touch-icon.png','apple-touch-icon.png','image/png']])assetFiles[url]={file:new URL('./site/'+name,import.meta.url),type};
  const shell=readFileSync(new URL('./site/index.html',import.meta.url));
  const privacyPage=readFileSync(new URL('./site/privacy.html',import.meta.url));
  const staticAssets={};
