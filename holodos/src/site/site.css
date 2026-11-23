@@ -2305,3 +2305,14 @@ body[data-site-theme="gta6"] #profile-content :is(.stat span,.profile-muted,.mut
 #profile-content .stat strong {
  color:var(--custom-stats-text,var(--profile-accent));
 }
+
+.cosmetic-profile-preview--custom :is(.sample-background,iframe) {
+ opacity:var(--custom-profile-image-opacity,.8);
+}
+.cosmetic-profile-preview--custom .sample-stats i {
+ background:var(--profile-surface);
+ border-color:var(--custom-stats-border,var(--profile-border));
+}
+.cosmetic-profile-preview--custom .sample-lines i {
+ background-color:var(--custom-stats-text,var(--profile-accent));
+}
