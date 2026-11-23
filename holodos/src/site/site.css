@@ -2155,7 +2155,8 @@ body[data-site-theme="gta6"] :is(.page-header h1,.panel h2,.panel h3,.player-lin
 body[data-site-theme="gta6"] :is(.text-link,.win-gain,.history-item em,.case-balance strong) {color:var(--ice2)}
 body[data-site-theme="gta6"] :is(.win-item small,.history-item time,.rank-name small,.case-balance-hint,.page-header p) {color:var(--muted)}
 body[data-site-theme="gta6"] :is(.community-strip,.footer) {
- background:#281831e8;border-color:#ad7798;color:var(--text);border-radius:14px;
+ background:transparent;border-color:#ad7798;color:var(--text);
 }
-body[data-site-theme="gta6"] :is(.community-strip p,.footer span,.footer a) {color:#d5b4c7}
+body[data-site-theme="gta6"] :is(.community-strip,.footer) {color:#fff0f6;text-shadow:0 1px 4px #301533}
+body[data-site-theme="gta6"] :is(.community-strip p,.footer span,.footer a) {color:#fff0f6}
 body[data-site-theme="gta6"] .community-strip .blue-mark {background:#ef9ebc;box-shadow:0 0 10px #ef9ebc80}
