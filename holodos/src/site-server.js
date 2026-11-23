@@ -368,7 +368,18 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
     if(path==='/api/frames/equip'){json(res,200,frames.equip(session.player_id,String(data.frame||'')));return true;}
     if(path==='/api/reviews'){json(res,200,reviews.create(session,data));return true;}
     if(path==='/api/notifications/read'){json(res,200,notifications.read(session,data.maxId));return true;}
-    if(path==='/api/support'){json(res,200,support.create(session,data.body));return true;}
+    if(path==='/api/support'){
+     const result=support.create(session,data.body);
+     json(res,200,result);
+     const apiKey=process.env.RESEND_API_KEY,from=process.env.SUPPORT_EMAIL_FROM;
+     if(apiKey&&from)void fetch('https://api.resend.com/emails',{
+      method:'POST',
+      headers:{Authorization:'Bearer '+apiKey,'Content-Type':'application/json','Idempotency-Key':'support-ticket/'+result.id},
+      body:JSON.stringify({from,to:['lehabotttv@gmail.com'],subject:'Холодос: новое обращение №'+result.id,text:'Новое обращение от @'+session.login+'. Открой раздел помощи в админке, чтобы прочитать и ответить.'}),
+      signal:AbortSignal.timeout(10000)
+     }).then(response=>{if(!response.ok)console.warn('Support email rejected:',response.status);}).catch(()=>console.warn('Support email delivery failed'));
+     return true;
+    }
     if(path==='/api/support/reply'){json(res,200,support.reply(session,data.id,data.body));return true;}
     if(path==='/api/support/read'){json(res,200,support.read(session,data.id,data.maxId));return true;}
     if(path==='/api/logout'){
