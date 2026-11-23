@@ -17,7 +17,7 @@ export function createCustomAssets(db,transaction){
  for(const r of db.prepare('SELECT * FROM uploaded_cosmetics WHERE enabled=1').all())register(r);
  db.exec('CREATE TABLE IF NOT EXISTS cosmetic_profile_styles(id TEXT PRIMARY KEY,image_opacity INTEGER NOT NULL,stats_opacity INTEGER NOT NULL,gradient TEXT NOT NULL)');
  const styleColumns=new Set(db.prepare('PRAGMA table_info(cosmetic_profile_styles)').all().map(c=>c.name));
- for(const column of ['stats_color','gradient_start','gradient_end','stats_border']){
+ for(const column of ['stats_color','gradient_start','gradient_end','stats_border','stats_text']){
   if(!styleColumns.has(column))db.exec('ALTER TABLE cosmetic_profile_styles ADD COLUMN '+column+' TEXT');
  }
  const gradients={custom:'Свои два цвета',none:'Без градиента',ice:'Ледяной',violet:'Сиреневый',sunset:'Закат',forest:'Лесной'};
@@ -25,7 +25,7 @@ export function createCustomAssets(db,transaction){
   const image=Number(form.get('image_opacity')??20),stats=Number(form.get('stats_opacity')??15);
   const gradient=String(form.get('gradient')??'none');
   if(![image,stats].every(x=>Number.isInteger(x)&&x>=0&&x<=100)||!Object.hasOwn(gradients,gradient))fail('Укажи прозрачность от 0 до 100 и выбери градиент.');
-  const colors=Object.entries({stats_color:'#101720',gradient_start:'#183453',gradient_end:'#0d172b',stats_border:'#63798b'}).map(([key,fallback])=>{
+  const colors=Object.entries({stats_color:'#101720',gradient_start:'#183453',gradient_end:'#0d172b',stats_border:'#63798b',stats_text:'#edf6ff'}).map(([key,fallback])=>{
    const color=String(form.get(key+'_hex')||form.get(key)||fallback).trim();
    if(!/^#[a-f0-9]{6}$/i.test(color))fail('Укажи цвет в формате #RRGGBB.');
    return color.toLowerCase();
@@ -33,7 +33,7 @@ export function createCustomAssets(db,transaction){
   return [100-image,100-stats,gradient,...colors];
  }
  function writeStyle(id,values){
-  db.prepare('INSERT OR REPLACE INTO cosmetic_profile_styles(id,image_opacity,stats_opacity,gradient,stats_color,gradient_start,gradient_end,stats_border) VALUES(?,?,?,?,?,?,?,?)').run(id,...values);
+  db.prepare('INSERT OR REPLACE INTO cosmetic_profile_styles(id,image_opacity,stats_opacity,gradient,stats_color,gradient_start,gradient_end,stats_border,stats_text) VALUES(?,?,?,?,?,?,?,?,?)').run(id,...values);
  }
  function saveStyle(form){
   const id=String(form.get('id')||'');
@@ -50,13 +50,13 @@ export function createCustomAssets(db,transaction){
   const media=style.enabled?(style.mime?.startsWith('text/html')?'<iframe sandbox src="'+style.src+'" title="Фон профиля"></iframe>':'<img src="'+style.src+'" alt="">'):'';
   return '<div class="profile-style-editor" data-profile-style-editor><div class="profile-style-fields">'+
    slider('image_opacity','Прозрачность картинки',image)+slider('stats_opacity','Прозрачность плашки',stats)+
-   colorPicker('stats_color','Цвет плашки статистики','#101720')+colorPicker('stats_border','Обводка плашки','#63798b')+
+   colorPicker('stats_color','Цвет плашки статистики','#101720')+colorPicker('stats_border','Обводка плашки','#63798b')+colorPicker('stats_text','Цвет текста статистики','#edf6ff')+
    '<label>Градиент фона<select name="gradient">'+Object.entries(gradients).map(([key,label])=>'<option value="'+key+'"'+(key===gradient?' selected':'')+'>'+label+'</option>').join('')+'</select></label>'+
    '<div data-custom-gradient>'+colorPicker('gradient_start','Первый цвет','#183453')+colorPicker('gradient_end','Второй цвет','#0d172b')+'</div></div>'+
    '<div class="profile-style-preview"><strong>Предпросмотр профиля</strong><div class="profile-style-card"><div data-profile-art>'+media+'</div>'+
    '<div class="profile-style-name"><span aria-hidden="true">W</span><b>@превью</b></div><div data-profile-stats><p>Баланс <b>570 W</b></p><p>Сообщений <b>4 359</b></p><p>Открытий <b>225</b></p></div></div></div></div>';
  }
- function list(){return db.prepare('SELECT a.id,a.kind,a.label,a.target,a.mime,a.enabled,s.image_opacity,s.stats_opacity,s.gradient,s.stats_color,s.gradient_start,s.gradient_end,s.stats_border FROM uploaded_cosmetics a LEFT JOIN cosmetic_profile_styles s ON s.id=a.id WHERE NOT EXISTS(SELECT 1 FROM deleted_cosmetic_assets d WHERE d.id=a.id) ORDER BY a.created_at DESC').all().map(r=>({...r,src:'/api/cosmetic-assets/'+r.id}));}
+ function list(){return db.prepare('SELECT a.id,a.kind,a.label,a.target,a.mime,a.enabled,s.image_opacity,s.stats_opacity,s.gradient,s.stats_color,s.gradient_start,s.gradient_end,s.stats_border,s.stats_text FROM uploaded_cosmetics a LEFT JOIN cosmetic_profile_styles s ON s.id=a.id WHERE NOT EXISTS(SELECT 1 FROM deleted_cosmetic_assets d WHERE d.id=a.id) ORDER BY a.created_at DESC').all().map(r=>({...r,src:'/api/cosmetic-assets/'+r.id}));}
  function media(id){return db.prepare('SELECT mime,data FROM uploaded_cosmetics WHERE id=? AND enabled=1').get(id);}
  async function parse(req){const content=String(req.headers['content-type']||''),match=content.match(/boundary=(?:"([^"]+)"|([^;]+))/i),boundary=match?.[1]||match?.[2];if(!boundary||boundary.length>100)fail('Нужна форма загрузки файла.');let length=0,chunks=[];for await(const chunk of req){const b=Buffer.from(chunk);length+=b.length;if(length>700000)fail('Файл слишком большой (максимум 512 КБ).');chunks.push(b);}const body=Buffer.concat(chunks),sep=Buffer.from('--'+boundary),form=new URLSearchParams();let file=null,start=body.indexOf(sep)+sep.length;while(start>=sep.length){const end=body.indexOf(sep,start);if(end<0)break;const part=body.subarray(start+2,end-2),headerEnd=part.indexOf(Buffer.from('\r\n\r\n'));if(headerEnd>=0){const header=part.subarray(0,headerEnd).toString(),data=part.subarray(headerEnd+4),name=header.match(/name="([^"]+)"/)?.[1];if(name==='file')file={name:header.match(/filename="([^"]*)"/)?.[1]||'',data};else if(name)form.set(name,data.toString('utf8'));}start=end+sep.length;}return {form,file};}
  function upload(form,file,actor){const kind=form.get('kind'),label=String(form.get('label')||'').trim(),target=String(form.get('target')||'');if(!['can','case','profile','theme'].includes(kind)||!label||label.length>60||!file?.data?.length||file.data.length>524288)fail('Проверь тип, название и файл (до 512 КБ).');let mime='image/png';if(kind==='theme'){let data;try{data=JSON.parse(file.data.toString('utf8'))}catch{fail('Для цветовой темы нужен JSON: colors, angle, accent.');}const hex=/^#[a-f0-9]{6}$/i;if(!Array.isArray(data.colors)||data.colors.length<1||data.colors.length>4||!data.colors.every(c=>typeof c==='string'&&hex.test(c))||!Number.isFinite(Number(data.angle??135))||Number(data.angle??135)<0||Number(data.angle??135)>360||!hex.test(String(data.accent||'#b8dfff')))fail('Укажи 1–4 цвета #RRGGBB, угол 0–360 и accent #RRGGBB.');mime='application/json';file={...file,data:Buffer.from(JSON.stringify({colors:data.colors,angle:Number(data.angle??135),accent:data.accent||'#b8dfff'}))};}else if(file.name.toLowerCase().endsWith('.html')&&kind==='profile'){mime='text/html; charset=utf-8';}else{const b=file.data;if(b.length<24||b.subarray(0,8).toString('hex')!=='89504e470d0a1a0a')fail('Для банки и кейса нужен PNG. Для профиля — PNG или HTML.');const w=b.readUInt32BE(16),h=b.readUInt32BE(20);if(w<16||h<16||w>2048||h>2048)fail('Размер PNG — от 16 до 2048 пикселей по каждой стороне.');}if(kind==='case'&&!['donation','twitch','chat','vip','coins','subscriber'].includes(target))fail('Выбери кейс, для которого загружаешь картинку.');const r={id:'custom_'+randomBytes(8).toString('hex'),kind,label,target,mime,data:file.data,enabled:1};const styles=kind==='profile'?styleFields(form):null;
