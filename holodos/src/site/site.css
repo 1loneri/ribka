@@ -2126,3 +2126,36 @@ body[data-site-theme="gta6"] .page-header h1 .period{color:#ffbdad}
 @media (prefers-reduced-motion:reduce) {
   [data-name-style="gta6"]:not(.player-line),.player-line[data-name-style="gta6"]>b {animation:none}
 }
+
+/* GTA VI: warm surfaces and accents across the site. */
+body[data-site-theme="gta6"] {
+ --bright:#e9ccd9;--text:#ddbdcf;--muted:#c0a0b6;--ice:#efa7c8;--ice2:#efbd9f;
+}
+body[data-site-theme="gta6"] :is(.topbar,.topbar .nav,.side-navigation) {
+ background:linear-gradient(110deg,#291735,#3f2343);border-color:#a46a8d;
+}
+body[data-site-theme="gta6"] :is(.topbar,.side-navigation) :is(a,button) {color:var(--text)}
+body[data-site-theme="gta6"] :is(.topbar,.side-navigation) :is(a:hover,a.active) {color:#ffc3d2}
+body[data-site-theme="gta6"] .topbar .nav-link.active::after {background:#ec9cbd}
+body[data-site-theme="gta6"] #view-home .recent-wins-panel {
+ animation:none;background:linear-gradient(145deg,#38213e,#25172f);
+ border-color:#bb789e;box-shadow:0 0 24px #ec8cb41c;
+}
+body[data-site-theme="gta6"] #view-home .recent-wins-panel::after {display:none}
+body[data-site-theme="gta6"] :is(.win-item,.history-item,.case-history-row,.duel-arena,.case-balance,.cosmetic-visual,.wallet,.odds-panel .odd-row) {
+ background:#3a2444;border-color:#825571;color:var(--text);
+}
+body[data-site-theme="gta6"] :is(.rank-position,.history-tabs button,.button-ghost,.side-toggle,.mobile-menu) {
+ background:#472b50;border-color:#956581;color:var(--text);
+}
+body[data-site-theme="gta6"] :is(.history-tabs button[aria-selected="true"],.rank-item:first-child .rank-position) {
+ background:#b9779e;color:#241429;
+}
+body[data-site-theme="gta6"] :is(.page-header h1,.panel h2,.panel h3,.player-line b,.rank-score) {color:var(--bright)}
+body[data-site-theme="gta6"] :is(.text-link,.win-gain,.history-item em,.case-balance strong) {color:var(--ice2)}
+body[data-site-theme="gta6"] :is(.win-item small,.history-item time,.rank-name small,.case-balance-hint,.page-header p) {color:var(--muted)}
+body[data-site-theme="gta6"] :is(.community-strip,.footer) {
+ background:#281831e8;border-color:#ad7798;color:var(--text);border-radius:14px;
+}
+body[data-site-theme="gta6"] :is(.community-strip p,.footer span,.footer a) {color:#d5b4c7}
+body[data-site-theme="gta6"] .community-strip .blue-mark {background:#ef9ebc;box-shadow:0 0 10px #ef9ebc80}
