@@ -2,7 +2,7 @@ export function createCosmeticNames(db,transaction,groups,rewards){
  db.exec('CREATE TABLE IF NOT EXISTS cosmetic_names(kind TEXT NOT NULL,id TEXT NOT NULL,label TEXT NOT NULL,PRIMARY KEY(kind,id))');
  const kinds={frame:'Рамки',can:'Банки',title:'Титулы',name_color:'Ники',theme:'Темы сайта',profile:'Фоны профиля',highlight:'Выделения',effect:'Эффекты'};
  const reserved=new Set(['moderator','administrator','tester']);
- const allowed=(kind,id)=>Object.hasOwn(groups,kind)&&!(kind==='title'&&reserved.has(id))&&
+ const allowed=(kind,id)=>Object.hasOwn(groups,kind)&&!db.prepare('SELECT 1 FROM deleted_cosmetic_assets WHERE id=?').get(id)&&!(kind==='title'&&reserved.has(id))&&
   (Object.hasOwn(groups[kind],id)||!!db.prepare("SELECT 1 FROM uploaded_cosmetics WHERE id=? AND kind=?").get(id,kind));
  function apply(kind,id,label){
   if(Object.hasOwn(groups[kind],id))groups[kind][id]=label;
