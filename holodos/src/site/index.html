@@ -15,7 +15,7 @@
 <link rel="preload" href="/assets/hero-main-2026.webp?v=20261114hq2" as="image" type="image/webp" fetchpriority="high">
 <link rel="stylesheet" href="/assets/site.css?v=20261123g">
 <link rel="stylesheet" href="/assets/cosmetic-titles.css?v=20261123c">
-<script src="/assets/site.js?v=20261123d" defer></script>
+<script src="/assets/site.js?v=20261123i" defer></script>
 <script src="/assets/site-features.js?v=20261123c" defer></script>
 <script src="/assets/profile-accordions.js?v=1" defer></script>
 <script src="/assets/nov23-ui.js?v=20261123e" defer></script>
@@ -37,7 +37,7 @@
   </nav>
   <div class="user-actions">
     <button class="notify-toggle" type="button" aria-label="Уведомить о готовности Холодоса" title="Уведомить о готовности Холодоса">♧</button><span class="wallet" id="wallet" title="Баланс W-монет" aria-live="polite" aria-atomic="true"><span class="coin-icon">W</span> <span id="wallet-amount">—</span></span>
-    <a class="login-btn" id="login-btn" href="/auth/twitch"><svg class="login-twitch-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 2 2 6v15h5v3l4-3h4l7-7V2H4zm16 11-4 4h-5l-3 3v-3H4V4h16v9zM14 7h2v6h-2V7zm-5 0h2v6H9V7z"/></svg><span class="login-label"><span class="login-desktop">Войти через Twitch</span><span class="login-mobile">Войти</span></span></a>
+    <a class="login-btn" id="login-btn" hidden href="/auth/twitch"><svg class="login-twitch-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 2 2 6v15h5v3l4-3h4l7-7V2H4zm16 11-4 4h-5l-3 3v-3H4V4h16v9zM14 7h2v6h-2V7zm-5 0h2v6H9V7z"/></svg><span class="login-label"><span class="login-desktop">Войти через Twitch</span><span class="login-mobile">Войти</span></span></a>
     <a class="avatar-link" href="/profile" data-route="/profile" id="avatar-link" hidden aria-label="Мой профиль"><span class="equipped-avatar top-equipped-avatar" id="top-avatar-frame"><img id="top-avatar" src="" alt="Аватар"></span><span id="top-name"></span></a>
   </div>
 </header>
@@ -58,7 +58,7 @@
     <a href="/chat" data-route="/chat" class="side-link" title="Топ чата" aria-label="Топ чата"><svg class="side-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h18v14H9l-6 4V3z M7 8h10M7 12h7"/></svg><span class="side-label">Топ чата</span></a>
     <a href="/shop" data-route="/shop" class="side-link" title="Магазин" aria-label="Магазин"><svg class="side-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h3l3 12h10l3-8H7 M10 20h.01M18 20h.01"/></svg><span class="side-label">Магазин</span></a>
     <a href="/profile" data-route="/profile" class="side-link" title="Профиль" aria-label="Профиль"><svg class="side-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z M4 21v-3a8 8 0 0 1 16 0v3"/></svg><span class="side-label">Профиль</span></a>
-    <a href="/auth/twitch" class="side-link side-auth-link" id="side-login" title="Войти через Twitch" aria-label="Войти через Twitch"><svg class="side-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4h12v16H9 M3 12h12m-4-4 4 4-4 4"/></svg><span class="side-label">Войти через Twitch</span></a>
+    <a href="/auth/twitch" class="side-link side-auth-link" id="side-login" hidden title="Войти через Twitch" aria-label="Войти через Twitch"><svg class="side-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4h12v16H9 M3 12h12m-4-4 4 4-4 4"/></svg><span class="side-label">Войти через Twitch</span></a>
     <a href="/admin" class="side-link" id="side-admin" hidden title="Админ-панель" aria-label="Админ-панель"><svg class="side-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 3 3 7v6c0 5 9 9 9 9s9-4 9-9V7z M8 12l3 3 5-6"/></svg><span class="side-label">Админ-панель</span></a><div class="side-wallets"><div class="side-wallet-row"><span>W-коины</span><strong id="side-balance" aria-live="polite">— W</strong></div></div>
   </nav>
 </aside>
@@ -97,8 +97,8 @@
     <div class="slot-game panel">
       <div class="panel-header"><h3 class="casino-title">Холодос <span class="casino-header-tools"><button class="notify-toggle" type="button" aria-label="Уведомить о готовности Холодоса" title="Уведомить о готовности Холодоса">♧</button><button type="button" class="game-sound-toggle" data-game-sound-toggle aria-pressed="true" aria-label="Выключить звук" title="Выключить звук"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></svg></button></span></h3><span class="small-pill">1 открытие / 2 минуты</span></div>
       <div class="reels" role="group" aria-label="Три символа Холодоса"><div class="reel" id="reel-1">⚪</div><div class="reel" id="reel-2">🔵</div><div class="reel" id="reel-3">🥭</div></div>
-      <div class="spin-result" id="spin-result" aria-live="polite">Войди через Twitch, чтобы открыть холодос.</div>
-      <button class="button button-primary spin-button" id="spin-button" type="button">Открыть холодос <span>↗</span></button>
+      <div class="spin-result" id="spin-result" aria-live="polite" data-auth-pending="true">Проверяем вход…</div>
+      <button class="button button-primary spin-button" id="spin-button" type="button" disabled>Проверяем вход…</button>
       <p class="muted microcopy">Открытие бесплатное. В игре используются виртуальные W-монеты.</p>
     </div>
     <div class="panel odds-panel"><h3>Награды и шансы</h3><div class="odd-row"><span>👑 👑 👑 <b>W EDITION</b></span><strong>+400 W</strong><small>0,05%</small></div><div class="odd-row"><span>⚪ ⚪ ⚪ <b>Джекпот</b></span><strong>+100 W</strong><small>0,5%</small></div><div class="odd-row"><span>🔵 🔵 🌸 <b>Пара</b></span><strong>+5 W</strong><small>27%</small></div><div class="odd-row"><span>🟢 🍉 ⚫ <b>Без совпадений</b></span><strong>+0 W</strong><small>72,45%</small></div><p class="muted odds-note">Символы: ⚪ 🟢 🥭 🌸 🔵 ⚫ 🍉 🟡.</p></div>
