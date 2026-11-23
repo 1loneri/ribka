@@ -2113,3 +2113,16 @@ body[data-site-theme="gta6"] .page-header h1 .period{color:#ffbdad}
 
 
 [data-name-style="gta6"]:not(.player-line),.player-line[data-name-style="gta6"]>b{background:linear-gradient(90deg,#7758ff 0%,#a642ec 20%,#d83fc6 39%,#f24b9b 57%,#ff6b6e 73%,#ff9b4a 88%,#ffe15e 100%);background-size:100% 100%;color:transparent;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:0 0 12px #f45b9d28}
+
+[data-name-style="gta6"]:not(.player-line),.player-line[data-name-style="gta6"]>b {
+  background-image:linear-gradient(90deg,#7758ff,#a642ec,#d83fc6,#f24b9b,#ff6b6e,#ff9b4a,#ffe15e,#ff9b4a,#ff6b6e,#f24b9b,#d83fc6,#a642ec,#7758ff);
+  background-size:200% 100%;
+  animation:gtaNicknameShimmer 6s ease-in-out infinite alternate;
+}
+@keyframes gtaNicknameShimmer {
+  from {background-position:0% 50%}
+  to {background-position:100% 50%}
+}
+@media (prefers-reduced-motion:reduce) {
+  [data-name-style="gta6"]:not(.player-line),.player-line[data-name-style="gta6"]>b {animation:none}
+}
