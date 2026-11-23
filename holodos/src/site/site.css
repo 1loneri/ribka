@@ -2082,3 +2082,13 @@ body[data-site-theme="gta6"]{--bg:#130c1d;--bg2:#22132c;--surface:#26182e;--surf
 .equipped-avatar[data-equipped-frame="gta6"]::after{inset:-15%;width:130%;height:130%;background-image:url('/assets/frame-gta6.png');background-size:contain;z-index:3}
 .theme-swatch--gta6{background:linear-gradient(135deg,#ffae79,#f064ca,#7549c8)!important}
 .giveaway-member .player-line{flex-wrap:wrap;gap:12px}.giveaway-member .player-avatar{margin:10px}.giveaway-member{min-height:100px;overflow:visible}
+
+/* Vice sunset: violet, pink and peach; dark glass keeps text readable. */
+body[data-site-theme="gta6"]{--bg:#24102f;--bg2:#391c48;--surface:#2a1838;--surface2:#3a224a;--border:#b772a15c;--bright:#fff5f8;--text:#f2e6f3;--muted:#cbb1cf;--ice:#ffb2d4;--ice2:#ffd0ab;background-color:#32133e;background-image:radial-gradient(ellipse at 88% 6%,#ffc39e99,transparent 53%),radial-gradient(ellipse at 12% 70%,#963dd666,transparent 65%),linear-gradient(145deg,#291846 0%,#793e82 46%,#c76696 76%,#e39b98 100%);background-attachment:fixed}
+body[data-site-theme="gta6"] .panel{border-color:#e4a5ca45;background:linear-gradient(135deg,#2d1a39ed,#19101fe8)}
+body[data-site-theme="gta6"] .side-navigation{background:linear-gradient(180deg,#27152ff5,#170e21f5);border-color:#e4a5ca45}
+body[data-site-theme="gta6"] .button-primary{background:linear-gradient(110deg,#e8a2d8,#ffbdad);border-color:#ffd4df;color:#29122f;box-shadow:0 3px 18px #eb82b825}
+body[data-site-theme="gta6"] .page-header h1 .period{color:#ffbdad}
+.cosmetic-site-preview[data-theme="gta6"]{background:linear-gradient(145deg,#442164,#a4559b 48%,#f1a696)}
+.theme-swatch--gta6::before{background:linear-gradient(135deg,#b36bd6,#f4a4c6,#ffc29f);box-shadow:0 0 10px #e69cce66}
+.duel-target-field{position:relative;isolation:isolate;z-index:5;min-width:0}.duel-target-field input{width:100%}.duel-target-field .duel-suggestions{top:calc(100% + 5px);max-height:280px;overflow-y:auto;overscroll-behavior:contain}.duel-suggestions button:focus-visible{outline:2px solid var(--ice);outline-offset:-2px}

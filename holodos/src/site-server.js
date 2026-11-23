@@ -83,6 +83,8 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
  assetFiles['/assets/site-features.js']={file:new URL('./site/site-features.js',import.meta.url),type:'text/javascript; charset=utf-8'};
  assetFiles['/assets/profile-cat.png']={file:new URL('./site/profile-cat.png',import.meta.url),type:'image/png'};
  for(const id of ['cat','roses'])assetFiles['/assets/profile-'+id+'.svg']={file:new URL('./site/profile-'+id+'.svg',import.meta.url),type:'image/svg+xml'};
+ for(const id of ['peach','berry']){const asset={file:new URL('./site/duel-can-'+id+'-real.webp',import.meta.url),type:'image/webp'};assetFiles['/assets/duel-can-'+id+'-real.webp']=asset;assetFiles['/assets/duel-can-'+id+'.webp']=asset;}
+ for(const [url,name,type] of [['/favicon.ico','favicon.ico','image/x-icon'],['/assets/site-icon.png','site-icon.png','image/png'],['/assets/apple-touch-icon.png','apple-touch-icon.png','image/png']])assetFiles[url]={file:new URL('./site/'+name,import.meta.url),type};
  const shell=readFileSync(new URL('./site/index.html',import.meta.url));
  const privacyPage=readFileSync(new URL('./site/privacy.html',import.meta.url));
  const staticAssets={};
@@ -181,7 +183,7 @@ export function createSite({db,publicUrl,app,tokenRequest,validate,player,transa
   return value.toLowerCase();
  }
  db.exec("CREATE TABLE IF NOT EXISTS site_visitors(player_id TEXT PRIMARY KEY,first_seen INTEGER NOT NULL);INSERT OR IGNORE INTO site_visitors SELECT player_id,MIN(created_at) FROM web_sessions GROUP BY player_id");
- const adminLogins=new Set(['lick0ver','war1ouss','bot_lehaai']);
+ const adminLogins=new Set(['lick0ver','wariouss','war1ouss','bot_lehaai']);
  db.exec("CREATE TABLE IF NOT EXISTS twitch_admin_accounts(login TEXT PRIMARY KEY,player_id TEXT NOT NULL UNIQUE,bound_at INTEGER NOT NULL);");
  function isAdminSession(session){
   if(!session)return false;

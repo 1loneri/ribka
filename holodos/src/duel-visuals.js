@@ -1,6 +1,6 @@
-export const duelCanCatalog=({peach:'Peach Ice',berry:'Midnight Berry',pipeline:'Pipeline Punch',pacific:'Pacific Punch',khaotic:'Khaotic',violet:'Ultra Violet',badapple:'Bad Apple',white:'Ultra White',green:'Original Green',mango:'Mango',pink:'Ultra Pink',blue:'Ultra Blue',watermelon:'Watermelon',yellow:'Ultra Gold','w-edition':'W Edition'});
+export const duelCanCatalog=({peach:'Ultra Peachy Keen',berry:'Ultra Strawberry Dreams',pipeline:'Pipeline Punch',pacific:'Pacific Punch',khaotic:'Khaotic',violet:'Ultra Violet',badapple:'Bad Apple',white:'Ultra White',green:'Original Green',mango:'Mango',pink:'Ultra Pink',blue:'Ultra Blue',watermelon:'Watermelon',yellow:'Ultra Gold','w-edition':'W Edition'});
 export const rainbowCans=new Set(['peach','berry','pipeline','pacific','khaotic','violet','badapple']);
-export const duelCanAssets={};
+export const duelCanAssets={peach:'/assets/duel-can-peach-real.webp',berry:'/assets/duel-can-berry-real.webp'};
 export const canArt=id=>duelCanAssets[id]||('/assets/'+(rainbowCans.has(id)?'duel-can-':'slot-')+id+'.webp');
 export function createDuelVisuals(db){
  db.exec('CREATE TABLE IF NOT EXISTS duel_can_equipped(player_id TEXT PRIMARY KEY,can_id TEXT NOT NULL)');

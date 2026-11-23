@@ -11,8 +11,9 @@ with zipfile.ZipFile(site/'twitch-panel.zip','w',zipfile.ZIP_DEFLATED) as z:
  z.write(site/'monocraft.woff','media/monocraft.woff')
  z.write(site/'Monocraft-LICENSE.txt','media/Monocraft-LICENSE.txt')
  for name in ['profile-fogcat.webp','profile-chinese.webp','profile-redangel.webp','sims-red-filter.svg']:z.write(site/name,'media/'+name)
- for name in names:
-  im=Image.open(site/name);data=io.BytesIO()
+ for name in names+['duel-can-peach-real.webp','duel-can-berry-real.webp']:
+  source_name=name.replace('.webp','-real.webp') if name in ['duel-can-peach.webp','duel-can-berry.webp'] else name
+  im=Image.open(site/source_name);data=io.BytesIO()
   if name.startswith('case-'):im.thumbnail((512,384))
   elif name.startswith('frame-'):im.thumbnail((256,256))
   im.save(data,format='PNG' if name.endswith('.png') else 'WEBP',**({'optimize':True} if name.endswith('.png') else {'quality':88,'method':6}))
