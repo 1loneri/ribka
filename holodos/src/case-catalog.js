@@ -15,7 +15,7 @@ for(const [kind,catalog] of Object.entries(cosmeticCatalog))for(const [id,label]
 for(const [id,label] of Object.entries(duelCanCatalog))caseRewardOptions['can-'+id]={label,kind:'Банка для дуэлей',symbol:'can',can:id};
 const round=n=>Math.round(n*1e6)/1e6;
 function moneyRewards(rows){return rows.map(r=>({id:r.kind==='physical'?'popmart':r.kind==='vip'?'vip-month':r.w?'w-'+r.w:'vp-'+parseInt(r.label),weight:round(r.probability*100)}));}
-function cosmetics(weights){const titleIds=Object.keys(cosmeticCatalog.title).filter(id=>!['tester','moderator','administrator'].includes(id)),frameTotal=Object.values(frameRarity).reduce((s,r)=>s+r.weight,0),canWeights=Object.keys(duelCanCatalog).map(id=>[id,id==='white'?2:['pipeline','pacific','khaotic','violet','badapple'].includes(id)?3:10]),canTotal=canWeights.reduce((s,r)=>s+r[1],0);const mappings={frame_effect:Object.entries(frameRarity).map(([id,r])=>['frame-'+id,r.weight/frameTotal]),title:titleIds.map(id=>['title-'+id,1/titleIds.length]),nickname_style:Object.keys(cosmeticCatalog.name_color).map(id=>['name_color-'+id,1/Object.keys(cosmeticCatalog.name_color).length]),site_theme:Object.keys(cosmeticCatalog.theme).map(id=>['theme-'+id,1/Object.keys(cosmeticCatalog.theme).length]),duel_can:canWeights.map(([id,w])=>['can-'+id,w/canTotal])};return Object.entries(weights).flatMap(([kind,probability])=>(mappings[kind]||[]).map(([id,share])=>({id,weight:round(probability*100*share)})));}
+function cosmetics(weights){const titleIds=Object.keys(cosmeticCatalog.title).filter(id=>!['tester','moderator','administrator'].includes(id)),frameTotal=Object.values(frameRarity).reduce((s,r)=>s+r.weight,0),canWeights=Object.keys(duelCanCatalog).map(id=>[id,id==='tea'?0.25:id==='white'?2:['pipeline','pacific','khaotic','violet','badapple'].includes(id)?3:10]),canTotal=canWeights.reduce((s,r)=>s+r[1],0);const mappings={frame_effect:Object.entries(frameRarity).map(([id,r])=>['frame-'+id,r.weight/frameTotal]),title:titleIds.map(id=>['title-'+id,1/titleIds.length]),nickname_style:Object.keys(cosmeticCatalog.name_color).map(id=>['name_color-'+id,1/Object.keys(cosmeticCatalog.name_color).length]),site_theme:Object.keys(cosmeticCatalog.theme).map(id=>['theme-'+id,1/Object.keys(cosmeticCatalog.theme).length]),duel_can:canWeights.map(([id,w])=>['can-'+id,w/canTotal])};return Object.entries(weights).flatMap(([kind,probability])=>(mappings[kind]||[]).map(([id,share])=>({id,weight:round(probability*100*share)})));}
 function exact(rows){const total=rows.reduce((s,r)=>s+r.weight,0);rows[0].weight=round(rows[0].weight+100-total);return rows;}
 export const defaultCases={
  donation:{title:'Подарочный',category:'Подарок',description:'Гарантированные 2 000 W дополнительно к случайной награде: W-монетам, коду VP или фигурке POP MART.',priceAmount:0,priceUnit:'free',guaranteedW:2000,rewards:moneyRewards(economy.caseRewards.donation)},
@@ -44,6 +44,18 @@ export function createCaseCatalog(db,transaction){
 
 
  for(const row of db.prepare('SELECT config_json FROM case_settings').all())for(const r of JSON.parse(row.config_json).rewards||[])if(r.id?.startsWith('w-'))registerWReward(r.id);
+ const teaMarker='tea-cosmetic-20261123';
+ if(!db.prepare('SELECT 1 FROM content_updates WHERE key=?').get(teaMarker))transaction(()=>{
+  const id='subscriber', row=db.prepare('SELECT * FROM case_settings WHERE id=?').get(id);
+  const value=row?JSON.parse(row.config_json):structuredClone(defaultCases[id]);
+  const source=value.rewards.filter(r=>r.id.startsWith('can-')).sort((a,b)=>b.weight-a.weight)[0];
+  if(source&&source.weight>0.05&&!value.rewards.some(r=>r.id==='can-tea')){
+   source.weight=round(source.weight-0.05);
+   value.rewards.push({id:'can-tea',weight:0.05});
+   db.prepare('INSERT INTO case_settings VALUES(?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET config_json=excluded.config_json,revision=case_settings.revision+1,updated_at=excluded.updated_at,updated_by=excluded.updated_by').run(id,JSON.stringify(value),(row?.revision||0)+1,Date.now(),teaMarker);
+  }
+  db.prepare('INSERT INTO content_updates VALUES(?,?)').run(teaMarker,Date.now());
+ });
  function config(id){if(!Object.hasOwn(defaultCases,id))fail('Неизвестный кейс.');const row=db.prepare('SELECT * FROM case_settings WHERE id=?').get(id);const value={id,...structuredClone(defaultCases[id]),...(row?JSON.parse(row.config_json):{}),revision:row?.revision||0};if(id==='vip'){if(value.category==='Раз в неделю')value.category=defaultCases.vip.category;if(value.description.includes('Один кейс в неделю'))value.description=value.description.replace('Один кейс в неделю для VIP канала.','Один кейс однократно при получении VIP-статуса.');}return value;}
  function list(){return Object.keys(defaultCases).map(id=>{const c=config(id);return {...c,priceText:casePriceText(c),rewards:c.rewards.map(r=>({...caseRewardOptions[r.id],...r}))};});}
  function save(form,actor){const id=String(form.get('case_id')||'');if(!Object.hasOwn(defaultCases,id))fail('Неизвестный кейс.');const clean=(key,max)=>{const value=String(form.get(key)||'').trim();if(!value||value.length>max||/[\u0000-\u0008\u000b-\u001f]/.test(value))fail('Проверь поле «'+({title:'Название',description:'Описание',category:'Метка'})[key]+'».');return value;};
@@ -52,9 +64,27 @@ export function createCaseCatalog(db,transaction){
  if(priceUnit==='donation'&&(rawPrice.length>40||/[\u0000-\u001f\u007f]/.test(rawPrice)))fail('Подпись цены должна быть не длиннее 40 символов и без переносов строк.');
  const rewards=[];for(const key of form.keys())if(key.startsWith('reward_enabled_')){const rewardId=key.slice(15);if(rewardId.startsWith('w-'))registerWReward(rewardId);if(!Object.hasOwn(caseRewardOptions,rewardId)||rewards.some(r=>r.id===rewardId))fail('Неизвестная или повторяющаяся награда.');const weight=Number(form.get('reward_weight_'+rewardId));if(!Number.isFinite(weight)||weight<=0||weight>100||Math.abs(weight-round(weight))>1e-9)fail('Шанс награды должен быть больше 0 и не больше 100%.');rewards.push({id:rewardId,weight});}
  const customAmount=Number(form.get('custom_w_amount')||0),customWeight=Number(form.get('custom_w_weight')||0);if(customAmount||customWeight){const id='w-'+customAmount;if(!registerWReward(id)||!Number.isFinite(customWeight)||customWeight<=0||customWeight>100||Math.abs(customWeight-round(customWeight))>1e-9||rewards.some(r=>r.id===id))fail('Проверь произвольную сумму W и её шанс.');rewards.push({id,weight:customWeight});}
- if(!rewards.length||Math.abs(rewards.reduce((sum,r)=>sum+r.weight,0)-100)>1e-6)fail('Сумма шансов включённых наград должна быть 100%.');
+ if(!rewards.length)fail('Выбери хотя бы одну награду.');
  const value={title,description,category,priceUnit,donationPriceText:priceUnit==='donation'?rawPrice:'',priceAmount:['free','donation','subscriber','vip'].includes(priceUnit)?0:priceAmount,rewards};
- return transaction(()=>{const old=config(id);if(old.revision!==revision)fail('Кейс уже изменён другим администратором. Обнови страницу.',409);const next=revision+1,now=Date.now();db.prepare('INSERT INTO case_settings VALUES(?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET config_json=excluded.config_json,revision=excluded.revision,updated_at=excluded.updated_at,updated_by=excluded.updated_by').run(id,JSON.stringify(value),next,now,String(actor));db.prepare('INSERT INTO case_settings_audit(case_id,revision,old_json,new_json,actor,created_at) VALUES(?,?,?,?,?,?)').run(id,next,JSON.stringify(old),JSON.stringify(value),String(actor),now);return {ok:true,revision:next};});
+ return transaction(()=>{const old=config(id);if(old.revision!==revision)fail('Кейс уже изменён другим администратором. Обнови страницу.',409);const totalUnits=100_000_000;
+ const units=r=>Math.round(r.weight*1e6);
+ if(rewards.reduce((sum,r)=>sum+units(r),0)!==totalUnits){
+  const previous=new Map(old.rewards.map(r=>[r.id,units(r)]));
+  const fixed=rewards.filter(r=>units(r)!==previous.get(r.id));
+  const adjusted=rewards.filter(r=>units(r)===previous.get(r.id));
+  const remaining=totalUnits-fixed.reduce((sum,r)=>sum+units(r),0);
+  if(!adjusted.length||remaining<adjusted.length)fail('Оставь место для остальных наград или задай шансы ровно на 100%.');
+  const weightSum=adjusted.reduce((sum,r)=>sum+units(r),0);
+  let allocated=0;
+  const shares=adjusted.map(r=>{
+   const share=(remaining-adjusted.length)*units(r)/weightSum;
+   const whole=Math.floor(share);
+   allocated+=whole+1;
+   return {r,weight:whole+1,fraction:share-whole};
+  }).sort((a,b)=>b.fraction-a.fraction);
+  shares.forEach(({r,weight},index)=>{r.weight=(weight+(index<remaining-allocated?1:0))/1e6;});
+ }
+ const next=revision+1,now=Date.now();db.prepare('INSERT INTO case_settings VALUES(?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET config_json=excluded.config_json,revision=excluded.revision,updated_at=excluded.updated_at,updated_by=excluded.updated_by').run(id,JSON.stringify(value),next,now,String(actor));db.prepare('INSERT INTO case_settings_audit(case_id,revision,old_json,new_json,actor,created_at) VALUES(?,?,?,?,?,?)').run(id,next,JSON.stringify(old),JSON.stringify(value),String(actor),now);return {ok:true,revision:next};});
  }
  return {list,save,rewardOptions:caseRewardOptions,priceUnits:casePriceUnits};
 }
