@@ -222,6 +222,7 @@ function updateCooldown(){
  if(me===null){button.disabled=true;button.textContent='Проверяем вход…';message.dataset.authPending='true';message.textContent='Проверяем вход…';return;}
  if(!me?.authenticated){
   button.disabled=false;button.textContent='Войти через Twitch ↗';
+  message.dataset.authPending='true';message.textContent='Войди через Twitch, чтобы открыть холодос.';
   return;
  }
  if(message.dataset.authPending||message.textContent.trim()==='Войди через Twitch, чтобы открыть холодос.'){delete message.dataset.authPending;message.textContent='Холодос готов к открытию.';}
