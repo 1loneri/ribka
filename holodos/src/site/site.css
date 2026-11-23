@@ -1714,7 +1714,7 @@ img[src*="/frame-thorn."]{filter:invert(1)}.equipped-avatar[data-equipped-frame=
 :is(#profile-content,.player-popover,.cosmetic-profile-preview)[data-profile="rose"]{background:linear-gradient(130deg,#2b1a26,#11151a)}
 :is(#profile-content,.player-popover,.cosmetic-profile-preview)[data-profile="aurora"],.profile-card[data-profile="aurora"]{background:linear-gradient(125deg,#142e37,#30263b,#17302c)}
 :is(#profile-content,.player-popover,.cosmetic-profile-preview)[data-profile="chess"],.profile-card[data-profile="chess"]{background-color:#101419;background-image:conic-gradient(#ffffff06 25%,transparent 0 50%,#ffffff06 0 75%,transparent 0);background-size:42px 42px}
-:is(#profile-content,.player-popover,.cosmetic-profile-preview)[data-profile="wood"]{background:linear-gradient(#121a1540,#121a1566),#172018 url('/assets/profile-wood.webp') center/cover no-repeat}
+:is(#profile-content,.player-popover,.cosmetic-profile-preview)[data-profile="wood"]{background:linear-gradient(#121a1540,#121a1566),#172018 url('/assets/profile-wood.webp?v=winter-birch') center/cover no-repeat}
 :is(#profile-content,.player-popover,.cosmetic-profile-preview)[data-profile="glass"]{background:#b6deff08;backdrop-filter:blur(16px);border-color:#cbeaff70}
 :is(#profile-content,.player-popover,.cosmetic-profile-preview)[data-profile="cube"]{background:linear-gradient(#101015bf,#101015e8),#16161a url('/assets/profile-cube.png') center/cover no-repeat}
 :is(#profile-content,.player-popover,.cosmetic-profile-preview)[data-profile="roses"]{background:radial-gradient(ellipse at 0 100%,#ac3c6b2a,transparent 45%),#151218}
