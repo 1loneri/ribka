@@ -1,7 +1,7 @@
 export const cosmeticCatalog={
  title:{gambler:'лудоман',devil:'чертовка',goodjob:'молодец',moderator:'Модератор',administrator:'Администратор',dirty:'грязнулька',nyashka:'няшка',frost:'Ледяной',night:'Ночная смена',keeper:'На чилле',spark:'Без суеты',ultra:'Ultra',zero:'Нулевой сахар',offline:'Вне сети',afterhours:'После полуночи',chmonya:'чмоня',duelist:'дуэльный',poor:'нищий',sneaky:'скрытопульный',boar:'кабанчик'},
  name_color:{ice:'Ледяной голубой',rose:'Светло-розовый',amber:'Тёплый янтарь',white:'Белое сияние',aurora:'Северное сияние'},
- theme:{gta6:'Неоновый закат',arctic:'Arctic Blue',violet:'Midnight Violet',mint:'Frozen Mint'},
+ theme:{gta6:'GTA VI',arctic:'Arctic Blue',violet:'Midnight Violet',mint:'Frozen Mint'},
  profile:{redangel:'Red Angel',fogcat:'Кот за стеклом',chinese:'Chinese',ice:'Ледяной',rose:'Розовый',aurora:'Градиент',chess:'Шахматы',wood:'Дерево',glass:'Стекло',cube:'Кубический',roses:'Розочки',rain:'Дождик',snow:'Снег',cat:'Котик в углу'},
  highlight:{ice:'Голубое выделение',rose:'Розовое выделение',aurora:'Северный перелив',red:'Красное выделение',orange:'Оранжевое выделение',amber:'Янтарное выделение',yellow:'Жёлтое выделение',lime:'Лаймовое выделение',green:'Зелёное выделение',mint:'Мятное выделение',cyan:'Бирюзовое выделение',blue:'Синее выделение',violet:'Фиолетовое выделение',white:'Белое выделение',gray:'Серое выделение',black:'Чёрное выделение',mono:'Белое ↔ чёрное',rainbow:'Прозрачная радуга',ember:'Красное ↔ чёрное',snow:'Снежное выделение',paws:'Гуляющие лапки'},
  effect:{snow:'Постоянный снег'}
