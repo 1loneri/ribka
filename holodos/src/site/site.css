@@ -1823,7 +1823,7 @@ main{view-transition-name:none}
 :is(#profile-content,.player-popover,.cosmetic-profile-preview)[data-profile="rose"],:is(#profile-content,.player-popover,.cosmetic-profile-preview)[data-profile="roses"]{--profile-accent:#f0c2dc;--profile-surface:#291d28;--profile-border:#68465d;--profile-muted:#bca1b3}
 :is(#profile-content,.player-popover,.cosmetic-profile-preview)[data-profile="aurora"]{--profile-accent:#d8c5ed;--profile-surface:#262333;--profile-border:#625674;--profile-muted:#b2a5c5}
 :is(#profile-content,.player-popover,.cosmetic-profile-preview)[data-profile="chess"]{--profile-accent:#eee;--profile-surface:#1b1c20;--profile-border:#54565d;--profile-muted:#aaadb5}
-:is(#profile-content,.player-popover,.cosmetic-profile-preview)[data-profile="wood"]{--profile-accent:#ebd1b0;--profile-surface:#30231b;--profile-border:#74563e;--profile-muted:#baa48e}
+:is(#profile-content,.player-popover,.cosmetic-profile-preview)[data-profile="wood"]{--profile-accent:#f0f4f7;--profile-surface:#111820a8;--profile-border:#bbc9d255;--profile-muted:#cbd5dd}
 :is(#profile-content,.player-popover,.cosmetic-profile-preview)[data-profile="glass"],:is(#profile-content,.player-popover,.cosmetic-profile-preview)[data-profile="cube"]{--profile-accent:#d1e0e5;--profile-surface:#d1e5ee0b;--profile-border:#73878f70;--profile-muted:#a1b7be}
 :is(#profile-content,.player-popover,.cosmetic-profile-preview)[data-profile="cat"]{--profile-accent:#e9d1e3;--profile-surface:#251e28;--profile-border:#66506b;--profile-muted:#b6a4bb}
 :is(#profile-content,.player-popover,.cosmetic-profile-preview)[data-profile="rain"]{--profile-accent:#bdd0dd;--profile-surface:#18232c;--profile-border:#455967;--profile-muted:#96aab9}
@@ -2290,3 +2290,5 @@ body[data-site-theme="gta6"] #profile-content :is(.stat span,.profile-muted,.mut
 @media(prefers-reduced-motion:reduce) {
  :is(#profile-content,.player-popover,.cosmetic-profile-preview)[data-profile="snow"] {animation:none}
 }
+
+.player-popover[data-profile="wood"] .mini-player-stats {backdrop-filter:blur(6px)}
