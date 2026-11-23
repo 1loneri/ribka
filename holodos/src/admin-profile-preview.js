@@ -8,7 +8,7 @@ for(const editor of document.querySelectorAll('[data-profile-style-editor]')){
  const art=editor.querySelector('[data-profile-art]');
  const stats=editor.querySelector('[data-profile-stats]');
  const card=editor.querySelector('.profile-style-card');
- const keys=['stats_color','stats_border','gradient_start','gradient_end'];
+ const keys=['stats_color','stats_border','stats_text','gradient_start','gradient_end'];
  const color=key=>isHex(fields[key+'_hex'].value)?fields[key+'_hex'].value:fields[key].value;
  function paint(){
   const mode=fields.gradient.value;
@@ -17,6 +17,7 @@ for(const editor of document.querySelectorAll('[data-profile-style-editor]')){
   art.style.opacity=String(1-fields.image_opacity.value/100);
   stats.style.backgroundColor=color('stats_color')+Math.round((100-fields.stats_opacity.value)*2.55).toString(16).padStart(2,'0');
   stats.style.borderColor=color('stats_border');
+  stats.style.color=color('stats_text');
   for(const output of editor.querySelectorAll('[data-opacity-for]'))output.value=fields[output.dataset.opacityFor].value+'%';
  }
  for(const key of keys){
