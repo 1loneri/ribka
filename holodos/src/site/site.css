@@ -2110,3 +2110,6 @@ body[data-site-theme="gta6"] .page-header h1 .period{color:#ffbdad}
 .profile-can-card:focus-visible{outline:2px solid var(--ice);outline-offset:3px}
 .topbar .brand,.side-navigation .side-brand{box-sizing:border-box;min-width:46px;height:42px;justify-content:center;padding:0 8px;border:1px solid #dcefff63;border-radius:9px;box-shadow:0 0 16px #b8dfff12,inset 0 0 12px #b8dfff0a}
 .topbar .brand-dot,.side-navigation .side-brand span{display:inline-block;width:4px;height:4px;flex:none;margin-left:5px;border-radius:50%;font-size:0;background:#cbd0d4;transform:translateY(8px)}
+
+
+[data-name-style="gta6"]:not(.player-line),.player-line[data-name-style="gta6"]>b{background:linear-gradient(90deg,#7758ff 0%,#a642ec 20%,#d83fc6 39%,#f24b9b 57%,#ff6b6e 73%,#ff9b4a 88%,#ffe15e 100%);background-size:100% 100%;color:transparent;background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:0 0 12px #f45b9d28}
