@@ -2316,3 +2316,18 @@ body[data-site-theme="gta6"] #profile-content :is(.stat span,.profile-muted,.mut
 .cosmetic-profile-preview--custom .sample-lines i {
  background-color:var(--custom-stats-text,var(--profile-accent));
 }
+
+.site-garland {
+ position:fixed;inset:0 0 auto;z-index:65;height:clamp(52px,11.8vw,142px);
+ background:url('/assets/site-garland.webp') top center/100% auto no-repeat;
+ pointer-events:none;mix-blend-mode:screen;opacity:.63;
+ animation:garland-glow 12s ease-in-out infinite;
+}
+.cosmetic-garland-preview {position:relative;overflow:hidden;isolation:isolate;background:#151521}
+.cosmetic-garland-preview .site-garland {position:absolute;height:100%;z-index:0}
+@keyframes garland-glow {
+ 0%,18%,40%,73%,100% {opacity:.63}
+ 24%,55%,82% {opacity:.9}
+ 30%,63%,88% {opacity:.72}
+}
+@media(prefers-reduced-motion:reduce){.site-garland{animation:none}}

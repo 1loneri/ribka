@@ -4,7 +4,7 @@ export const cosmeticCatalog={
  theme:{gta6:'GTA VI',arctic:'Arctic Blue',violet:'Midnight Violet',mint:'Frozen Mint'},
  profile:{redangel:'Red Angel',fogcat:'Кот за стеклом',chinese:'Chinese',ice:'Ледяной',rose:'Розовый',aurora:'Градиент',chess:'Шахматы',wood:'Дерево',glass:'Стекло',cube:'Кубический',roses:'Розочки',rain:'Дождик',snow:'Снег',cat:'Котик в углу'},
  highlight:{ice:'Голубое выделение',rose:'Розовое выделение',aurora:'Северный перелив',red:'Красное выделение',orange:'Оранжевое выделение',amber:'Янтарное выделение',yellow:'Жёлтое выделение',lime:'Лаймовое выделение',green:'Зелёное выделение',mint:'Мятное выделение',cyan:'Бирюзовое выделение',blue:'Синее выделение',violet:'Фиолетовое выделение',white:'Белое выделение',gray:'Серое выделение',black:'Чёрное выделение',mono:'Белое ↔ чёрное',rainbow:'Прозрачная радуга',ember:'Красное ↔ чёрное',snow:'Снежное выделение',paws:'Гуляющие лапки'},
- effect:{snow:'Постоянный снег'}
+ effect:{snow:'Постоянный снег',garland:'Гирлянда'}
 };
 export function createCosmetics(db,transaction){
  db.exec(`CREATE TABLE IF NOT EXISTS cosmetic_inventory(player_id TEXT NOT NULL,kind TEXT NOT NULL,item_id TEXT NOT NULL,granted_by TEXT NOT NULL,created_at INTEGER NOT NULL,PRIMARY KEY(player_id,kind,item_id));CREATE TABLE IF NOT EXISTS cosmetic_equipped(player_id TEXT NOT NULL,kind TEXT NOT NULL,item_id TEXT NOT NULL,PRIMARY KEY(player_id,kind));`);

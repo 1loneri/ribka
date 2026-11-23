@@ -14,7 +14,8 @@
   if(kind==='name_color')visual='<div class="cosmetic-visual cosmetic-name-preview" data-name-style="'+escaped+'"><b>@'+escape(state.me?.player?.login||'Игрок')+'</b><span class="sample-underline"></span></div>';
   if(kind==='cans')visual='<div class="cosmetic-visual cosmetic-can-preview"><img loading="lazy" '+(id==='w-edition'?'style="transform:scaleX(1.15)" ':'')+'src="'+escape(siteFeatures.cans[id]?.src||'')+'" alt=""></div>';
   if(kind==='highlight')visual='<div class="cosmetic-visual cosmetic-highlight-preview"><span class="history-item" data-highlight="'+escaped+'">'+avatar()+'<b>@'+escape(state.me?.player?.login||'Игрок')+'</b></span></div>';
-  if(kind==='effect')visual='<div class="cosmetic-visual cosmetic-effect-preview"><span class="snowfall-preview" role="img" aria-label="Падающий снег">'+Array.from({length:16},()=>'<i aria-hidden="true"></i>').join('')+'</span></div>';
+  if(kind==='effect'&&id==='garland')visual='<div class="cosmetic-visual cosmetic-garland-preview"><span class="site-garland" aria-hidden="true"></span></div>'; 
+  if(kind==='effect'&&id==='snow')visual='<div class="cosmetic-visual cosmetic-effect-preview"><span class="snowfall-preview" role="img" aria-label="Падающий снег">'+Array.from({length:16},()=>'<i aria-hidden="true"></i>').join('')+'</span></div>';
   if(kind==='profile'){
    return '<figure class="cosmetic-example cosmetic-example--profile">'+visual+caption+
     '<button type="button" data-preview-profile="'+escaped+'" aria-label="Примерить фон '+escape(label)+'" title="Примерить фон" class="cosmetic-profile-trigger"></button></figure>';
