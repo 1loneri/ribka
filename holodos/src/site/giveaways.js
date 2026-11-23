@@ -51,6 +51,24 @@
   return layout;
  }
  function bindDragging(canvas){
+  canvas.style.touchAction='manipulation';
+  canvas.addEventListener('dblclick',event=>{
+   const round=snapshot?.round;
+   if(demo||round?.status!=='running')return;
+   const rect=canvas.getBoundingClientRect();
+   const x=event.clientX-rect.left,y=event.clientY-rect.top;
+   const {positions,canH}=stageLayout(round.participants,canvas.clientWidth,canvas.clientHeight,arrangementOf(round));
+   for(let i=round.participants.length-1;i>=0;i--){
+    const player=round.participants[i];
+    const shot=shots.find(item=>item.id===player.id);
+    if(shot ? lastFrame>=shot.fire : player.eliminated)continue;
+    const point=positions.get(player.id);
+    if(!point||Math.abs(x-point.x)>canH*.25||Math.abs(y-point.y)>canH*.5)continue;
+    event.preventDefault();
+    void openPlayer(player.login);
+    break;
+   }
+  });
   canvas.addEventListener('pointerdown',ev=>{if(!canArrange()||!snapshot?.round||arrangementOf(snapshot.round).mode!=='manual'||busy)return;const rect=canvas.getBoundingClientRect(),x=ev.clientX-rect.left,y=ev.clientY-rect.top,layout=stageLayout(snapshot.round.participants,rect.width,rect.height,arrangementOf(snapshot.round));let nearest=null,best=Infinity;for(const p of snapshot.round.participants){if(p.eliminated)continue;const pos=layout.positions.get(p.id),d=Math.hypot(x-pos.x,y-pos.y);if(Math.abs(x-pos.x)<Math.max(16,layout.canH*.4)&&Math.abs(y-pos.y)<Math.max(20,layout.canH*.65)&&d<best){best=d;nearest=p.id;}}if(nearest===null)return;const pos=layout.positions.get(nearest);drag={id:nearest,x:pos.x/rect.width,y:pos.y/rect.height,dx:x-pos.x,dy:y-pos.y,pointer:ev.pointerId};canvas.setPointerCapture(ev.pointerId);ev.preventDefault();});
   canvas.addEventListener('pointermove',ev=>{if(!drag||drag.pointer!==ev.pointerId)return;const rect=canvas.getBoundingClientRect();drag.x=Math.max(.14,Math.min(.86,(ev.clientX-rect.left-drag.dx)/rect.width));drag.y=Math.max(.25,Math.min(.82,(ev.clientY-rect.top-drag.dy)/rect.height));});
   const finish=ev=>{if(!drag||drag.pointer!==ev.pointerId)return;const position={id:drag.id,x:drag.x,y:drag.y};drag=null;if(ev.type==='pointercancel')return;const g=snapshot.round;g.arrangement={mode:'manual',positions:{...arrangementOf(g).positions,[position.id]:{x:position.x,y:position.y}}};post('arrangement',{mode:'manual',position});};
