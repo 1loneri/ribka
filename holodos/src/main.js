@@ -221,7 +221,16 @@ async function handle(login,id,msg,mid,now){
   site.recordSpin(id,login,d,now,'chat:'+mid,'chat');
   return '@'+login+' открыл холодос: '+d.cans.map(i=>cans[i]).join(' ')+' - '+d.description+' '+spinCreditText(credit);
  });
- else if(cmd==='!баланс')output=transaction(()=>seen(mid,now)?'@'+login+', у тебя '+player(id,login).balance.toLocaleString('ru-RU')+' W-монет.':null);
+ else if(cmd==='!баланс'||/^!баланс\s/.test(cmd))output=transaction(()=>{
+  if(!seen(mid,now))return null;
+  const match=/^!баланс(?:\s+@?([a-z0-9_]{1,25}))?$/.exec(cmd);
+  if(!match)return '@'+login+', используй !баланс или !баланс @игрок.';
+  const target=match[1];
+  if(!target||target===login.toLowerCase())return '@'+login+', у тебя '+player(id,login).balance.toLocaleString('ru-RU')+' W-монет.';
+  const other=db.prepare('SELECT login,balance FROM players WHERE login=? COLLATE NOCASE LIMIT 1').get(target);
+  if(!other)return '@'+login+', игрок @'+target+' не найден в Холодосе.';
+  return 'У @'+other.login+' '+other.balance.toLocaleString('ru-RU')+' W-монет.';
+ });
  else if(cmd==='!топ')output=transaction(()=>{
   if(!seen(mid,now))return null;
   const top=db.prepare('SELECT login,balance FROM players ORDER BY balance DESC,login ASC LIMIT 5').all();
