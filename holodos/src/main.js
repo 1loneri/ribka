@@ -231,6 +231,22 @@ async function handle(login,id,msg,mid,now){
   if(!other)return '@'+login+', игрок @'+target+' не найден в Холодосе.';
   return 'У @'+other.login+' '+other.balance.toLocaleString('ru-RU')+' W-монет.';
  });
+ else if((cmd==='!дать'||/^!дать\s/.test(cmd))&&['lick0ver','war1ouss'].includes(login.toLowerCase()))output=transaction(()=>{
+  if(!seen(mid,now))return null;
+  const match=/^!дать\s+@?([a-z0-9_]{1,25})\s+([1-9]\d*)$/.exec(cmd);
+  const amount=Number(match?.[2]);
+  if(!Number.isSafeInteger(amount))return '@'+login+', используй !дать @игрок количество. Количество должно быть целым положительным числом.';
+  const target=match[1];
+  if(target===login.toLowerCase())return '@'+login+', выбери другого игрока.';
+  const recipient=db.prepare('SELECT id,login,balance FROM players WHERE login=? COLLATE NOCASE LIMIT 1').get(target);
+  if(!recipient)return '@'+login+', игрок @'+target+' не найден в Холодосе.';
+  if(recipient.id===id)return '@'+login+', выбери другого игрока.';
+  if(!Number.isSafeInteger(recipient.balance+amount))return '@'+login+', сумма слишком большая для этого перевода.';
+  const debit=db.prepare('UPDATE players SET balance=balance-? WHERE id=? AND balance>=?').run(amount,id,amount);
+  if(debit.changes!==1)return '@'+login+', у тебя недостаточно W-монет.';
+  db.prepare('UPDATE players SET balance=balance+? WHERE id=?').run(amount,recipient.id);
+  return '@'+login+' перевёл '+amount.toLocaleString('ru-RU')+' W игроку @'+recipient.login+'.';
+ });
  else if(cmd==='!топ')output=transaction(()=>{
   if(!seen(mid,now))return null;
   const top=db.prepare('SELECT login,balance FROM players ORDER BY balance DESC,login ASC LIMIT 5').all();
