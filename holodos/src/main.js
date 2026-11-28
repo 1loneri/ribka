@@ -40,6 +40,7 @@ db.exec("PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000; PRAGMA foreign_keys=
 db.exec("CREATE TABLE IF NOT EXISTS players(id TEXT PRIMARY KEY,login TEXT NOT NULL,balance INTEGER NOT NULL DEFAULT 0,last_opened INTEGER NOT NULL DEFAULT 0,opens INTEGER NOT NULL DEFAULT 0,wins INTEGER NOT NULL DEFAULT 0,jackpots INTEGER NOT NULL DEFAULT 0);");
 db.exec("CREATE TABLE IF NOT EXISTS seen(message_id TEXT PRIMARY KEY,created_at INTEGER NOT NULL);");
 db.exec("CREATE TABLE IF NOT EXISTS duels(id INTEGER PRIMARY KEY AUTOINCREMENT,initiator_id TEXT NOT NULL,initiator_login TEXT NOT NULL,opponent_login TEXT NOT NULL,opponent_id TEXT,wager INTEGER NOT NULL CHECK(wager>0),status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','accepted','declined','expired','cancelled')),created_at INTEGER NOT NULL,expires_at INTEGER NOT NULL,resolved_at INTEGER,winner_id TEXT,fee INTEGER NOT NULL DEFAULT 0);");
+db.exec('CREATE TABLE IF NOT EXISTS duel_recipient_blocks(login TEXT PRIMARY KEY NOT NULL)');
 db.exec("CREATE INDEX IF NOT EXISTS idx_duels_pending ON duels(status,opponent_login,expires_at);");
 db.exec("CREATE TABLE IF NOT EXISTS shop_orders(id INTEGER PRIMARY KEY AUTOINCREMENT,player_id TEXT NOT NULL,login TEXT NOT NULL,vp INTEGER NOT NULL CHECK(vp IN (240,475,1000)),price INTEGER NOT NULL CHECK(price>0),status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','fulfilled','cancelled')),created_at INTEGER NOT NULL,updated_at INTEGER NOT NULL);");
 db.exec("CREATE INDEX IF NOT EXISTS idx_shop_user_orders ON shop_orders(player_id,id DESC);");
@@ -113,6 +114,7 @@ function duelChallenge(login,id,target,wager,mid,now){
   if(target===login)return '@'+login+', нельзя вызвать себя.';
   if(target===botLogin)return '@'+login+', Лёха в дуэли не участвует.';
   if(!Number.isSafeInteger(wager)||wager<1||wager>100000000)return '@'+login+', ставка должна быть от 1 до 100 000 000 W.';
+  if(db.prepare('SELECT 1 FROM duel_recipient_blocks WHERE login=?').get(target))return '@'+login+', входящие дуэли для @'+target+' закрыты.';
   const sender=player(id,login);
   const ownCooldown=duelCooldownMs(id,now);
   if(ownCooldown>0)return '@'+login+', после дуэли подожди ещё '+duelCooldownTime(ownCooldown)+'.';
@@ -246,6 +248,20 @@ async function handle(login,id,msg,mid,now){
   if(debit.changes!==1)return '@'+login+', у тебя недостаточно W-монет.';
   db.prepare('UPDATE players SET balance=balance+? WHERE id=?').run(amount,recipient.id);
   return '@'+login+' перевёл '+amount.toLocaleString('ru-RU')+' W игроку @'+recipient.login+'.';
+ });
+ else if(/^!(?:закрыть|открыто)(?:\s|$)/.test(cmd)&&['lick0ver','war1ouss'].includes(login.toLowerCase()))output=transaction(()=>{
+  if(!seen(mid,now))return null;
+  const match=/^!(закрыть|открыто)\s+@?([a-z0-9_]{1,25})$/.exec(cmd);
+  if(!match)return '@'+login+', используй !закрыть @ник или !открыто @ник.';
+  const [,action,target]=match;
+  if(action==='открыто'){
+   db.prepare('DELETE FROM duel_recipient_blocks WHERE login=?').run(target);
+   return 'Входящие дуэли для @'+target+' открыты.';
+  }
+  db.prepare('INSERT OR IGNORE INTO duel_recipient_blocks(login) VALUES(?)').run(target);
+  expireDuels(now);
+  db.prepare("UPDATE duels SET status='cancelled',resolved_at=? WHERE opponent_login=? AND status='pending'").run(now,target);
+  return 'Входящие дуэли для @'+target+' закрыты до команды !открыто @'+target+'.';
  });
  else if(cmd==='!топ')output=transaction(()=>{
   if(!seen(mid,now))return null;

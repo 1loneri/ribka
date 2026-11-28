@@ -9,9 +9,11 @@ export const botCommands=[
  {command:'!заказ',description:'Посмотреть статус своего последнего заказа.',example:'!заказ',access:'Все пользователи.'},
  {command:'!заказы',description:'Альтернативная запись команды !заказ.',example:'!заказы',access:'Все пользователи; показывает последний заказ.'},
  {command:'!дуэль',description:'Вызвать игрока на дуэль с указанной ставкой W.',example:'!дуэль @player 100',access:'Нужны ник и целое число W. Дуэли должны быть включены.',duel:true},
+ {command:'!закрыть',description:'Закрыть входящие вызовы игроку и отменить ожидающие входящие дуэли.',example:'!закрыть @игрок',access:'Только lick0ver и war1ouss.'},
+ {command:'!открыто',description:'Снова разрешить входящие вызовы игроку.',example:'!открыто @игрок',access:'Только lick0ver и war1ouss.'},
  {command:'!принять',description:'Принять адресованный тебе вызов на дуэль.',example:'!принять',access:'Только получатель активного вызова; ответить нужно за 60 секунд.',duel:true},
  {command:'!отказ',description:'Отклонить адресованный тебе вызов на дуэль.',example:'!отказ',access:'Только получатель активного вызова.',duel:true}
 ];
 export function renderBotCommands(escape,duelsEnabled){
- return '<section class="admin-panel" id="bot-commands"><h2>Команды бота</h2><p class="admin-note">Все действующие команды Twitch-бота. Команды не засчитываются в статистику сообщений. Отдельных админских чат-команд сейчас нет: управление находится в этой панели.</p><div class="admin-command-table"><table><thead><tr><th>Команда</th><th>Что делает</th><th>Пример</th><th>Условия</th></tr></thead><tbody>'+botCommands.map(c=>'<tr><td><code>'+escape(c.command)+'</code></td><td>'+escape(c.description)+'</td><td><code>'+escape(c.example)+'</code></td><td>'+escape(c.duel&&!duelsEnabled?'Сейчас дуэли выключены. '+c.access:c.access)+'</td></tr>').join('')+'</tbody></table></div></section>';
+ return '<section class="admin-panel" id="bot-commands"><h2>Команды бота</h2><p class="admin-note">Все действующие команды Twitch-бота. Команды не засчитываются в статистику сообщений.</p><div class="admin-command-table"><table><thead><tr><th>Команда</th><th>Что делает</th><th>Пример</th><th>Условия</th></tr></thead><tbody>'+botCommands.map(c=>'<tr><td><code>'+escape(c.command)+'</code></td><td>'+escape(c.description)+'</td><td><code>'+escape(c.example)+'</code></td><td>'+escape(c.duel&&!duelsEnabled?'Сейчас дуэли выключены. '+c.access:c.access)+'</td></tr>').join('')+'</tbody></table></div></section>';
 }
